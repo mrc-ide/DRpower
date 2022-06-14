@@ -1,0 +1,18 @@
+Package: DRpower
+Type: Package
+Title: Sample size calculation and power analysis for drug- and diagnostic
+    resistance studies
+Version: 0.1.0
+Authors@R: as.person(c(
+    "Bob Verity <r.verity@imperial.ac.uk> [aut, cre]"
+  ))
+Description: Can be used to analyse prevalence data typical of drug- and
+    diagnostic-resistance studies (i.e. pfhrp2/3 deletions in malaria). Uses a
+    Bayesian approach to estimate both the prevalence and the level of intra-
+    cluster correlation. Also estimates the power via simulation for a given
+    sample size, making it possible to choose a sample size to achieve a given
+    desired power.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.1
