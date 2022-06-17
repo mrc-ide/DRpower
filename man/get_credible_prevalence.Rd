@@ -5,28 +5,28 @@
 \title{Get credible intervals for prevalence}
 \usage{
 get_credible_prevalence(
-  k,
-  m,
+  pos_samples,
+  total_samples,
   alpha = 0.05,
-  prior_p_shape1 = 1,
-  prior_p_shape2 = 1,
-  prior_rho_shape1 = 1,
-  prior_rho_shape2 = 1
+  prior_prev_shape1 = 1,
+  prior_prev_shape2 = 1,
+  prior_ICC_shape1 = 1,
+  prior_ICC_shape2 = 1
 )
 }
 \arguments{
-\item{k}{counts of positive samples.}
+\item{pos_samples}{number of "positive" samples per cluster.}
 
-\item{m}{sample size per cluster.}
+\item{total_samples}{total sample size per cluster.}
 
-\item{alpha}{the significance level of the credible interval - for sample,
-use \code{alpha = 0.05} for 95.}
+\item{alpha}{the significance level of the credible interval - for example,
+use \code{alpha = 0.05} for a 95\% interval.}
 
-\item{prior_p_shape1, prior_p_shape2}{parameters of the Beta prior on the
-prevalence.}
-
-\item{prior_rho_shape1, prior_rho_shape2}{parameters of the Beta prior on the
-ICC.}
+\item{prior_prev_shape1, prior_prev_shape2, prior_ICC_shape1, prior_ICC_shape2}{parameters that dictate the shape of the priors on prevalence and the ICC.
+Increasing the first shape parameter (e.g. \code{prior_p_shape1}) pushes
+the distribution to the right, increasing the second shape parameter (e.g.
+\code{prior_p_shape2}) pushes the distribution to the left. Increasing both
+shape parameters squeezes the distribution and makes it narrower.}
 }
 \description{
 Get lower and upper credible intervals on the prevalence over

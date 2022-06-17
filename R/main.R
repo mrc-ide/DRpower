@@ -462,14 +462,16 @@ loglike_marginal_p_Gauss_Vp <- Vectorize(loglike_marginal_p_Gauss, vectorize.arg
 #' @description Get lower and upper credible intervals on the intra-cluster
 #'   correlation coefficient (ICC).
 #'
-#' @param k counts of positive samples.
-#' @param m sample size per cluster.
-#' @param alpha the significance level of the credible interval - for sample,
-#'   use \code{alpha = 0.05} for 95.
-#' @param prior_p_shape1,prior_p_shape2 parameters of the Beta prior on the
-#'   prevalence.
-#' @param prior_rho_shape1,prior_rho_shape2 parameters of the Beta prior on the
-#'   ICC.
+#' @param pos_samples number of "positive" samples per cluster.
+#' @param total_samples total sample size per cluster.
+#' @param alpha the significance level of the credible interval - for example,
+#'   use \code{alpha = 0.05} for a 95\% interval.
+#' @param prior_prev_shape1,prior_prev_shape2,prior_ICC_shape1,prior_ICC_shape2
+#'   parameters that dictate the shape of the priors on prevalence and the ICC.
+#'   Increasing the first shape parameter (e.g. \code{prior_p_shape1}) pushes
+#'   the distribution to the right, increasing the second shape parameter (e.g.
+#'   \code{prior_p_shape2}) pushes the distribution to the left. Increasing both
+#'   shape parameters squeezes the distribution and makes it narrower.
 #'
 #' @importFrom stats optim qbeta
 #' @export
@@ -477,46 +479,46 @@ loglike_marginal_p_Gauss_Vp <- Vectorize(loglike_marginal_p_Gauss, vectorize.arg
 #' # TODO
 #' print("foo")
 
-get_credible_ICC <- function(k, m, alpha = 0.05,
-                             prior_p_shape1 = 1.0, prior_p_shape2 = 1.0,
-                             prior_rho_shape1 = 1.0, prior_rho_shape2 = 1.0) {
+get_credible_ICC <- function(pos_samples, total_samples, alpha = 0.05,
+                             prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
+                             prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 1.0) {
   
-  # if m == 1 then likelihood becomes independent of rho, therefore the
-  # posterior equals the prior and we can return CrIs exactly
-  if (m == 1) {
-    CrI_lower <- qbeta(p = alpha / 2, shape1 = prior_rho_shape1, shape2 = prior_rho_shape2)
-    CrI_upper <- qbeta(p = 1 - alpha / 2, shape1 = prior_rho_shape1, shape2 = prior_rho_shape2)
+  # if total_samples == 1 then likelihood becomes independent of rho, therefore
+  # the posterior equals the prior and we can return CrIs exactly
+  if (total_samples == 1) {
+    CrI_lower <- qbeta(p = alpha / 2, shape1 = prior_ICC_shape1, shape2 = prior_ICC_shape2)
+    CrI_upper <- qbeta(p = 1 - alpha / 2, shape1 = prior_ICC_shape1, shape2 = prior_ICC_shape2)
     return(c(lower = CrI_lower, upper = CrI_upper))
   }
   
   # define a series of arguments that ordinarily would be part of the function
-  # declaration. I have made the design choice to put them here instead to keep
-  # things as simple as possible for the user. Advanced users may want to make
-  # their own version of this function and fiddle with these arguments
+  # declaration, but I have made the design choice to put them here instead to
+  # keep things as simple as possible for the user. Advanced users may want to
+  # make their own version of this function and fiddle with these arguments
   precision_limit <- 6*log(10)
   n_intervals <- 40
   
   # get maximum of distribution
   ml <- optim(0.5, function(rho) {
-    -loglike_marginal_rho_Gauss(k = k, m = m, rho = rho,
-                                prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
-                                prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2)
+    -loglike_marginal_rho_Gauss(k = pos_samples, m = total_samples, rho = rho,
+                                prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
+                                prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
   }, lower = 0, upper = 1, method = "Brent")
   
   # get lower and upper bounds at which distribution is a factor
   # exp(precision_limit) smaller than the maximum we just found. We will only
   # integrate over this interval as it contains nearly all the probability mass
   bound_lower <- optim(0, function(rho) {
-    ll <- loglike_marginal_rho_Gauss(k, m, rho = rho,
-                                     prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
-                                     prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2)
+    ll <- loglike_marginal_rho_Gauss(k = pos_samples, m = total_samples, rho = rho,
+                                     prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
+                                     prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
     abs(ll + ml$value + precision_limit)
   }, lower = 0, upper = ml$par, method = "Brent")
   
   bound_upper <- optim(1, function(rho) {
-    ll <- loglike_marginal_rho_Gauss(k = k, m = m, rho = rho,
-                                     prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
-                                     prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2)
+    ll <- loglike_marginal_rho_Gauss(k = pos_samples, m = total_samples, rho = rho,
+                                     prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
+                                     prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
     abs(ll + ml$value + precision_limit)
   }, lower = ml$par, upper = 1, method = "Brent")
   
@@ -534,20 +536,20 @@ get_credible_ICC <- function(k, m, alpha = 0.05,
   # computing is not the true marginal likelihood, but rather is multiplied by
   # an arbitrary scalar. This does not matter for our purposes of constructing
   # CrIs, as they will be in the same positions.
-  f_node <- exp(loglike_marginal_rho_Gauss_Vrho(k = k, m = m, rho = node_pos,
-                                                prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
-                                                prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2) + ml$value)
+  f_node <- exp(loglike_marginal_rho_Gauss_Vrho(k = pos_samples, m = total_samples, rho = node_pos,
+                                                prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
+                                                prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2) + ml$value)
   f_left <- f_node[-length(f_node)]
   f_right <- f_node[-1]
-  f_mids <- exp(loglike_marginal_rho_Gauss_Vrho(k = k, m = m, rho = node_mids,
-                                                prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
-                                                prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2) + ml$value)
+  f_mids <- exp(loglike_marginal_rho_Gauss_Vrho(k = pos_samples, m = total_samples, rho = node_mids,
+                                                prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
+                                                prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2) + ml$value)
   
   # uncomment to plot distribution of rho
   #rho_vec <- seq(bound_lower$par, bound_upper$par, l = 1001)
-  #z <- loglike_marginal_rho_Gauss_Vrho(k = k, m = m, rho = rho_vec,
-  #                                     prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
-  #                                     prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2)
+  #z <- loglike_marginal_rho_Gauss_Vrho(k = pos_samples, m = total_samples, rho = rho_vec,
+  #                                     prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
+  #                                     prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
   #plot(rho_vec, exp(z + ml$value), type = 'l')
   
   # uncomment to overlay nodes and Simpson's rule approximation
@@ -596,14 +598,16 @@ get_credible_ICC <- function(k, m, alpha = 0.05,
 #' @description Get lower and upper credible intervals on the prevalence over
 #'   all clusters.
 #'
-#' @param k counts of positive samples.
-#' @param m sample size per cluster.
-#' @param alpha the significance level of the credible interval - for sample,
-#'   use \code{alpha = 0.05} for 95.
-#' @param prior_p_shape1,prior_p_shape2 parameters of the Beta prior on the
-#'   prevalence.
-#' @param prior_rho_shape1,prior_rho_shape2 parameters of the Beta prior on the
-#'   ICC.
+#' @param pos_samples number of "positive" samples per cluster.
+#' @param total_samples total sample size per cluster.
+#' @param alpha the significance level of the credible interval - for example,
+#'   use \code{alpha = 0.05} for a 95\% interval.
+#' @param prior_prev_shape1,prior_prev_shape2,prior_ICC_shape1,prior_ICC_shape2
+#'   parameters that dictate the shape of the priors on prevalence and the ICC.
+#'   Increasing the first shape parameter (e.g. \code{prior_p_shape1}) pushes
+#'   the distribution to the right, increasing the second shape parameter (e.g.
+#'   \code{prior_p_shape2}) pushes the distribution to the left. Increasing both
+#'   shape parameters squeezes the distribution and makes it narrower.
 #'
 #' @importFrom stats optim
 #' @export
@@ -611,38 +615,38 @@ get_credible_ICC <- function(k, m, alpha = 0.05,
 #' # TODO
 #' print("foo")
 
-get_credible_prevalence <- function(k, m, alpha = 0.05,
-                                    prior_p_shape1 = 1.0, prior_p_shape2 = 1.0,
-                                    prior_rho_shape1 = 1.0, prior_rho_shape2 = 1.0) {
+get_credible_prevalence <- function(pos_samples, total_samples, alpha = 0.05,
+                                    prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
+                                    prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 1.0) {
   
   # define a series of arguments that ordinarily would be part of the function
-  # declaration. I have made the design choice to put them here instead to keep
-  # things as simple as possible for the user. Advanced users may want to make
-  # their own version of this function and fiddle with these arguments
+  # declaration but I have made the design choice to put them here instead to
+  # keep things as simple as possible for the user. Advanced users may want to
+  # make their own version of this function and fiddle with these arguments
   precision_limit <- 6*log(10)
   n_intervals <- 40
   
   # get maximum of distribution
   ml <- optim(0.5, function(p) {
-    -loglike_marginal_p_Gauss(k = k, m = m, p = p,
-                              prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
-                              prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2)
+    -loglike_marginal_p_Gauss(k = pos_samples, m = total_samples, p = p,
+                              prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
+                              prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
   }, lower = 0, upper = 1, method = "Brent")
   
   # get lower and upper bounds at which distribution is a factor
   # exp(precision_limit) smaller than the maximum we just found. We will only
   # integrate over this interval as it contains nearly all the probability mass
   bound_lower <- optim(0, function(p) {
-    ll <- loglike_marginal_p_Gauss(k = k, m = m, p = p,
-                                   prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
-                                   prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2)
+    ll <- loglike_marginal_p_Gauss(k = pos_samples, m = total_samples, p = p,
+                                   prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
+                                   prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
     abs(ll + ml$value + precision_limit)
   }, lower = 0, upper = ml$par, method = "Brent")
   
   bound_upper <- optim(1, function(p) {
-    ll <- loglike_marginal_p_Gauss(k = k, m = m, p = p,
-                                   prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
-                                   prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2)
+    ll <- loglike_marginal_p_Gauss(k = pos_samples, m = total_samples, p = p,
+                                   prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
+                                   prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
     abs(ll + ml$value + precision_limit)
   }, lower = ml$par, upper = 1, method = "Brent")
   
@@ -660,20 +664,20 @@ get_credible_prevalence <- function(k, m, alpha = 0.05,
   # computing is not the true marginal likelihood, but rather is multiplied by
   # an arbitrary scalar. This does not matter for our purposes of constructing
   # CrIs, as they will be in the same positions.
-  f_node <- exp(loglike_marginal_p_Gauss_Vp(k = k, m = m, p = node_pos,
-                                            prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
-                                            prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2) + ml$value)
+  f_node <- exp(loglike_marginal_p_Gauss_Vp(k = pos_samples, m = total_samples, p = node_pos,
+                                            prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
+                                            prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2) + ml$value)
   f_left <- f_node[-length(f_node)]
   f_right <- f_node[-1]
-  f_mids <- exp(loglike_marginal_p_Gauss_Vp(k = k, m = m, p = node_mids,
-                                            prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
-                                            prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2) + ml$value)
+  f_mids <- exp(loglike_marginal_p_Gauss_Vp(k = pos_samples, m = total_samples, p = node_mids,
+                                            prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
+                                            prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2) + ml$value)
   
   # uncomment to plot distribution of p
   #p_vec <- seq(bound_lower$par, bound_upper$par, l = 1001)
-  #z <- loglike_marginal_p_Gauss_Vp(k = k, m = m, p = p_vec,
-  #                                 prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
-  #                                 prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2)
+  #z <- loglike_marginal_p_Gauss_Vp(k = pos_samples, m = total_samples, p = p_vec,
+  #                                 prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
+  #                                 prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
   #plot(p_vec, exp(z + ml$value), type = 'l')
   
   # uncomment to overlay nodes and Simpson's rule approximation
