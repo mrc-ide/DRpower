@@ -4,7 +4,15 @@
 \alias{get_credible_ICC}
 \title{Get credible intervals for the intra-cluster correlation coefficient}
 \usage{
-get_credible_ICC(k, m, alpha = 0.05, p_nodes = 20, rho_nodes = 20)
+get_credible_ICC(
+  k,
+  m,
+  alpha = 0.05,
+  prior_p_shape1 = 1,
+  prior_p_shape2 = 1,
+  prior_rho_shape1 = 1,
+  prior_rho_shape2 = 1
+)
 }
 \arguments{
 \item{k}{counts of positive samples.}
@@ -12,10 +20,13 @@ get_credible_ICC(k, m, alpha = 0.05, p_nodes = 20, rho_nodes = 20)
 \item{m}{sample size per cluster.}
 
 \item{alpha}{the significance level of the credible interval - for sample,
-use \code{alpha = 0.05} for 95}
+use \code{alpha = 0.05} for 95.}
 
-\item{p_nodes, rho_nodes}{number of nodes to use in the Gaussian quadrature
-approximate integral method.}
+\item{prior_p_shape1, prior_p_shape2}{parameters of the Beta prior on the
+prevalence.}
+
+\item{prior_rho_shape1, prior_rho_shape2}{parameters of the Beta prior on the
+ICC.}
 }
 \description{
 Get lower and upper credible intervals on the intra-cluster
