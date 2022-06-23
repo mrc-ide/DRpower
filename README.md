@@ -4,5 +4,8 @@
 
 # DRpower
 
-This package is for analysing drug- and diagnostic resistance data, and for
-helping with study design before collecting data.
+This package is designed to simplify the process of designing Plasmodium hrp2/3
+gene deletion studies, including performing sample size and power calculations
+before collecting any samples, and analysing data once it arrives. The current version of the package is fairly simple, and contains only the following functions:
+  * foo
+  # bar
