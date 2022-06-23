@@ -163,7 +163,7 @@ estimate_power <- function(clusters, total_samples, prevalence, ICC = NULL,
   
   # get ICC from Deff if needed
   if (is.null(ICC)) {
-    ICC <- (Deff - 1) / (clusters - 1)
+    ICC <- (Deff - 1) / (total_samples - 1)
   }
   
   # define dataframe holding parameter combinations, and that will eventually
