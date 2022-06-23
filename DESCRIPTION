@@ -2,7 +2,7 @@ Package: DRpower
 Type: Package
 Title: Sample size estimation and power analysis for drug- and diagnostic
     resistance studies
-Version: 0.1.0
+Version: 1.0.0
 Authors@R: as.person(c(
     "Bob Verity <r.verity@imperial.ac.uk> [aut, cre]"
   ))
@@ -18,5 +18,13 @@ LazyData: true
 RoxygenNote: 7.1.1
 BugReports: https://github.com/mrc-ide/DRpower/issues
 Imports: 
+    dplyr,
     extraDistr,
-    statmod
+    ICCbin,
+    magrittr,
+    rlang,
+    statmod,
+    tidyr
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
