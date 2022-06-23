@@ -18,6 +18,13 @@ LazyData: true
 RoxygenNote: 7.1.1
 BugReports: https://github.com/mrc-ide/DRpower/issues
 Imports: 
+    dplyr,
     extraDistr,
     ICCbin,
-    statmod
+    magrittr,
+    rlang,
+    statmod,
+    tidyr
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

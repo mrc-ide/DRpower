@@ -355,6 +355,16 @@ get_credible_ICC <- function(pos_samples, total_samples, alpha = 0.05,
                              prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
                              prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 1.0) {
   
+  # check inputs
+  assert_vector_pos_int(pos_samples)
+  assert_single_pos_int(total_samples)
+  assert_single_bounded(alpha)
+  assert_single_pos(prior_prev_shape1, zero_allowed = FALSE)
+  assert_single_pos(prior_prev_shape2, zero_allowed = FALSE)
+  assert_single_pos(prior_ICC_shape1, zero_allowed = FALSE)
+  assert_single_pos(prior_ICC_shape2, zero_allowed = FALSE)
+  #assert_single_logical(debug_on)
+  
   # if total_samples == 1 then likelihood becomes independent of rho, therefore
   # the posterior equals the prior and we can return CrIs exactly
   if (total_samples == 1) {
@@ -515,6 +525,16 @@ get_credible_prevalence <- function(pos_samples, total_samples, alpha = 0.05,
   # make their own version of this function and fiddle with these arguments
   precision_limit <- 6*log(10)
   n_intervals <- 40
+  
+  # check inputs
+  assert_vector_pos_int(pos_samples)
+  assert_single_pos_int(total_samples)
+  assert_single_bounded(alpha)
+  assert_single_pos(prior_prev_shape1, zero_allowed = FALSE)
+  assert_single_pos(prior_prev_shape2, zero_allowed = FALSE)
+  assert_single_pos(prior_ICC_shape1, zero_allowed = FALSE)
+  assert_single_pos(prior_ICC_shape2, zero_allowed = FALSE)
+  assert_single_logical(debug_on)
   
   # get maximum of distribution
   ml <- optim(0.5, function(p) {

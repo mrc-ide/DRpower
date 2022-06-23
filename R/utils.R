@@ -1,5 +1,18 @@
 
 #------------------------------------------------
+#' Pipe operator
+#'
+#' See \code{magrittr::\link[magrittr]{\%>\%}} for details.
+#'
+#' @name %>%
+#' @rdname pipe
+#' @keywords internal
+#' @export
+#' @importFrom magrittr %>%
+#' @usage lhs \%>\% rhs
+NULL
+
+#------------------------------------------------
 # apply Simpson's rule to interpolate betwee a series of node x- and y-values.
 # New values are calcualted at x_new, which is allowed to project beyond the
 # range of the nodes, in which case values are extrapolated from the last

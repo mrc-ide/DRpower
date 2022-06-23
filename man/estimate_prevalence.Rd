@@ -4,7 +4,12 @@
 \alias{estimate_prevalence}
 \title{Estimate prevalence of pfhrp2 deletions from clustered data}
 \usage{
-estimate_prevalence(pos_samples, total_samples, alpha = 0.05)
+estimate_prevalence(
+  pos_samples,
+  total_samples,
+  alpha = 0.05,
+  fix_ICC_estimate = NULL
+)
 }
 \arguments{
 \item{pos_samples}{number of "positive" samples per cluster.}
@@ -13,6 +18,9 @@ estimate_prevalence(pos_samples, total_samples, alpha = 0.05)
 
 \item{alpha}{the significance level of the credible interval - for example,
 use \code{alpha = 0.05} for a 95\% interval.}
+
+\item{fix_ICC_estimate}{if defined, fix the ICC at this value rather than estimating
+from data.}
 }
 \description{
 Takes raw counts of pfhrp2 deletions in multiple clusters (e.g.
