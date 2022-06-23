@@ -115,8 +115,7 @@ estimate_prevalence <- function(pos_samples, total_samples, alpha = 0.05, fix_IC
 #' @param total_samples total sample size per cluster.
 #' @param prevalence assumed true prevalence of pfhrp2 deletions. Input as
 #'   proportion between 0 and 1.
-#' @param ICC,Deff assumed true intra-cluster correlation or design effect. Only
-#'   one of these must be defined, the other must be \code{NULL}.
+#' @param ICC assumed true intra-cluster correlation (ICC), between 0 and 1.
 #' @param prevalence_threshold threshold used in decision-making. Input as
 #'   proportion between 0 and 1.
 #' @param alpha the significance level of the credible interval - for example,
@@ -135,35 +134,19 @@ estimate_prevalence <- function(pos_samples, total_samples, alpha = 0.05, fix_IC
 #' @export
 
 estimate_power <- function(clusters, total_samples, prevalence, ICC = NULL,
-                           Deff = NULL, prevalence_threshold = 0.05, alpha = 0.05,
+                           prevalence_threshold = 0.05, alpha = 0.05,
                            reps = 1e2, fix_ICC_estimate = NULL) {
   
   # check inputs
   assert_vector_pos_int(clusters)
   assert_vector_pos_int(total_samples)
   assert_vector_bounded(prevalence)
-  if (!is.null(ICC)) {
-    assert_vector_bounded(ICC)
-  }
-  if (!is.null(ICC)) {
-    assert_vector_pos(Deff)
-    assert_greq(Deff, 1.0)
-  }
+  assert_vector_bounded(ICC)
   assert_single_bounded(prevalence_threshold)
   assert_single_bounded(alpha)
   assert_single_pos_int(reps)
   if (!is.null(fix_ICC_estimate)) {
     assert_single_bounded(fix_ICC_estimate)
-  }
-  
-  # one of ICC and Deff must be NULL
-  if ((is.null(ICC) && is.null(Deff)) || (!is.null(ICC) && !is.null(Deff))) {
-    stop("one (and only one) of ICC and Deff must be NULL")
-  }
-  
-  # get ICC from Deff if needed
-  if (is.null(ICC)) {
-    ICC <- (Deff - 1) / (total_samples - 1)
   }
   
   # define dataframe holding parameter combinations, and that will eventually

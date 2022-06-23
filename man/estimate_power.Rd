@@ -9,7 +9,6 @@ estimate_power(
   total_samples,
   prevalence,
   ICC = NULL,
-  Deff = NULL,
   prevalence_threshold = 0.05,
   alpha = 0.05,
   reps = 100,
@@ -24,8 +23,7 @@ estimate_power(
 \item{prevalence}{assumed true prevalence of pfhrp2 deletions. Input as
 proportion between 0 and 1.}
 
-\item{ICC, Deff}{assumed true intra-cluster correlation or design effect. Only
-one of these must be defined, the other must be \code{NULL}.}
+\item{ICC}{assumed true intra-cluster correlation (ICC), between 0 and 1.}
 
 \item{prevalence_threshold}{threshold used in decision-making. Input as
 proportion between 0 and 1.}
