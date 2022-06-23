@@ -172,7 +172,7 @@ estimate_power <- function(clusters, total_samples, prevalence, ICC = NULL,
                                total_samples = total_samples,
                                prevalence = prevalence,
                                ICC = ICC) %>%
-    dplyr::mutate(Deff = 1 + (clusters - 1) * ICC,
+    dplyr::mutate(Deff = 1 + (total_samples - 1) * ICC,
                   n_correct = 0)
   
   # loop through parameter combinations
