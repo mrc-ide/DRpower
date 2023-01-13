@@ -1,5 +1,16 @@
 
 #------------------------------------------------
+# produce Clopper-Pearson upper and lower intervals
+#' @noRd
+
+ClopperPearson <- function(n_success, n_total, alpha = 0.05) {
+  p_lower <- qbeta(p = alpha / 2, shape1 = n_success, shape2 = n_total - n_success + 1)
+  p_upper <- qbeta(p = 1 - alpha / 2, shape1 = n_success + 1, shape2 = n_total - n_success)
+  ret <- c(lower = p_lower, upper = p_upper)
+  return(ret)
+}
+
+#------------------------------------------------
 #' @title Estimate prevalence of pfhrp2 deletions from clustered data
 #'
 #' @description Takes raw counts of pfhrp2 deletions in multiple clusters (e.g.

@@ -12,8 +12,79 @@
 #' @usage lhs \%>\% rhs
 NULL
 
+
 #------------------------------------------------
-# apply Simpson's rule to interpolate betwee a series of node x- and y-values.
+# reparameterisation of the beta-binomial distribution in terms of a mean (p)
+# and an intra-cluster correlation coefficient (rho). Deals with special cases
+# that simplify to the binomial or bernoulli distributions
+#' @importFrom extraDistr dbbinom
+#' @importFrom stats dbinom
+#' @noRd
+
+dbbinom_reparam <- function(k, m, p, rho, log_on = TRUE) {
+  if ((rho == 0) || (m == 1)) {
+    # simplifies to binomial distribution
+    ret <- dbinom(x = k, size = m, prob = p, log = TRUE)
+    
+  } else if (rho == 1) {
+    # likelihood still positive whenever k == 0 or k == m
+    n <- length(k)
+    ret <- rep(-Inf, n)
+    ret[k == 0] <- log(1 - p)
+    ret[k == m] <- log(p)
+    
+  } else {
+    if (p == 0) {
+      # likelihood 1 whenever k == 0
+      n <- length(k)
+      ret <- rep(-Inf, n)
+      ret[k == 0] <- 0
+      
+    } else if (p == 1) {
+      # likelihood 1 whenever k == m
+      n <- length(k)
+      ret <- rep(-Inf, n)
+      ret[k == m] <- 0
+      
+    } else {
+      # beta-binomial distribution
+      alpha <- p * (1 - rho) / rho
+      beta <- (1 - p) * (1 - rho) / rho
+      ret <- extraDistr::dbbinom(x = k, size = m, alpha = alpha, beta = beta, log = TRUE)
+      
+    }
+  }
+  if (!log_on) {
+    ret <- exp(ret)
+  }
+  return(ret)
+}
+
+#------------------------------------------------
+# draw from reparameterisation of the beta-binomial distribution in terms of a
+# mean (p) and an intra-cluster correlation coefficient (rho). Deals with
+# special cases that simplify to the binomial distribution
+#' @importFrom extraDistr rbbinom
+#' @importFrom stats rbinom
+#' @noRd
+
+rbbinom_reparam <- function(n, m, p, rho) {
+  if ((rho == 0) || (m == 1)) {
+    # simplifies to binomial distribution
+    ret <- rbinom(n = n, size = m, prob = p)
+    
+  } else {
+    # beta-binomial distribution
+    alpha <- p * (1 - rho) / rho
+    beta <- (1 - p) * (1 - rho) / rho
+    ret <- extraDistr::rbbinom(n = n, size = m, alpha = alpha, beta = beta)
+    
+  }
+  return(ret)
+}
+
+#------------------------------------------------
+# apply Simpson's rule to interpolate between a series of node x- and y-values.
 # New values are calcualted at x_new, which is allowed to project beyond the
 # range of the nodes, in which case values are extrapolated from the last
 # quadratic fit (not recommended for anything other than very short distances)
@@ -97,92 +168,10 @@ solve_Simpsons_area <- function(a, b, fa, fm, fb, target_area) {
   # there should be exactly one root within the interval
   w <- which((Re(roots) > a) & (Re(roots) < b))
   if (length(w) != 1) {
-    stop("could not find single root to cubic in Simpson's rule within the defined interval")
+    stop("could not find single root to cubic expression in Simpson's rule within the defined interval")
   }
   ret <- Re(roots)[w]
   
   return(ret)
 }
-
-#------------------------------------------------
-# reparameterisation of the beta-binomial distribution in terms of a mean (p)
-# and an intra-cluster correlation coefficient (rho). Deals with special cases
-# that simplify to the binomial or bernoulli distributions
-#' @importFrom extraDistr dbbinom
-#' @importFrom stats dbinom
-#' @noRd
-
-dbbinom_reparam <- function(k, m, p, rho, log_on = TRUE) {
-  if ((rho == 0) || (m == 1)) {
-    # simplifies to binomial distribution
-    ret <- dbinom(x = k, size = m, prob = p, log = TRUE)
-    
-  } else if (rho == 1) {
-    # likelihood still positive whenever k == 0 or k == m
-    n <- length(k)
-    ret <- rep(-Inf, n)
-    ret[k == 0] <- log(1 - p)
-    ret[k == m] <- log(p)
-    
-  } else {
-    if (p == 0) {
-      # likelihood 1 whenever k == 0
-      n <- length(k)
-      ret <- rep(-Inf, n)
-      ret[k == 0] <- 0
-      
-    } else if (p == 1) {
-      # likelihood 1 whenever k == m
-      n <- length(k)
-      ret <- rep(-Inf, n)
-      ret[k == m] <- 0
-      
-    } else {
-      # beta-binomial distribution
-      alpha <- p * (1 - rho) / rho
-      beta <- (1 - p) * (1 - rho) / rho
-      ret <- extraDistr::dbbinom(x = k, size = m, alpha = alpha, beta = beta, log = TRUE)
-      
-    }
-  }
-  if (!log_on) {
-    ret <- exp(ret)
-  }
-  return(ret)
-}
-
-#------------------------------------------------
-# draw from reparameterisation of the beta-binomial distribution in terms of a
-# mean (p) and an intra-cluster correlation coefficient (rho). Deals with
-# special cases that simplify to the binomial distribution
-#' @importFrom extraDistr rbbinom
-#' @importFrom stats rbinom
-#' @noRd
-
-rbbinom_reparam <- function(n, m, p, rho) {
-  if ((rho == 0) || (m == 1)) {
-    # simplifies to binomial distribution
-    ret <- rbinom(n = n, size = m, prob = p)
-    
-  } else {
-    # beta-binomial distribution
-    alpha <- p * (1 - rho) / rho
-    beta <- (1 - p) * (1 - rho) / rho
-    ret <- extraDistr::rbbinom(n = n, size = m, alpha = alpha, beta = beta)
-    
-  }
-  return(ret)
-}
-
-#------------------------------------------------
-# produce Clopper-Pearson upper and lower intervals
-#' @noRd
-
-ClopperPearson <- function(n_success, n_total, alpha = 0.05) {
-  p_lower <- qbeta(p = alpha / 2, shape1 = n_success, shape2 = n_total - n_success + 1)
-  p_upper <- qbeta(p = 1 - alpha / 2, shape1 = n_success + 1, shape2 = n_total - n_success)
-  ret <- c(lower = p_lower, upper = p_upper)
-  return(ret)
-}
-
 
