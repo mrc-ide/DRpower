@@ -175,3 +175,4 @@ solve_Simpsons_area <- function(a, b, fa, fm, fb, target_area) {
   return(ret)
 }
 
+

@@ -838,9 +838,16 @@ get_credible_prevalence <- function(n, N, alpha = 0.05,
   which_interval_lower <- which(interval_cumsum  > target_area_lower)[1]
   which_interval_upper <- which(interval_cumsum  > target_area_upper)[1]
   
+  
   # find the remaining area in each interval
   area_remaining_lower <- target_area_lower - c(0, interval_cumsum)[which_interval_lower]
   area_remaining_upper <- target_area_upper - c(0, interval_cumsum)[which_interval_upper]
+  
+  #print(c(which_interval_lower, which_interval_upper))
+  #print(interval_cumsum)
+  #print(c(target_area_lower, target_area_upper))
+  #print(c(area_remaining_lower, area_remaining_upper))
+  
   
   # solve for lower and upper CrIs
   CrI_lower <- solve_Simpsons_area(a = node_left[which_interval_lower],
@@ -859,4 +866,60 @@ get_credible_prevalence <- function(n, N, alpha = 0.05,
   
   # return
   return(c(lower = CrI_lower, upper = CrI_upper))
+}
+
+########################################
+#                                      #
+#   Rcpp-BASED METHODS                 #
+#                                      #
+########################################
+
+#------------------------------------------------
+#' @title Rcpp implementation of \code{get_credible_prevalence()}
+#'
+#' @description Equivalent to \code{get_credible_prevalence()} in functionality,
+#'   but implemented in Rcpp for speed.
+#'
+#' @inheritParams get_credible_prevalence
+#'
+#' @export
+
+get_credible_prevalence_fast <- function(n, N, alpha = 0.05,
+                                         prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
+                                         prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 1.0) {
+  
+  # check inputs
+  assert_vector_pos_int(n)
+  assert_single_pos_int(N)
+  assert_single_bounded(alpha)
+  assert_single_pos(prior_prev_shape1, zero_allowed = FALSE)
+  assert_single_pos(prior_prev_shape2, zero_allowed = FALSE)
+  assert_single_pos(prior_ICC_shape1, zero_allowed = FALSE)
+  assert_single_pos(prior_ICC_shape2, zero_allowed = FALSE)
+  
+  # define number of intervals and GQ nodes used in integration
+  GQ_intervals <- 10
+  GQ_nodes <- 5
+  gq <- statmod::gauss.quad(GQ_nodes)
+  
+  # get arguments into list
+  args_params <- list(n = n, N = rep(N, length(n)), alpha = alpha,
+                      prior_prev_shape1 = prior_prev_shape1,
+                      prior_prev_shape2 = prior_prev_shape2,
+                      prior_ICC_shape1 = prior_ICC_shape1,
+                      prior_ICC_shape2 = prior_ICC_shape2,
+                      GQ_intervals = GQ_intervals,
+                      GQ_nodes = GQ_nodes,
+                      GQ_node_pos = 0.5*(gq$nodes + 1),
+                      GQ_node_weights = gq$weights)
+  
+  # R functions to pass to C++
+  args_functions <- list(solve_Simpsons_area = solve_Simpsons_area)
+  
+  # run efficient C++ function
+  output_raw <- get_credible_prevalence_cpp(args_params, args_functions)
+  
+  # return
+  names(output_raw) <- c("lower", "upper")
+  return(output_raw)
 }
