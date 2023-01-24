@@ -69,7 +69,7 @@ dbbinom_reparam <- function(k, m, p, rho, log_on = TRUE) {
 #' @noRd
 
 rbbinom_reparam <- function(n, m, p, rho) {
-  if ((rho == 0) || (m == 1)) {
+  if (rho == 0) {
     # simplifies to binomial distribution
     ret <- rbinom(n = n, size = m, prob = p)
     

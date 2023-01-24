@@ -14,7 +14,6 @@ Rcpp::NumericVector get_credible_prevalence_cpp(Rcpp::List args_params, Rcpp::Li
 double get_marginal_p_max(const std::vector<int> &k,
                           const std::vector<int> &m,
                           int GQ_intervals, int GQ_nodes,
-                          double precision_limit,
                           double prior_p_shape1, double prior_p_shape2,
                           double prior_rho_shape1, double prior_rho_shape2,
                           const std::vector<double> &GQ_node_pos,
@@ -32,14 +31,13 @@ double get_marginal_p_bound(const std::vector<int> &k, const std::vector<int> &m
                             const std::vector<double> &GQ_node_weights,
                             std::vector<double> &dummy_vec,
                             double p_lower, double p_upper,
-                            double target_ll, double precision_limit);
+                            double target_ll);
 
 //------------------------------------------------
 // TODO
 double loglike_marginal_p(const std::vector<int> &k,
                           const std::vector<int> &m,
                           double p, int n_intervals, int n_nodes,
-                          double precision_limit,
                           double prior_p_shape1, double prior_p_shape2,
                           double prior_rho_shape1, double prior_rho_shape2,
                           const std::vector<double> &GQ_node_pos,
@@ -59,7 +57,7 @@ double get_rho_bound(const std::vector<int> &k, const std::vector<int> &m, doubl
                      double prior_p_shape1, double prior_p_shape2,
                      double prior_rho_shape1, double prior_rho_shape2,
                      double rho_lower, double rho_upper,
-                     double target_ll, double precision_limit);
+                     double target_ll);
 
 //------------------------------------------------
 // TODO

@@ -24,10 +24,10 @@ loglike_joint_Vp <- function(k, m, p, rho,
   
   # if the same value of k is present many times (for the same corresponding
   # value of m) then we should only compute the likelihood once and raise to the
-  # appropriate power. Do this by determining the unique values of k and the
-  # number of times they are present (the weight). Note, this only applies when
-  # m is a single value over all clusters, as here there is a decent chance of
-  # duplication
+  # appropriate power rather than repeating the same calculation. Do this by
+  # determining the unique values of k and the number of times they are present
+  # (the weight). Note, this only applies when m is a single value over all
+  # clusters as here there is a decent chance of duplication
   if (length(m) == 1) {
     k_unique <- sort(unique(k))
     k_weights <- as.vector(table(k))
@@ -98,10 +98,10 @@ loglike_joint_Vrho <- function(k, m, p, rho,
   
   # if the same value of k is present many times (for the same corresponding
   # value of m) then we should only compute the likelihood once and raise to the
-  # appropriate power. Do this by determining the unique values of k and the
-  # number of times they are present (the weight). Note, this only applies when
-  # m is a single value over all clusters, as here there is a decent chance of
-  # duplication
+  # appropriate power rather than repeating the same calculation. Do this by
+  # determining the unique values of k and the number of times they are present
+  # (the weight). Note, this only applies when m is a single value over all
+  # clusters as here there is a decent chance of duplication
   if (length(m) == 1) {
     k_unique <- sort(unique(k))
     k_weights <- as.vector(table(k))
@@ -111,13 +111,13 @@ loglike_joint_Vrho <- function(k, m, p, rho,
   }
   
   # main use-case: p between 0 and 1
-  if (p != 0 && p != 1) {
+  if ((p != 0) && (p != 1)) {
     
     # beta-binomial distribution
     alpha <- p * (1 - rho) / rho
     beta <- (1 - p) * (1 - rho) / rho
     ret_mat <- mapply(function(i) {
-      k_weights[i] * extraDistr::dbbinom(x = k_unique[i], size = m, alpha = alpha, beta = beta, log = TRUE)
+      k_weights[i] * extraDistr::dbbinom(x = k_unique[i], size = m[i], alpha = alpha, beta = beta, log = TRUE)
     }, seq_along(k_unique))
     
     # deal with special cases of rho=0 and rho=1
@@ -393,18 +393,37 @@ loglike_marginal_rho_Gauss_Vrho <- Vectorize(loglike_marginal_rho_Gauss, vectori
 #' @importFrom graphics abline
 #' @noRd
 
-loglike_marginal_p_Gauss <- function(k, m, p, n_intervals = 10, n_nodes = 5,
-                                     precision_limit = 6*log(10),
+loglike_marginal_p_Gauss <- function(k, m, p, n_intervals = 20, n_nodes = 10,
                                      prior_p_shape1 = 1, prior_p_shape2 = 1,
                                      prior_rho_shape1 = 1, prior_rho_shape2 = 1,
                                      debug_on = FALSE) {
   
-  # if m == 1 then likelihood simplifies to a Bernoulli in p. rho does not
-  # feature, therefore marginalising over joint is equivalent to marginalising
-  # over the prior
-  if (m == 1) {
-    ret <- sum(k == 1) * log(p) + sum(k == 0) * log(1 - p)
-    return(ret)
+  # fixed parameters
+  bound_scale <- 12
+  
+  # if p=0 then likelihood is 1 if k=0, or 0 otherwise. Marginalising over rho
+  # does not change this (assume this is true even for rho=0, even though
+  # strictly undefined). Equivalent argument for p=1
+  if (p == 0) {
+    if (all(k == 0)) {
+      if (prior_rho_shape1 == 1) {
+        return(log(prior_rho_shape2))
+      } else {
+        return(-Inf)
+      }
+    } else {
+      return(-Inf)
+    }
+  } else if (p == 1) {
+    if (all(k == m)) {
+      if (prior_rho_shape2 == 1) {
+        return(log(prior_rho_shape1))
+      } else {
+        return(-Inf)
+      }
+    } else {
+      return(-Inf)
+    }
   }
   
   # get maximum of distribution
@@ -414,25 +433,33 @@ loglike_marginal_p_Gauss <- function(k, m, p, n_intervals = 10, n_nodes = 5,
                    prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2)
   }, lower = 0, upper = 1, method = "Brent")
   
-  # get lower and upper bounds at which distribution is a factor
-  # exp(precision_limit) smaller than the maximum we just found. We will only
-  # integrate over this interval as it contains nearly all the probability mass
-  bound_lower <- optim(0, function(rho) {
+  # get values to the left and right at which the distribution is exacty half
+  # the maximum
+  half_ml_left <- optim(0, function(rho) {
     ll <- loglike_joint(k, m, p = p, rho = rho,
                         prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
                         prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2)
-    abs(ll + ml$value + precision_limit)
+    abs(ll + ml$value + log(2))
   }, lower = 0, upper = ml$par, method = "Brent")
   
-  bound_upper <- optim(1, function(rho) {
+  half_ml_right <- optim(1, function(rho) {
     ll <- loglike_joint(k, m, p = p, rho = rho,
                         prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
                         prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2)
-    abs(ll + ml$value + precision_limit)
+    abs(ll + ml$value + log(2))
   }, lower = ml$par, upper = 1, method = "Brent")
   
-  # get lower and upper bounds
-  bounds <- c(bound_lower$par, bound_upper$par)
+  # define integration bounds by looking a fixed multiple of the distances just
+  # identified either side of the maximum
+  delta_left <- ml$par - half_ml_left$par
+  delta_right <- half_ml_right$par - ml$par
+  bounds <- ml$par + bound_scale*c(-delta_left, delta_right)
+  bounds[1] <- max(bounds[1], 0)
+  bounds[2] <- min(bounds[2], 1)
+  
+  bounds <- c(0, 1)
+  #print(ml$par)
+  #print(bounds)
   
   # get GQ nodes and weights for the standard [-1,1] interval, and transform to
   # apply to each of our new sub-intervals
@@ -450,6 +477,7 @@ loglike_marginal_p_Gauss <- function(k, m, p, n_intervals = 10, n_nodes = 5,
   
   # perform quadrature, take logs, and put scaling factor back in
   ret <- ll_max + log(sum(weights_trans * exp(ll - ll_max)))
+  
   
   # debug distribution of rho
   if (debug_on) {
@@ -732,12 +760,15 @@ get_credible_prevalence <- function(n, N, alpha = 0.05,
   # declaration but I have made the design choice to put them here instead to
   # keep things as simple as possible for the user. Advanced users may want to
   # make their own version of this function and fiddle with these arguments
-  precision_limit <- 6*log(10)
   n_intervals <- 40
   
   # check inputs
   assert_vector_pos_int(n)
-  assert_single_pos_int(N)
+  assert_vector_pos_int(N)
+  if (length(N) == 1) {
+    N <- rep(N, length(n))
+  }
+  assert_same_length(n, N, message = "N must be either a single value (all clusters the same size) or a vector with the same length as n")
   assert_single_bounded(alpha)
   assert_single_pos(prior_prev_shape1, zero_allowed = FALSE)
   assert_single_pos(prior_prev_shape2, zero_allowed = FALSE)
@@ -753,25 +784,31 @@ get_credible_prevalence <- function(n, N, alpha = 0.05,
                               prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
   }, lower = 0, upper = 1, method = "Brent")
   
-  # get lower and upper bounds at which distribution is a factor
-  # exp(precision_limit) smaller than the maximum we just found. We will only
-  # integrate over this interval as it contains nearly all the probability mass
-  bound_lower <- optim(0, function(p) {
+  # get values to the left and right at which the distribution is exacty half
+  # the maximum
+  half_ml_left <- optim(0, function(p) {
     ll <- loglike_marginal_p_Gauss(k = n, m = N, p = p,
                                    prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
                                    prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
-    abs(ll + ml$value + precision_limit)
+    abs(ll + ml$value + log(2))
   }, lower = 0, upper = ml$par, method = "Brent")
   
-  bound_upper <- optim(1, function(p) {
+  half_ml_right <- optim(1, function(p) {
     ll <- loglike_marginal_p_Gauss(k = n, m = N, p = p,
                                    prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
                                    prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
-    abs(ll + ml$value + precision_limit)
+    abs(ll + ml$value + log(2))
   }, lower = ml$par, upper = 1, method = "Brent")
   
-  # define bounds
-  bounds <- c(bound_lower$par, bound_upper$par)
+  # define integration bounds by looking a fixed multiple of the distances just
+  # identified either side of the maximum
+  delta_left <- ml$par - half_ml_left$par
+  delta_right <- half_ml_right$par - ml$par
+  bounds <- ml$par + 6*c(-delta_left, delta_right)
+  bounds[1] <- max(bounds[1], 0)
+  bounds[2] <- min(bounds[2], 1)
+  
+  #print(bounds)
   
   # define interval width
   node_interval <- diff(bounds) / n_intervals
@@ -803,7 +840,7 @@ get_credible_prevalence <- function(n, N, alpha = 0.05,
     # loglike_marginal_p_Gauss(k = n, m = N, p = 0.1,
     #                            prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
     #                            prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2,
-    #                            debug_on = TRUE, precision_limit = 6*log(10))
+    #                            debug_on = TRUE)
     
     # get posterior distribution of rho using marginalisation via trapezoidal rule
     p_vec <- seq(bounds[1], bounds[2], l = 201)
@@ -823,6 +860,7 @@ get_credible_prevalence <- function(n, N, alpha = 0.05,
     plot(p_vec, exp(ll_marginal_trap + ml$value), type = "l", lwd = 3)
     lines(p_vec, exp(ll_marginal_Gauss + ml$value), col = 2)
     points(node_pos, f_node, col = 3, pch = 20)
+    points(node_mids, f_mids, col = 6, pch = 20)
     lines(p_vec, ll_Simpsons, lty = 2, col = 3, lwd = 1)
   }
   
@@ -838,16 +876,9 @@ get_credible_prevalence <- function(n, N, alpha = 0.05,
   which_interval_lower <- which(interval_cumsum  > target_area_lower)[1]
   which_interval_upper <- which(interval_cumsum  > target_area_upper)[1]
   
-  
   # find the remaining area in each interval
   area_remaining_lower <- target_area_lower - c(0, interval_cumsum)[which_interval_lower]
   area_remaining_upper <- target_area_upper - c(0, interval_cumsum)[which_interval_upper]
-  
-  #print(c(which_interval_lower, which_interval_upper))
-  #print(interval_cumsum)
-  #print(c(target_area_lower, target_area_upper))
-  #print(c(area_remaining_lower, area_remaining_upper))
-  
   
   # solve for lower and upper CrIs
   CrI_lower <- solve_Simpsons_area(a = node_left[which_interval_lower],
