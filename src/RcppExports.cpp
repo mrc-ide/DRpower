@@ -11,20 +11,31 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // get_credible_prevalence_cpp
-Rcpp::NumericVector get_credible_prevalence_cpp(Rcpp::List args_params, Rcpp::List args_functions);
-RcppExport SEXP _DRpower_get_credible_prevalence_cpp(SEXP args_paramsSEXP, SEXP args_functionsSEXP) {
+Rcpp::List get_credible_prevalence_cpp(Rcpp::List args_params);
+RcppExport SEXP _DRpower_get_credible_prevalence_cpp(SEXP args_paramsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::List >::type args_params(args_paramsSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type args_functions(args_functionsSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_credible_prevalence_cpp(args_params, args_functions));
+    rcpp_result_gen = Rcpp::wrap(get_credible_prevalence_cpp(args_params));
+    return rcpp_result_gen;
+END_RCPP
+}
+// get_credible_ICC_cpp
+Rcpp::List get_credible_ICC_cpp(Rcpp::List args_params);
+RcppExport SEXP _DRpower_get_credible_ICC_cpp(SEXP args_paramsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type args_params(args_paramsSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_credible_ICC_cpp(args_params));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_DRpower_get_credible_prevalence_cpp", (DL_FUNC) &_DRpower_get_credible_prevalence_cpp, 2},
+    {"_DRpower_get_credible_prevalence_cpp", (DL_FUNC) &_DRpower_get_credible_prevalence_cpp, 1},
+    {"_DRpower_get_credible_ICC_cpp", (DL_FUNC) &_DRpower_get_credible_ICC_cpp, 1},
     {NULL, NULL, 0}
 };
 

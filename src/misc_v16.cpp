@@ -18,7 +18,9 @@ using namespace std;
 // add two numbers together in log space. One number (but not both) is allowed
 // to be -inf.
 double log_sum(double logA, double logB) {
-  if (logA - logB > 100) {
+  if (!isfinite(logA) && !isfinite(logB)) {
+    return -INFINITY;
+  } else if (logA - logB > 100) {
     return(logA);
   } else if (logB - logA > 100) {
     return(logB);

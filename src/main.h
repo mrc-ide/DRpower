@@ -5,64 +5,47 @@
 #include "misc_v16.h"
 
 //------------------------------------------------
-// TODO
-// [[Rcpp::export]]
-Rcpp::NumericVector get_credible_prevalence_cpp(Rcpp::List args_params, Rcpp::List args_functions);
+double dbbinom_reparam(const std::vector<int> &n,
+                       const std::vector<int> &N,
+                       double p, double rho);
 
 //------------------------------------------------
-// TODO
-double get_marginal_p_max(const std::vector<int> &k,
-                          const std::vector<int> &m,
-                          int GQ_intervals, int GQ_nodes,
-                          double prior_p_shape1, double prior_p_shape2,
-                          double prior_rho_shape1, double prior_rho_shape2,
-                          const std::vector<double> &GQ_node_pos,
-                          const std::vector<double> &GQ_node_weights,
-                          std::vector<double> &dummy_vec,
-                          double &final_loglike);
-
-//------------------------------------------------
-// TODO
-double get_marginal_p_bound(const std::vector<int> &k, const std::vector<int> &m,
-                            int GQ_intervals, int GQ_nodes,
-                            double prior_p_shape1, double prior_p_shape2,
-                            double prior_rho_shape1, double prior_rho_shape2,
-                            const std::vector<double> &GQ_node_pos,
-                            const std::vector<double> &GQ_node_weights,
-                            std::vector<double> &dummy_vec,
-                            double p_lower, double p_upper,
-                            double target_ll);
-
-//------------------------------------------------
-// TODO
-double loglike_marginal_p(const std::vector<int> &k,
-                          const std::vector<int> &m,
-                          double p, int n_intervals, int n_nodes,
-                          double prior_p_shape1, double prior_p_shape2,
-                          double prior_rho_shape1, double prior_rho_shape2,
-                          const std::vector<double> &GQ_node_pos,
-                          const std::vector<double> &GQ_node_weights,
-                          std::vector<double> &dummy_vec);
-
-//------------------------------------------------
-// TODO
-double get_rho_max(const std::vector<int> &k, const std::vector<int> &m, double p,
-                   double prior_p_shape1, double prior_p_shape2,
-                   double prior_rho_shape1, double prior_rho_shape2,
-                   double &final_loglike);
-
-//------------------------------------------------
-// TODO
-double get_rho_bound(const std::vector<int> &k, const std::vector<int> &m, double p,
-                     double prior_p_shape1, double prior_p_shape2,
-                     double prior_rho_shape1, double prior_rho_shape2,
-                     double rho_lower, double rho_upper,
-                     double target_ll);
-
-//------------------------------------------------
-// TODO
-double loglike_joint(const std::vector<int> &k,
-                     const std::vector<int> &m,
+double loglike_joint(const std::vector<int> &n,
+                     const std::vector<int> &N,
                      double p, double rho,
                      double prior_p_shape1, double prior_p_shape2,
                      double prior_rho_shape1, double prior_rho_shape2);
+
+//------------------------------------------------
+double loglike_marginal_p(const std::vector<int> &n,
+                          const std::vector<int> &N,
+                          double p, int n_intervals,
+                          double prior_p_shape1, double prior_p_shape2,
+                          double prior_rho_shape1, double prior_rho_shape2,
+                          std::vector<double> &x0, std::vector<double> &xm,
+                          std::vector<double> &x1, std::vector<double> &log_y0,
+                          std::vector<double> &log_ym, std::vector<double> &log_y1,
+                          std::vector<double> &log_area_trap,
+                          std::vector<double> &log_area_Simp,
+                          std::vector<double> &log_area_diff);
+
+//------------------------------------------------
+double loglike_marginal_rho(const std::vector<int> &n,
+                            const std::vector<int> &N,
+                            double rho, int n_intervals,
+                            double prior_p_shape1, double prior_p_shape2,
+                            double prior_rho_shape1, double prior_rho_shape2,
+                            std::vector<double> &x0, std::vector<double> &xm,
+                            std::vector<double> &x1, std::vector<double> &log_y0,
+                            std::vector<double> &log_ym, std::vector<double> &log_y1,
+                            std::vector<double> &log_area_trap,
+                            std::vector<double> &log_area_Simp,
+                            std::vector<double> &log_area_diff);
+
+//------------------------------------------------
+// [[Rcpp::export]]
+Rcpp::List get_credible_prevalence_cpp(Rcpp::List args_params);
+
+//------------------------------------------------
+// [[Rcpp::export]]
+Rcpp::List get_credible_ICC_cpp(Rcpp::List args_params);

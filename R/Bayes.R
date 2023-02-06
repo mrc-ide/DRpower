@@ -1,507 +1,346 @@
 
 #------------------------------------------------
+# reparameterisation of the beta-binomial distribution in terms of a mean (p)
+# and an intra-cluster correlation coefficient (rho). Deals with special cases
+# that simplify to the binomial or bernoulli distributions
+#' @importFrom extraDistr dbbinom
+#' @importFrom stats dbinom
+#' @noRd
+
+dbbinom_reparam <- function(k, m, p, rho, log_on = TRUE) {
+  
+  if (rho == 0) {
+    # simplifies to binomial distribution
+    ret <- dbinom(x = k, size = m, prob = p, log = TRUE)
+    
+  } else if (rho == 1) {
+    # likelihood still positive whenever k == 0 or k == m
+    n <- length(k)
+    ret <- rep(-Inf, n)
+    ret[k == 0] <- log(1 - p)
+    ret[k == m] <- log(p)
+    
+  } else {
+    if (p == 0) {
+      # likelihood 1 whenever k == 0
+      n <- length(k)
+      ret <- rep(-Inf, n)
+      ret[k == 0] <- 0
+      
+    } else if (p == 1) {
+      # likelihood 1 whenever k == m
+      n <- length(k)
+      ret <- rep(-Inf, n)
+      ret[k == m] <- 0
+      
+    } else {
+      # beta-binomial distribution
+      alpha <- p * (1 - rho) / rho
+      beta <- (1 - p) * (1 - rho) / rho
+      ret <- extraDistr::dbbinom(x = k, size = m, alpha = alpha, beta = beta, log = TRUE)
+      
+    }
+  }
+  if (!log_on) {
+    ret <- exp(ret)
+  }
+  return(ret)
+}
+
+#------------------------------------------------
+# draw from reparameterisation of the beta-binomial distribution in terms of a
+# mean (p) and an intra-cluster correlation coefficient (rho). Deals with
+# special cases that simplify to the binomial distribution
+#' @importFrom extraDistr rbbinom
+#' @importFrom stats rbinom
+#' @noRd
+
+rbbinom_reparam <- function(n, m, p, rho) {
+  if (rho == 0) {
+    # simplifies to binomial distribution
+    ret <- rbinom(n = n, size = m, prob = p)
+    
+  } else {
+    # beta-binomial distribution
+    alpha <- p * (1 - rho) / rho
+    beta <- (1 - p) * (1 - rho) / rho
+    ret <- extraDistr::rbbinom(n = n, size = m, alpha = alpha, beta = beta)
+    
+  }
+  return(ret)
+}
+
+#------------------------------------------------
 # joint probability of data multiplied by priors on p and rho
 #' @importFrom stats dbeta
 #' @noRd
 
-loglike_joint <- function(k, m, p, rho,
+loglike_joint <- function(n, N, p, rho,
                           prior_p_shape1 = 1, prior_p_shape2 = 1,
                           prior_rho_shape1 = 1, prior_rho_shape2 = 1) {
   
   dbeta(p, shape1 = prior_p_shape1, shape2 = prior_p_shape2, log = TRUE) +
     dbeta(rho, shape1 = prior_rho_shape1, shape2 = prior_rho_shape2, log = TRUE) +
-    sum(dbbinom_reparam(k = k, m = m, p = p, rho = rho, log_on = TRUE))
+    sum(dbbinom_reparam(k = n, m = N, p = p, rho = rho, log_on = TRUE))
 }
 
 #------------------------------------------------
-# loglike_joint taking p as a vector
+# calculate log(area) via trapezoidal rule
 #' @noRd
 
-loglike_joint_Vp <- function(k, m, p, rho,
-                             prior_p_shape1 = 1, prior_p_shape2 = 1,
-                             prior_rho_shape1 = 1, prior_rho_shape2 = 1) {
-  n_clust <- length(k)
-  
-  # if the same value of k is present many times (for the same corresponding
-  # value of m) then we should only compute the likelihood once and raise to the
-  # appropriate power rather than repeating the same calculation. Do this by
-  # determining the unique values of k and the number of times they are present
-  # (the weight). Note, this only applies when m is a single value over all
-  # clusters as here there is a decent chance of duplication
-  if (length(m) == 1) {
-    k_unique <- sort(unique(k))
-    k_weights <- as.vector(table(k))
+get_area_single_trap <- function(x0, x1, log_y0, log_y1) {
+  if ((log_y0 == -Inf) & (log_y1 == -Inf)) {
+    ret <- -Inf
+  } else if (log_y0 > log_y1) {
+    ret <- log_y0 + log(1 + exp(log_y1 - log_y0)) + log(x1 - x0) - log(2)
   } else {
-    k_unique <- k
-    k_weights <- rep(1, length(k))
+    ret <- log_y1 + log(1 + exp(log_y0 - log_y1)) + log(x1 - x0) - log(2)
   }
-  
-  # main use-case: rho between 0 and 1
-  if ((rho != 0) && (rho != 1)) {
-    
-    # beta-binomial distribution
-    alpha <- p * (1 - rho) / rho
-    beta <- (1 - p) * (1 - rho) / rho
-    ret_mat <- mapply(function(i) {
-      k_weights[i] * extraDistr::dbbinom(x = k_unique[i], size = m, alpha = alpha, beta = beta, log = TRUE)
-    }, seq_along(k_unique))
-    
-    # sum over rows
-    ret <- rowSums(ret_mat)
-    
-    # deal with special cases of p=0 and p=1
-    ret[p == 0] <- ifelse(all(k == 0), 0, -Inf)
-    ret[p == 1] <- ifelse(all(k == m), 0, -Inf)
-    
-    # apply priors
-    ret <- ret + dbeta(p, shape1 = prior_p_shape1, shape2 = prior_p_shape2, log = TRUE) +
-      dbeta(rho, shape1 = prior_rho_shape1, shape2 = prior_rho_shape2, log = TRUE)
-    
-    return(ret)
-    
-  } else {
-    
-    if (rho == 0) {
-      # ordinary binomial distribution
-      ret_mat <- mapply(function(i) {
-        k_weights[i] * dbinom(x = k_unique[i], size = m, prob = p, log = TRUE)
-      }, seq_along(k_unique))
-      
-      ret <- rowSums(ret_mat)
-      return(ret)
-      
-    } else {
-      # clusters must have prevalence 0 or 1
-      if (any((k != 0) & (k != m))) {
-        ret <- rep(-Inf, length(p))
-        return(ret)
-      } else{
-        n1 <- sum(k == m)
-        ret <- dbinom(x = n1, size = n_clust, prob = p, log = TRUE)
-        return(ret)
-      }
-    }
-    
-  }
-}
-
-#------------------------------------------------
-# loglike_joint taking rho as a vector
-#' @importFrom extraDistr dbbinom
-#' @importFrom stats dbinom
-#' @noRd
-
-loglike_joint_Vrho <- function(k, m, p, rho,
-                                prior_p_shape1 = 1, prior_p_shape2 = 1,
-                                prior_rho_shape1 = 1, prior_rho_shape2 = 1) {
-  n_clust <- length(k)
-  
-  # if the same value of k is present many times (for the same corresponding
-  # value of m) then we should only compute the likelihood once and raise to the
-  # appropriate power rather than repeating the same calculation. Do this by
-  # determining the unique values of k and the number of times they are present
-  # (the weight). Note, this only applies when m is a single value over all
-  # clusters as here there is a decent chance of duplication
-  if (length(m) == 1) {
-    k_unique <- sort(unique(k))
-    k_weights <- as.vector(table(k))
-  } else {
-    k_unique <- k
-    k_weights <- rep(1, length(k))
-  }
-  
-  # main use-case: p between 0 and 1
-  if ((p != 0) && (p != 1)) {
-    
-    # beta-binomial distribution
-    alpha <- p * (1 - rho) / rho
-    beta <- (1 - p) * (1 - rho) / rho
-    ret_mat <- mapply(function(i) {
-      k_weights[i] * extraDistr::dbbinom(x = k_unique[i], size = m[i], alpha = alpha, beta = beta, log = TRUE)
-    }, seq_along(k_unique))
-    
-    # deal with special cases of rho=0 and rho=1
-    ret_mat[rho == 0,] <- k_weights * dbinom(x = k_unique, size = m, prob = p, log = TRUE)
-    ret_mat[rho == 1,] <- -Inf
-    if (any(k_unique == 0)) {
-      ret_mat[rho == 1, k_unique == 0] <- k_weights[k_unique == 0] * log(1 - p)
-    }
-    if (any(k_unique == m)) {
-      ret_mat[rho == 1, k == m] <- k_weights[k_unique == m] * log(p)
-    }
-    
-    # sum log-likelihood and apply prior
-    ret <- rowSums(ret_mat) + dbeta(p, shape1 = prior_p_shape1, shape2 = prior_p_shape2, log = TRUE) +
-      dbeta(rho, shape1 = prior_rho_shape1, shape2 = prior_rho_shape2, log = TRUE)
-    
-    return(ret)
-    
-  } else {
-    
-    # deal with special case of p=0 and p=1
-    ret <- rep(-Inf, length(rho))
-    if (p == 0) {
-      if (all(k == 0)) {
-        ret <- rep(0, length(rho))
-      }
-    } else {
-      if (all(k == m)) {
-        ret <- rep(0, length(rho))
-      }
-    }
-    return(ret)
-    
-  }
-}
-
-###############################################
-#                                             #
-#   TRAPEZOIDAL-BASED METHODS                 #
-#                                             #
-###############################################
-
-#------------------------------------------------
-# marginal log-likelihood of rho, integrated over p via trapezoidal rule. This
-# is a brute force method that is slow and inaccurate compared with more elegant
-# approaches, but has the advantage of being very simple and so can be used to
-# check other methods
-#' @noRd
-
-loglike_marginal_rho_trap <- function(k, m, rho, p_breaks = seq(0, 1, l = 201),
-                                      prior_p_shape1 = 1, prior_p_shape2 = 1,
-                                      prior_rho_shape1 = 1, prior_rho_shape2 = 1) {
-  
-  # evaluate log-likelihood
-  ll <- loglike_joint_Vp(k = k, m = m, p = p_breaks, rho = rho,
-                         prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
-                         prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2)
-  
-  # special case if all -Inf
-  if (all(ll == -Inf)) {
-    return(-Inf)
-  }
-  
-  # subtract max log-likelihood and exponentiate
-  ll_max <- max(ll)
-  integrand <- exp(ll - ll_max)
-  
-  # calculate AUC via trapezoidal rule
-  trap <- sum(0.5 * (integrand[-length(integrand)] + integrand[-1]) * diff(p_breaks))
-  
-  # add back in constant and return
-  ret <- ll_max + log(trap)
   return(ret)
 }
 
 #------------------------------------------------
-# loglike_marginal_rho_trap vectorized in terms of rho
+# calculate log(area) given two points and a midpoint via trapezoidal rule
 #' @noRd
 
-loglike_marginal_rho_trap_Vrho <- Vectorize(loglike_marginal_rho_trap, vectorize.args = "rho")
-
-#------------------------------------------------
-# marginal log-likelihood of p, integrated over rho via trapezoidal rule (the
-# same caveats apply as for loglike_marginal_rho_trap())
-#' @noRd
-
-loglike_marginal_p_trap <- function(k, m, p, rho_breaks = seq(0, 1, l = 201),
-                                    prior_p_shape1 = 1, prior_p_shape2 = 1,
-                                    prior_rho_shape1 = 1, prior_rho_shape2 = 1) {
-  
-  # evaluate log-likelihood
-  ll <- loglike_joint_Vrho(k = k, m = m, p = p, rho = rho_breaks,
-                           prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
-                           prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2)
-  
-  # special case if all -Inf
-  if (all(ll == -Inf)) {
+get_area_trap <- function(x0, x1, log_y0, log_ym, log_y1) {
+  l1 <- get_area_single_trap(x0, 0.5*(x0 + x1), log_y0, log_ym)
+  l2 <- get_area_single_trap(0.5*(x0 + x1), x1, log_ym, log_y1)
+  if ((l1 == -Inf) & (l2 == -Inf)) {
     return(-Inf)
+  } else if (l1 > l2) {
+    ret <- l1 + log(1 + exp(l2 - l1))
+  } else {
+    ret <- l2 + log(1 + exp(l1 - l2))
   }
-  
-  # subtract max log-likelihood and exponentiate
-  ll_max <- max(ll)
-  integrand <- exp(ll - ll_max)
-  
-  # calculate AUC via trapezoidal rule
-  trap <- sum(0.5 * (integrand[-length(integrand)] + integrand[-1]) * diff(rho_breaks))
-  
-  # add back in constant and return
-  ret <- ll_max + log(trap)
   return(ret)
 }
 
 #------------------------------------------------
-# loglike_marginal_p_trap vectorized in terms of p
+# calculate log(area) via Simpson's rule
 #' @noRd
 
-loglike_marginal_p_trap_Vp <- Vectorize(loglike_marginal_p_trap, vectorize.args = "p")
-
-#------------------------------------------------
-# get credible intervals for rho via trapezoidal rule. This is a brute force
-# method that is slow and inaccurate compared with more elegant approaches, but
-# has the advantage of being very simple and so can be used to check other
-# methods
-#' @noRd
-
-get_CrI_rho_trap <- function(k, m, p_breaks = seq(0, 1, l = 201), rho_breaks = seq(0, 1, l = 201),
-                             alpha = 0.05, prior_p_shape1 = 1, prior_p_shape2 = 1,
-                             prior_rho_shape1 = 1, prior_rho_shape2 = 1) {
-  
-  # evaluate marginal log-likelihood over range of rho values
-  ll <- loglike_marginal_rho_trap_Vrho(k = k, m = m, rho = rho_breaks, p_breaks = p_breaks,
-                                       prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
-                                       prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2)
-  
-  # rescale and calculate cumulative integral via trapezoidal rule
-  integrand <- exp(ll - max(ll))
-  trap <- c(0, cumsum(0.5 * (integrand[-length(integrand)] + integrand[-1]) * diff(rho_breaks)))
-  trap_max <- trap[length(trap)]
-  
-  # get lower and upper CrIs
-  w_lower <- which((trap / trap_max) > (alpha / 2))[1]
-  CrI_lower <- rho_breaks[w_lower]
-  
-  w_upper <- which((trap / trap_max) > (1 - alpha / 2))[1]
-  CrI_upper <- rho_breaks[w_upper]
-  
-  # return
-  return(c(lower = CrI_lower, upper = CrI_upper))
+get_area_Simp <- function(x0, x1, log_y0, log_ym, log_y1) {
+  if ((log_y0 == -Inf) & (log_ym == -Inf) & (log_y1 == -Inf)) {
+    ret <- -Inf
+  } else {
+    z <- c(log_y0, log(4) + log_ym, log_y1)
+    ret <- max(z) + log(sum(exp(z - max(z)))) + log(x1 - x0) - log(6)
+  }
+  return(ret)
 }
 
 #------------------------------------------------
-# get credible intervals for p via trapezoidal rule (the same caveats apply as
-# for get_CrI_rho_trap())
+# calculate A coefficient in the Simpson's rule formula Ax^2 + Bx + C
 #' @noRd
 
-get_CrI_p_trap <- function(k, m, p_breaks = seq(0, 1, l = 201), rho_breaks = seq(0, 1, l = 201),
-                           alpha = 0.05, prior_p_shape1 = 1, prior_p_shape2 = 1,
-                           prior_rho_shape1 = 1, prior_rho_shape2 = 1) {
-  
-  # evaluate marginal log-likelihood over range of rho values
-  ll <- loglike_marginal_p_trap_Vp(k = k, m = m, p = p_breaks, rho_breaks = rho_breaks,
-                                   prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
-                                   prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2)
-  
-  # rescale and calculate cumulative integral via trapezoidal rule
-  integrand <- exp(ll - max(ll))
-  trap <- c(0, cumsum(0.5 * (integrand[-length(integrand)] + integrand[-1]) * diff(rho_breaks)))
-  trap_max <- trap[length(trap)]
-  
-  # get lower and upper CrIs
-  w_lower <- which((trap / trap_max) > (alpha / 2))[1]
-  CrI_lower <- p_breaks[w_lower]
-  
-  w_upper <- which((trap / trap_max) > (1 - alpha / 2))[1]
-  CrI_upper <- p_breaks[w_upper]
-  
-  # return
-  return(c(lower = CrI_lower, upper = CrI_upper))
+get_Simp_A <- function(x0, xm, x1, log_y0, log_ym, log_y1) {
+  c1 <- xm - x0
+  c2 <- x1 - xm
+  (c1*(exp(log_y1) - exp(log_ym)) - c2*(exp(log_ym) - exp(log_y0))) / (c1*(x1^2 - xm^2) + c2*(x0^2 - xm^2))
 }
 
-
-##############################################
-#                                            #
-#   QUADRATURE-BASED METHODS                 #
-#                                            #
-##############################################
-
 #------------------------------------------------
-# marginal log-likelihood of rho, integrated over p by Gaussian quadrature on a
-# range of sub-intervals
-#' @importFrom statmod gauss.quad
-#' @importFrom graphics abline
+# calculate B coefficient in the Simpson's rule formula Ax^2 + Bx + C
 #' @noRd
 
-loglike_marginal_rho_Gauss <- function(k, m, rho, n_intervals = 10, n_nodes = 5,
-                                       precision_limit = 6*log(10),
-                                       prior_p_shape1 = 1, prior_p_shape2 = 1,
-                                       prior_rho_shape1 = 1, prior_rho_shape2 = 1,
-                                       debug_on = FALSE) {
+get_Simp_B <- function(x0, xm, log_y0, log_ym, A) {
+  (exp(log_ym) - exp(log_y0) + A*(x0^2 - xm^2)) / (xm - x0)
+}
+
+#------------------------------------------------
+# calculate C coefficient in the Simpson's rule formula Ax^2 + Bx + C
+#' @noRd
+
+get_Simp_C <- function(x0, log_y0, A, B) {
+  exp(log_y0) - A*x0^2 - B*x0
+}
+
+#------------------------------------------------
+# get lowest point in Simpson's rule quadratic
+#' @noRd
+
+get_Simp_lowest <- function(x0, x1, A, B, C) {
   
-  # get maximum of distribution
-  ml <- optim(0.5, function(p) {
-    -loglike_joint(k, m, p = p, rho = rho,
-                   prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
-                   prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2)
-  }, lower = 0, upper = 1, method = "Brent")
+  # get y-values at both ends of interval and point of inflection
+  y0 <- A*x0^2 + B*x0 + C
+  y1 <- A*x1^2 + B*x1 + C
+  x_inflect <- -B / (2*A)
+  y_inflect <- A*x_inflect^2 + B*x_inflect + C
   
-  # get lower and upper bounds at which distribution is a factor
-  # exp(precision_limit) smaller than the maximum we just found. We will only
-  # integrate over this interval as it contains nearly all the probability mass
-  bound_lower <- optim(0, function(p) {
-    ll <- loglike_joint(k, m, p = p, rho = rho,
-                        prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
-                        prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2)
-    abs(ll + ml$value + precision_limit)
-  }, lower = 0, upper = ml$par, method = "Brent")
+  # get smallest y-value. This can be the point of inflection as long as this is
+  # inside the range [x0, x1]
+  y_min <- pmin(y0, y1)
+  w <- which((x_inflect > x0) & (x_inflect < x1))
+  if (any(w)) {
+    y_min[w] <- y_inflect[w]
+  }
   
-  bound_upper <- optim(1, function(p) {
-    ll <- loglike_joint(k, m, p = p, rho = rho,
-                        prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
-                        prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2)
-    abs(ll + ml$value + precision_limit)
-  }, lower = ml$par, upper = 1, method = "Brent")
+  return(y_min)
+}
+
+#------------------------------------------------
+# calculate gradient at midpoint and over range, and return absolute relative
+# difference in gradient
+#' @noRd
+
+compare_grad <- function(x0, x1, log_y0, log_y1, log_ym, log_ydelta, delta) {
+  if (!is.finite(log_y0) && !is.finite(log_ym) && !is.finite(log_y1)) {
+    ret <- 1
+  } else {
+    grad_mid <- (exp(log_ydelta) - exp(log_ym)) / delta;
+    grad_trap <- (exp(log_y1) - exp(log_y0)) / (x1 - x0);
+    ret <- abs(grad_mid / grad_trap - 1.0);
+  }
+  return(ret)
+}
+
+#------------------------------------------------
+# general function for performing integration via adaptive quadrature
+# n_intervals must be 2 or greater
+#' @noRd
+
+adaptive_quadrature <- function(f1, n_intervals, left, right, debug_on = FALSE) {
   
-  # get lower and upper bounds
-  bounds <- c(bound_lower$par, bound_upper$par)
+  delta <- 1e-4
   
-  # get GQ nodes and weights for the standard [-1,1] interval, and transform to
-  # apply to each of our new sub-intervals
-  gq <- statmod::gauss.quad(n_nodes)
-  int_width <- diff(bounds) / n_intervals
-  int_midpoints <- seq(bounds[1] + 0.5*int_width, bounds[2] - 0.5*int_width, l = n_intervals)
-  nodes_trans <- 0.5*int_width*gq$nodes + rep(int_midpoints, each = n_nodes)
-  weights_trans <- rep(int_width/2 * gq$weights, times = n_intervals)
+  # initialise empty dataframe for storing results
+  df_quad <- data.frame(x0 = rep(NA, n_intervals), xm = NA, x1 = NA,
+                        log_y0 = NA, log_ym = NA, log_y1 = NA,
+                        log_area_trap = NA, log_area_Simp = NA,
+                        log_area_diff = NA)
   
-  # calculate loglikelihood and take out largest value as scaling factor
-  ll <- loglike_joint_Vp(k = k, m = m, p = nodes_trans, rho = rho,
-                         prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
-                         prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2)
-  ll_max <- max(ll)
+  # create first interval
+  df_quad$x0[1] <- left
+  df_quad$x1[1] <- right
+  df_quad$xm[1] <- 0.5*(df_quad$x0[1] + df_quad$x1[1])
+  df_quad$log_y0[1] <- f1(df_quad$x0[1])
+  df_quad$log_y1[1] <- f1(df_quad$x1[1])
+  df_quad$log_ym[1] <- f1(df_quad$xm[1])
+  df_quad$log_area_trap[1] <- get_area_trap(df_quad$x0[1], df_quad$x1[1], df_quad$log_y0[1], df_quad$log_ym[1], df_quad$log_y1[1])
+  df_quad$log_area_Simp[1] <- get_area_Simp(df_quad$x0[1], df_quad$x1[1], df_quad$log_y0[1], df_quad$log_ym[1], df_quad$log_y1[1])
+  df_quad$log_area_diff[1] <- 0
   
-  # perform quadrature, take logs, and put scaling factor back in
-  ret <- ll_max + log(sum(weights_trans * exp(ll - ll_max)))
+  # loop through remaining n_intervals
+  for (i in 2:n_intervals) {
+    
+    # find largest discrepancy in area
+    w <- which.max(df_quad$log_area_diff)
+    
+    # create new entry and modify existing
+    df_quad$x0[i] <- df_quad$xm[w]
+    df_quad$x1[i] <- df_quad$x1[w]
+    df_quad$xm[i] <- 0.5*(df_quad$x0[i] + df_quad$x1[i])
+    df_quad$log_y0[i] <- df_quad$log_ym[w]
+    df_quad$log_y1[i] <- df_quad$log_y1[w]
+    df_quad$log_ym[i] <- f1(df_quad$xm[i])
+    df_quad$log_area_trap[i] <- get_area_trap(df_quad$x0[i], df_quad$x1[i], df_quad$log_y0[i], df_quad$log_ym[i], df_quad$log_y1[i])
+    df_quad$log_area_Simp[i] <- get_area_Simp(df_quad$x0[i], df_quad$x1[i], df_quad$log_y0[i], df_quad$log_ym[i], df_quad$log_y1[i])
+    log_ydelta = f1(df_quad$xm[i] + delta);
+    grad_diff <- compare_grad(df_quad$x0[i], df_quad$x1[i], df_quad$log_y0[i], df_quad$log_y1[i], df_quad$log_ym[i], log_ydelta, delta);
+    df_quad$log_area_diff[i] <- grad_diff * abs(exp(df_quad$log_area_trap[i]) - exp(df_quad$log_area_Simp[i]))
+    
+    df_quad$x1[w] = df_quad$xm[w]
+    df_quad$xm[w] = 0.5*(df_quad$x0[w] + df_quad$x1[w])
+    df_quad$log_y1[w] <- df_quad$log_ym[w]
+    df_quad$log_ym[w] <- f1(df_quad$xm[w])
+    df_quad$log_area_trap[w] <- get_area_trap(df_quad$x0[w], df_quad$x1[w], df_quad$log_y0[w], df_quad$log_ym[w], df_quad$log_y1[w])
+    df_quad$log_area_Simp[w] <- get_area_Simp(df_quad$x0[w], df_quad$x1[w], df_quad$log_y0[w], df_quad$log_ym[w], df_quad$log_y1[w])
+    log_ydelta = f1(df_quad$xm[w] + delta);
+    grad_diff <- compare_grad(df_quad$x0[w], df_quad$x1[w], df_quad$log_y0[w], df_quad$log_y1[w], df_quad$log_ym[w], log_ydelta, delta);
+    df_quad$log_area_diff[w] <- grad_diff * abs(exp(df_quad$log_area_trap[w]) - exp(df_quad$log_area_Simp[w]))
+  }
   
-  # debug distribution of p
+  # debug distribution
   if (debug_on) {
     
-    # get conditional distribution of p on a fine grid
-    p_vec <- seq(bounds[1], bounds[2], l = 1001)
-    ll_grid <- loglike_joint_Vp(k = k, m = m, p = p_vec, rho = rho,
-                                prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
-                                prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2)
+    # get in order of x0
+    df_order <- df_quad[order(df_quad$x0),]
     
-    # plot
-    plot(p_vec, exp(ll_grid), type = "l", lwd = 3)
-    points(nodes_trans, exp(ll), col = 3, pch = 20)
-    abline(v = seq(bounds[1], bounds[2], l = n_intervals + 1), col = 2, lt = 2)
+    # calculate Simpson's rule coefficients
+    df_order$A <- get_Simp_A(df_order$x0, df_order$xm, df_order$x1, df_order$log_y0, df_order$log_ym, df_order$log_y1)
+    df_order$B <- get_Simp_B(df_order$x0, df_order$xm, df_order$log_y0, df_order$log_ym, df_order$A)
+    df_order$C <- get_Simp_C(df_order$x0, df_order$log_y0, df_order$A, df_order$B)
+    
+    # create sequence of x-values spanning total range and evaluate function by
+    # brute force over this range
+    x <- seq(left, right, l = 201)
+    fx <- rep(NA, length(x))
+    for (i in seq_along(x)) {
+      fx[i] <- exp(f1(x[i]))
+    }
+    
+    # calculate interpolated curve from Simpson's rule
+    z <- findInterval(x, vec = df_order$x0)
+    fx2 <- df_order$A[z]*x^2 + df_order$B[z]*x + df_order$C[z]
+    
+    # produce plot
+    plot(x, fx, type = 'l', lwd = 2)
+    lines(x, fx2, col = 4, lty = 2, lwd = 2)
+    points(df_quad$x0, exp(df_quad$log_y0), pch = 20, cex = 0.75)
+    points(df_quad$xm, exp(df_quad$log_ym), pch = 20, cex = 0.75, col = 4)
+    segments(df_quad$x0, exp(df_quad$log_y0), df_quad$xm, exp(df_quad$log_ym), col = 2)
+    segments(df_quad$xm, exp(df_quad$log_ym), df_quad$x1, exp(df_quad$log_y1), col = 2)
+    abline(h = 0, lty = 3)
   }
   
-  return(ret)
+  return(df_quad)
 }
 
 #------------------------------------------------
-# loglike_marginal_rho_Gauss vectorized in terms of rho
+# marginal log-likelihood of rho, integrated over p by adaptive quadrature
 #' @noRd
 
-loglike_marginal_rho_Gauss_Vrho <- Vectorize(loglike_marginal_rho_Gauss, vectorize.args = "rho")
-
-#------------------------------------------------
-# marginal log-likelihood of p, integrated over rho by Gaussian quadrature on a
-# range of sub-intervals
-#' @importFrom statmod gauss.quad
-#' @importFrom graphics abline
-#' @noRd
-
-loglike_marginal_p_Gauss <- function(k, m, p, n_intervals = 20, n_nodes = 10,
-                                     prior_p_shape1 = 1, prior_p_shape2 = 1,
-                                     prior_rho_shape1 = 1, prior_rho_shape2 = 1,
-                                     debug_on = FALSE) {
+loglike_marginal_rho <- function(n, N, rho, n_intervals = 40,
+                                 prior_p_shape1 = 1, prior_p_shape2 = 1,
+                                 prior_rho_shape1 = 1, prior_rho_shape2 = 1,
+                                 debug_on = FALSE) {
   
-  # fixed parameters
-  bound_scale <- 12
   
-  # if p=0 then likelihood is 1 if k=0, or 0 otherwise. Marginalising over rho
-  # does not change this (assume this is true even for rho=0, even though
-  # strictly undefined). Equivalent argument for p=1
-  if (p == 0) {
-    if (all(k == 0)) {
-      if (prior_rho_shape1 == 1) {
-        return(log(prior_rho_shape2))
-      } else {
-        return(-Inf)
-      }
-    } else {
-      return(-Inf)
-    }
-  } else if (p == 1) {
-    if (all(k == m)) {
-      if (prior_rho_shape2 == 1) {
-        return(log(prior_rho_shape1))
-      } else {
-        return(-Inf)
-      }
-    } else {
-      return(-Inf)
-    }
+  # integrate over rho via adaptive quadrature
+  df_quad <- adaptive_quadrature(f1 = function(p) {
+    loglike_joint(n = n, N = N, p = p, rho = rho, prior_p_shape1 = prior_p_shape1,
+                  prior_p_shape2 = prior_p_shape2, prior_rho_shape1 = prior_rho_shape1,
+                  prior_rho_shape2 = prior_rho_shape2)
+  }, n_intervals = n_intervals, left = 0, right = 1, debug_on = debug_on)
+  
+  # sum area over intervals
+  log_area <- df_quad$log_area_S
+  if (all(log_area == -Inf)) {
+    log_area_sum <- -Inf
+  } else {
+    log_area_sum <- max(log_area) + log(sum(exp(log_area - max(log_area))))
   }
   
-  # get maximum of distribution
-  ml <- optim(0.5, function(rho) {
-    -loglike_joint(k, m, p = p, rho = rho,
-                   prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
-                   prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2)
-  }, lower = 0, upper = 1, method = "Brent")
-  
-  # get values to the left and right at which the distribution is exacty half
-  # the maximum
-  half_ml_left <- optim(0, function(rho) {
-    ll <- loglike_joint(k, m, p = p, rho = rho,
-                        prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
-                        prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2)
-    abs(ll + ml$value + log(2))
-  }, lower = 0, upper = ml$par, method = "Brent")
-  
-  half_ml_right <- optim(1, function(rho) {
-    ll <- loglike_joint(k, m, p = p, rho = rho,
-                        prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
-                        prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2)
-    abs(ll + ml$value + log(2))
-  }, lower = ml$par, upper = 1, method = "Brent")
-  
-  # define integration bounds by looking a fixed multiple of the distances just
-  # identified either side of the maximum
-  delta_left <- ml$par - half_ml_left$par
-  delta_right <- half_ml_right$par - ml$par
-  bounds <- ml$par + bound_scale*c(-delta_left, delta_right)
-  bounds[1] <- max(bounds[1], 0)
-  bounds[2] <- min(bounds[2], 1)
-  
-  bounds <- c(0, 1)
-  #print(ml$par)
-  #print(bounds)
-  
-  # get GQ nodes and weights for the standard [-1,1] interval, and transform to
-  # apply to each of our new sub-intervals
-  gq <- statmod::gauss.quad(n_nodes)
-  int_width <- diff(bounds) / n_intervals
-  int_midpoints <- seq(bounds[1] + 0.5*int_width, bounds[2] - 0.5*int_width, l = n_intervals)
-  nodes_trans <- 0.5*int_width*gq$nodes + rep(int_midpoints, each = n_nodes)
-  weights_trans <- rep(int_width/2 * gq$weights, times = n_intervals)
-  
-  # calculate loglikelihood and take out largest value as scaling factor
-  ll <- loglike_joint_Vrho(k = k, m = m, p = p, rho = nodes_trans,
-                           prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
-                           prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2)
-  ll_max <- max(ll)
-  
-  # perform quadrature, take logs, and put scaling factor back in
-  ret <- ll_max + log(sum(weights_trans * exp(ll - ll_max)))
-  
-  
-  # debug distribution of rho
-  if (debug_on) {
-    
-    # get conditional distribution of rho on a fine grid
-    rho_vec <- seq(bounds[1], bounds[2], l = 1001)
-    ll_grid <- loglike_joint_Vrho(k = k, m = m, p = p, rho = rho_vec,
-                                  prior_p_shape1 = prior_p_shape1, prior_p_shape2 = prior_p_shape2,
-                                  prior_rho_shape1 = prior_rho_shape1, prior_rho_shape2 = prior_rho_shape2)
-    
-    # plot
-    plot(rho_vec, exp(ll_grid), type = "l", lwd = 3)
-    points(nodes_trans, exp(ll), col = 3, pch = 20)
-    abline(v = seq(bounds[1], bounds[2], l = n_intervals + 1), col = 2, lt = 2)
-  }
-  
-  return(ret)
+  return(log_area_sum)
 }
 
 #------------------------------------------------
-# loglike_marginal_p_Gauss vectorized in terms of p
+# marginal log-likelihood of p, integrated over rho by adaptive quadrature
 #' @noRd
 
-loglike_marginal_p_Gauss_Vp <- Vectorize(loglike_marginal_p_Gauss, vectorize.args = "p")
+loglike_marginal_p <- function(n, N, p, n_intervals = 40,
+                               prior_p_shape1 = 1, prior_p_shape2 = 1,
+                               prior_rho_shape1 = 1, prior_rho_shape2 = 1,
+                               debug_on = FALSE) {
+  
+  # integrate over rho via adaptive quadrature
+  df_quad <- adaptive_quadrature(f1 = function(rho) {
+    loglike_joint(n = n, N = N, p = p, rho = rho, prior_p_shape1 = prior_p_shape1,
+                  prior_p_shape2 = prior_p_shape2, prior_rho_shape1 = prior_rho_shape1,
+                  prior_rho_shape2 = prior_rho_shape2)
+  }, n_intervals = n_intervals, left = 0, right = 1, debug_on = debug_on)
+  
+  # sum area over intervals
+  log_area <- df_quad$log_area_S
+  if (all(log_area == -Inf)) {
+    log_area_sum <- -Inf
+  } else {
+    log_area_sum <- max(log_area) + log(sum(exp(log_area - max(log_area))))
+  }
+  
+  return(log_area_sum)
+}
 
 #------------------------------------------------
 #' @title Get credible intervals for the intra-cluster correlation coefficient
@@ -557,145 +396,56 @@ loglike_marginal_p_Gauss_Vp <- Vectorize(loglike_marginal_p_Gauss, vectorize.arg
 get_credible_ICC <- function(n, N, alpha = 0.05,
                              prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
                              prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 1.0,
-                             debug_on = FALSE, debug_grid = 1e3) {
-  
-  # define a series of arguments that ordinarily would be part of the function
-  # declaration, but I have made the design choice to put them here instead to
-  # keep things as simple as possible for the user. Advanced users may want to
-  # make their own version of this function and fiddle with these arguments
-  precision_limit <- 6*log(10)
-  n_intervals <- 40
+                             n_intervals = 20, debug_on = FALSE) {
   
   # check inputs
   assert_vector_pos_int(n)
-  assert_single_pos_int(N)
-  assert_single_bounded(alpha)
-  assert_single_pos(prior_prev_shape1, zero_allowed = FALSE)
-  assert_single_pos(prior_prev_shape2, zero_allowed = FALSE)
-  assert_single_pos(prior_ICC_shape1, zero_allowed = FALSE)
-  assert_single_pos(prior_ICC_shape2, zero_allowed = FALSE)
+  assert_vector_pos_int(N)
+  if (length(N) == 1) {
+    N <- rep(N, length(n))
+  }
+  assert_same_length(n, N, message = "N must be either a single value (all clusters the same size) or a vector with the same length as n")
+  assert_single_bounded(alpha, inclusive_left = FALSE, inclusive_right = FALSE)
+  assert_single_bounded(prior_prev_shape1, left = 1, right = 1e3)
+  assert_single_bounded(prior_prev_shape2, left = 1, right = 1e3)
+  assert_single_bounded(prior_ICC_shape1, left = 1, right = 1e3)
+  assert_single_bounded(prior_ICC_shape2, left = 1, right = 1e3)
+  assert_vector_pos_int(n_intervals)
+  assert_greq(n_intervals, 5)
   assert_single_logical(debug_on)
-  assert_single_pos_int(debug_grid, zero_allowed = FALSE)
   
-  # if N == 1 then likelihood becomes independent of rho, therefore
-  # the posterior equals the prior and we can return CrIs exactly
-  if (N == 1) {
-    CrI_lower <- qbeta(p = alpha / 2, shape1 = prior_ICC_shape1, shape2 = prior_ICC_shape2)
-    CrI_upper <- qbeta(p = 1 - alpha / 2, shape1 = prior_ICC_shape1, shape2 = prior_ICC_shape2)
-    return(c(lower = CrI_lower, upper = CrI_upper))
-  }
+  # approximate distribution of rho via adaptive quadrature
+  df_quad <- adaptive_quadrature(f1 = function(rho) {
+    loglike_marginal_rho(n = n, N = N, rho = rho, n_intervals = n_intervals,
+                         prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
+                         prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
+  }, n_intervals = n_intervals, left = 0, right = 1, debug_on = debug_on)
   
-  # get maximum of distribution
-  ml <- optim(0.5, function(rho) {
-    -loglike_marginal_rho_Gauss(k = n, m = N, rho = rho,
-                                prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
-                                prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
-  }, lower = 0, upper = 1, method = "Brent")
+  # reorder in terms of increasing rho
+  df_quad <- df_quad[order(df_quad$x0),]
   
-  # get lower and upper bounds at which distribution is a factor
-  # exp(precision_limit) smaller than the maximum we just found. We will only
-  # integrate over this interval as it contains nearly all the probability mass
-  bound_lower <- optim(0, function(rho) {
-    ll <- loglike_marginal_rho_Gauss(k = n, m = N, rho = rho,
-                                     prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
-                                     prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
-    abs(ll + ml$value + precision_limit)
-  }, lower = 0, upper = ml$par, method = "Brent")
-  
-  bound_upper <- optim(1, function(rho) {
-    ll <- loglike_marginal_rho_Gauss(k = n, m = N, rho = rho,
-                                     prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
-                                     prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
-    abs(ll + ml$value + precision_limit)
-  }, lower = ml$par, upper = 1, method = "Brent")
-  
-  # define bounds
-  bounds <- c(bound_lower$par, bound_upper$par)
-  
-  # define interval width
-  node_interval <- diff(bounds) / n_intervals
-  
-  # define node points making up left, right, and midpoint of intervals
-  node_pos <- seq(bounds[1], bounds[2], l = n_intervals + 1)
-  node_left <- node_pos[-length(node_pos)]
-  node_right <- node_pos[-1]
-  node_mids <- (node_left + node_right) / 2
-  
-  # define integrand at these points. Note that ml$value is added back into this
-  # expression to avoid underflow issues. This means the integral we are
-  # computing is not the true marginal likelihood, but rather is multiplied by
-  # an arbitrary scalar. This does not matter for our purposes of constructing
-  # CrIs, as they will be in the same positions.
-  f_node <- exp(loglike_marginal_rho_Gauss_Vrho(k = n, m = N, rho = node_pos,
-                                                prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
-                                                prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2) + ml$value)
-  f_left <- f_node[-length(f_node)]
-  f_right <- f_node[-1]
-  f_mids <- exp(loglike_marginal_rho_Gauss_Vrho(k = n, m = N, rho = node_mids,
-                                                prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
-                                                prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2) + ml$value)
-  
-  # debug distribution of rho
-  if (debug_on) {
-    
-    #code to debug internal GQ integration function
-    # loglike_marginal_rho_Gauss(k = n, m = N, rho = 0.2,
-    #                            prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
-    #                            prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2,
-    #                            debug_on = TRUE, precision_limit = 6*log(10))
-    
-    # get posterior distribution of rho using marginalisation via trapezoidal rule
-    rho_vec <- seq(bound_lower$par, bound_upper$par, l = 201)
-    ll_marginal_trap <- loglike_marginal_rho_trap_Vrho(k = n, m = N, rho = rho_vec, p_breaks = seq(0, 1, l = debug_grid),
-                                                       prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
-                                                       prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
-    
-    # get the same distribution using marginalisation via Gaussian quadrature
-    ll_marginal_Gauss <- loglike_marginal_rho_Gauss_Vrho(k = n, m = N, rho = rho_vec,
-                                                         prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
-                                                         prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
-    
-    # get interpolation by Simpson's rule
-    ll_Simpsons <- get_Simpsons_curve(rho_vec, node_left, node_right, f_left, f_mids, f_right)
-    
-    # plot
-    plot(rho_vec, exp(ll_marginal_trap + ml$value), type = "l", lwd = 3)
-    lines(rho_vec, exp(ll_marginal_Gauss + ml$value), col = 2)
-    points(node_pos, f_node, col = 3, pch = 20)
-    lines(rho_vec, ll_Simpsons, lty = 2, col = 3, lwd = 1)
-  }
-  
-  # define area and cumulative area of each interval
-  interval_area <- node_interval / 6 * (f_left + 4*f_mids + f_right)
-  interval_cumsum <- cumsum(interval_area)
-  
-  # get target area of integral for lower and upper CrI
-  target_area_lower <- alpha / 2 * sum(interval_area)
-  target_area_upper <- (1 - alpha / 2) * sum(interval_area)
-  
-  # find which intervals these target areas fall within
-  which_interval_lower <- which(interval_cumsum  > target_area_lower)[1]
-  which_interval_upper <- which(interval_cumsum  > target_area_upper)[1]
-  
-  # find the remaining area in each interval
-  area_remaining_lower <- target_area_lower - c(0, interval_cumsum)[which_interval_lower]
-  area_remaining_upper <- target_area_upper - c(0, interval_cumsum)[which_interval_upper]
+  # normalise interval areas
+  log_area_Simp <- df_quad$log_area_Simp
+  log_area_sum <- max(log_area_Simp) + log(sum(exp(log_area_Simp - max(log_area_Simp))))
+  area <- exp(log_area_Simp - log_area_sum)
+  area_cs <- cumsum(area)
   
   # solve for lower and upper CrIs
-  CrI_lower <- solve_Simpsons_area(a = node_left[which_interval_lower],
-                                   b = node_right[which_interval_lower],
-                                   fa = f_left[which_interval_lower],
-                                   fm = f_mids[which_interval_lower],
-                                   fb = f_right[which_interval_lower],
-                                   target_area = area_remaining_lower)
+  w1 <- which(area_cs > alpha / 2)[1]
+  area_remaining1 <- alpha / 2 - (area_cs[w1] - area[w1])
+  CrI_lower <- solve_Simpsons_area(a = df_quad$x0[w1], b = df_quad$x1[w1],
+                                   fa = exp(df_quad$log_y0[w1] - log_area_sum),
+                                   fm = exp(df_quad$log_ym[w1] - log_area_sum),
+                                   fb = exp(df_quad$log_y1[w1] - log_area_sum),
+                                   target_area = area_remaining1)
   
-  CrI_upper <- solve_Simpsons_area(a = node_left[which_interval_upper],
-                                   b = node_right[which_interval_upper],
-                                   fa = f_left[which_interval_upper],
-                                   fm = f_mids[which_interval_upper],
-                                   fb = f_right[which_interval_upper],
-                                   target_area = area_remaining_upper)
-  
+  w2 <- which(area_cs > (1 - alpha / 2))[1]
+  area_remaining2 <- area_cs[w2] - (1 - alpha / 2)
+  CrI_upper <- solve_Simpsons_area(a = df_quad$x0[w2], b = df_quad$x1[w2],
+                                   fa = exp(df_quad$log_y0[w2] - log_area_sum),
+                                   fm = exp(df_quad$log_ym[w2] - log_area_sum),
+                                   fb = exp(df_quad$log_y1[w2] - log_area_sum),
+                                   target_area = area_remaining2)
   # return
   return(c(lower = CrI_lower, upper = CrI_upper))
 }
@@ -745,22 +495,11 @@ get_credible_ICC <- function(n, N, alpha = 0.05,
 #' @importFrom stats optim
 #' @importFrom graphics lines points
 #' @export
-#' @examples
-#' # define three clusters with different number of observed positive counts.
-#' # Try the default 95% CrI and a more stringent significance level
-#' get_credible_prevalence(n = c(2, 5, 4), N = 10)
-#' get_credible_prevalence(n = c(2, 5, 4), N = 10, alpha = 0.01)
 
 get_credible_prevalence <- function(n, N, alpha = 0.05,
                                     prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
                                     prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 1.0,
-                                    debug_on = FALSE, debug_grid = 1e3) {
-  
-  # define a series of arguments that ordinarily would be part of the function
-  # declaration but I have made the design choice to put them here instead to
-  # keep things as simple as possible for the user. Advanced users may want to
-  # make their own version of this function and fiddle with these arguments
-  n_intervals <- 40
+                                    n_intervals = 20, debug_on = FALSE) {
   
   # check inputs
   assert_vector_pos_int(n)
@@ -769,132 +508,47 @@ get_credible_prevalence <- function(n, N, alpha = 0.05,
     N <- rep(N, length(n))
   }
   assert_same_length(n, N, message = "N must be either a single value (all clusters the same size) or a vector with the same length as n")
-  assert_single_bounded(alpha)
-  assert_single_pos(prior_prev_shape1, zero_allowed = FALSE)
-  assert_single_pos(prior_prev_shape2, zero_allowed = FALSE)
-  assert_single_pos(prior_ICC_shape1, zero_allowed = FALSE)
-  assert_single_pos(prior_ICC_shape2, zero_allowed = FALSE)
+  assert_single_bounded(alpha, inclusive_left = FALSE, inclusive_right = FALSE)
+  assert_single_bounded(prior_prev_shape1, left = 1, right = 1e3)
+  assert_single_bounded(prior_prev_shape2, left = 1, right = 1e3)
+  assert_single_bounded(prior_ICC_shape1, left = 1, right = 1e3)
+  assert_single_bounded(prior_ICC_shape2, left = 1, right = 1e3)
+  assert_vector_pos_int(n_intervals)
+  assert_greq(n_intervals, 5)
   assert_single_logical(debug_on)
-  assert_single_pos_int(debug_grid, zero_allowed = FALSE)
   
-  # get maximum of distribution
-  ml <- optim(0.5, function(p) {
-    -loglike_marginal_p_Gauss(k = n, m = N, p = p,
-                              prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
-                              prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
-  }, lower = 0, upper = 1, method = "Brent")
+  # approximate distribution of p via adaptive quadrature
+  df_quad <- adaptive_quadrature(f1 = function(p) {
+    loglike_marginal_p(n = n, N = N, p = p, n_intervals = n_intervals,
+                       prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
+                       prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
+  }, n_intervals = n_intervals, left = 0, right = 1, debug_on = debug_on)
   
-  # get values to the left and right at which the distribution is exacty half
-  # the maximum
-  half_ml_left <- optim(0, function(p) {
-    ll <- loglike_marginal_p_Gauss(k = n, m = N, p = p,
-                                   prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
-                                   prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
-    abs(ll + ml$value + log(2))
-  }, lower = 0, upper = ml$par, method = "Brent")
+  # reorder in terms of increasing p
+  df_quad <- df_quad[order(df_quad$x0),]
   
-  half_ml_right <- optim(1, function(p) {
-    ll <- loglike_marginal_p_Gauss(k = n, m = N, p = p,
-                                   prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
-                                   prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
-    abs(ll + ml$value + log(2))
-  }, lower = ml$par, upper = 1, method = "Brent")
-  
-  # define integration bounds by looking a fixed multiple of the distances just
-  # identified either side of the maximum
-  delta_left <- ml$par - half_ml_left$par
-  delta_right <- half_ml_right$par - ml$par
-  bounds <- ml$par + 6*c(-delta_left, delta_right)
-  bounds[1] <- max(bounds[1], 0)
-  bounds[2] <- min(bounds[2], 1)
-  
-  #print(bounds)
-  
-  # define interval width
-  node_interval <- diff(bounds) / n_intervals
-  
-  # define node points making up left, right, and midpoint of intervals
-  node_pos <- seq(bounds[1], bounds[2], l = n_intervals + 1)
-  node_left <- node_pos[-length(node_pos)]
-  node_right <- node_pos[-1]
-  node_mids <- (node_left + node_right) / 2
-  
-  # define integrand at these points. Note that ml$value is added back into this
-  # expression to avoid underflow issues. This means the integral we are
-  # computing is not the true marginal likelihood, but rather is multiplied by
-  # an arbitrary scalar. This does not matter for our purposes of constructing
-  # CrIs, as they will be in the same positions.
-  f_node <- exp(loglike_marginal_p_Gauss_Vp(k = n, m = N, p = node_pos,
-                                            prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
-                                            prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2) + ml$value)
-  f_left <- f_node[-length(f_node)]
-  f_right <- f_node[-1]
-  f_mids <- exp(loglike_marginal_p_Gauss_Vp(k = n, m = N, p = node_mids,
-                                            prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
-                                            prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2) + ml$value)
-  
-  # debug distribution of p
-  if (debug_on) {
-    
-    # code to debug internal GQ integration function
-    # loglike_marginal_p_Gauss(k = n, m = N, p = 0.1,
-    #                            prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
-    #                            prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2,
-    #                            debug_on = TRUE)
-    
-    # get posterior distribution of rho using marginalisation via trapezoidal rule
-    p_vec <- seq(bounds[1], bounds[2], l = 201)
-    ll_marginal_trap <- loglike_marginal_p_trap_Vp(k = n, m = N, p = p_vec, rho_breaks = seq(0, 1, l = debug_grid),
-                                                   prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
-                                                   prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
-    
-    # get the same distribution using marginalisation via Gaussian quadrature
-    ll_marginal_Gauss <- loglike_marginal_p_Gauss_Vp(k = n, m = N, p = p_vec,
-                                                     prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
-                                                     prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
-    
-    # get interpolation by Simpson's rule
-    ll_Simpsons <- get_Simpsons_curve(p_vec, node_left, node_right, f_left, f_mids, f_right)
-    
-    # plot
-    plot(p_vec, exp(ll_marginal_trap + ml$value), type = "l", lwd = 3)
-    lines(p_vec, exp(ll_marginal_Gauss + ml$value), col = 2)
-    points(node_pos, f_node, col = 3, pch = 20)
-    points(node_mids, f_mids, col = 6, pch = 20)
-    lines(p_vec, ll_Simpsons, lty = 2, col = 3, lwd = 1)
-  }
-  
-  # define area and cumulative area of each interval
-  interval_area <- node_interval / 6 * (f_left + 4*f_mids + f_right)
-  interval_cumsum <- cumsum(interval_area)
-  
-  # get target area of integral for lower and upper CrI
-  target_area_lower <- alpha / 2 * sum(interval_area)
-  target_area_upper <- (1 - alpha / 2) * sum(interval_area)
-  
-  # find which intervals these target areas fall within
-  which_interval_lower <- which(interval_cumsum  > target_area_lower)[1]
-  which_interval_upper <- which(interval_cumsum  > target_area_upper)[1]
-  
-  # find the remaining area in each interval
-  area_remaining_lower <- target_area_lower - c(0, interval_cumsum)[which_interval_lower]
-  area_remaining_upper <- target_area_upper - c(0, interval_cumsum)[which_interval_upper]
+  # normalise interval areas
+  log_area_Simp <- df_quad$log_area_Simp
+  log_area_sum <- max(log_area_Simp) + log(sum(exp(log_area_Simp - max(log_area_Simp))))
+  area <- exp(log_area_Simp - log_area_sum)
+  area_cs <- cumsum(area)
   
   # solve for lower and upper CrIs
-  CrI_lower <- solve_Simpsons_area(a = node_left[which_interval_lower],
-                                   b = node_right[which_interval_lower],
-                                   fa = f_left[which_interval_lower],
-                                   fm = f_mids[which_interval_lower],
-                                   fb = f_right[which_interval_lower],
-                                   target_area = area_remaining_lower)
+  w1 <- which(area_cs > alpha / 2)[1]
+  area_remaining1 <- alpha / 2 - (area_cs[w1] - area[w1])
+  CrI_lower <- solve_Simpsons_area(a = df_quad$x0[w1], b = df_quad$x1[w1],
+                                   fa = exp(df_quad$log_y0[w1] - log_area_sum),
+                                   fm = exp(df_quad$log_ym[w1] - log_area_sum),
+                                   fb = exp(df_quad$log_y1[w1] - log_area_sum),
+                                   target_area = area_remaining1)
   
-  CrI_upper <- solve_Simpsons_area(a = node_left[which_interval_upper],
-                                   b = node_right[which_interval_upper],
-                                   fa = f_left[which_interval_upper],
-                                   fm = f_mids[which_interval_upper],
-                                   fb = f_right[which_interval_upper],
-                                   target_area = area_remaining_upper)
-  
+  w2 <- which(area_cs > (1 - alpha / 2))[1]
+  area_remaining2 <- area_cs[w2] - (1 - alpha / 2)
+  CrI_upper <- solve_Simpsons_area(a = df_quad$x0[w2], b = df_quad$x1[w2],
+                                   fa = exp(df_quad$log_y0[w2] - log_area_sum),
+                                   fm = exp(df_quad$log_ym[w2] - log_area_sum),
+                                   fb = exp(df_quad$log_y1[w2] - log_area_sum),
+                                   target_area = area_remaining2)
   # return
   return(c(lower = CrI_lower, upper = CrI_upper))
 }
@@ -909,7 +563,7 @@ get_credible_prevalence <- function(n, N, alpha = 0.05,
 #' @title Rcpp implementation of \code{get_credible_prevalence()}
 #'
 #' @description Equivalent to \code{get_credible_prevalence()} in functionality,
-#'   but implemented in Rcpp for speed.
+#'   but implemented in Rcpp for increased speed.
 #'
 #' @inheritParams get_credible_prevalence
 #'
@@ -917,40 +571,190 @@ get_credible_prevalence <- function(n, N, alpha = 0.05,
 
 get_credible_prevalence_fast <- function(n, N, alpha = 0.05,
                                          prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
-                                         prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 1.0) {
+                                         prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 1.0,
+                                         n_intervals = 20, debug_on = FALSE) {
   
   # check inputs
   assert_vector_pos_int(n)
-  assert_single_pos_int(N)
-  assert_single_bounded(alpha)
-  assert_single_pos(prior_prev_shape1, zero_allowed = FALSE)
-  assert_single_pos(prior_prev_shape2, zero_allowed = FALSE)
-  assert_single_pos(prior_ICC_shape1, zero_allowed = FALSE)
-  assert_single_pos(prior_ICC_shape2, zero_allowed = FALSE)
-  
-  # define number of intervals and GQ nodes used in integration
-  GQ_intervals <- 10
-  GQ_nodes <- 5
-  gq <- statmod::gauss.quad(GQ_nodes)
+  assert_vector_pos_int(N)
+  if (length(N) == 1) {
+    N <- rep(N, length(n))
+  }
+  assert_same_length(n, N, message = "N must be either a single value (all clusters the same size) or a vector with the same length as n")
+  assert_single_bounded(alpha, inclusive_left = FALSE, inclusive_right = FALSE)
+  assert_single_bounded(prior_prev_shape1, left = 1, right = 1e3)
+  assert_single_bounded(prior_prev_shape2, left = 1, right = 1e3)
+  assert_single_bounded(prior_ICC_shape1, left = 1, right = 1e3)
+  assert_single_bounded(prior_ICC_shape2, left = 1, right = 1e3)
+  assert_vector_pos_int(n_intervals)
+  assert_greq(n_intervals, 5)
+  assert_single_logical(debug_on)
   
   # get arguments into list
-  args_params <- list(n = n, N = rep(N, length(n)), alpha = alpha,
+  args_params <- list(n = n,
+                      N = rep(N, length(n)),
+                      alpha = alpha,
                       prior_prev_shape1 = prior_prev_shape1,
                       prior_prev_shape2 = prior_prev_shape2,
                       prior_ICC_shape1 = prior_ICC_shape1,
                       prior_ICC_shape2 = prior_ICC_shape2,
-                      GQ_intervals = GQ_intervals,
-                      GQ_nodes = GQ_nodes,
-                      GQ_node_pos = 0.5*(gq$nodes + 1),
-                      GQ_node_weights = gq$weights)
-  
-  # R functions to pass to C++
-  args_functions <- list(solve_Simpsons_area = solve_Simpsons_area)
+                      n_intervals = n_intervals)
   
   # run efficient C++ function
-  output_raw <- get_credible_prevalence_cpp(args_params, args_functions)
+  output_raw <- get_credible_prevalence_cpp(args_params)
+  df_quad <- as.data.frame(output_raw)
+  
+  # reorder in terms of increasing p
+  df_quad <- df_quad[order(df_quad$x0),]
+  
+  # normalise interval areas
+  log_area_Simp <- df_quad$log_area_Simp
+  log_area_sum <- max(log_area_Simp) + log(sum(exp(log_area_Simp - max(log_area_Simp))))
+  area <- exp(log_area_Simp - log_area_sum)
+  area_cs <- cumsum(area)
+  
+  # solve for lower and upper CrIs
+  w1 <- which(area_cs > alpha / 2)[1]
+  area_remaining1 <- alpha / 2 - (area_cs[w1] - area[w1])
+  CrI_lower <- solve_Simpsons_area(a = df_quad$x0[w1], b = df_quad$x1[w1],
+                                   fa = exp(df_quad$log_y0[w1] - log_area_sum),
+                                   fm = exp(df_quad$log_ym[w1] - log_area_sum),
+                                   fb = exp(df_quad$log_y1[w1] - log_area_sum),
+                                   target_area = area_remaining1)
+  
+  w2 <- which(area_cs > (1 - alpha / 2))[1]
+  area_remaining2 <- area_cs[w2] - (1 - alpha / 2)
+  CrI_upper <- solve_Simpsons_area(a = df_quad$x0[w2], b = df_quad$x1[w2],
+                                   fa = exp(df_quad$log_y0[w2] - log_area_sum),
+                                   fm = exp(df_quad$log_ym[w2] - log_area_sum),
+                                   fb = exp(df_quad$log_y1[w2] - log_area_sum),
+                                   target_area = area_remaining2)
+  
+  # debug distribution
+  if (debug_on) {
+    
+    # get in order of x0
+    df_order <- df_quad[order(df_quad$x0),]
+    
+    # calculate Simpson's rule coefficients
+    df_order$A <- get_Simp_A(df_order$x0, df_order$xm, df_order$x1, df_order$log_y0, df_order$log_ym, df_order$log_y1)
+    df_order$B <- get_Simp_B(df_order$x0, df_order$xm, df_order$log_y0, df_order$log_ym, df_order$A)
+    df_order$C <- get_Simp_C(df_order$x0, df_order$log_y0, df_order$A, df_order$B)
+    
+    # calculate interpolated curve from Simpson's rule
+    x <- seq(0, 1, l = 201)
+    z <- findInterval(x, vec = df_order$x0)
+    fx <- df_order$A[z]*x^2 + df_order$B[z]*x + df_order$C[z]
+    
+    # produce plot
+    plot(x, fx, type = 'l', col = 4, lty = 2, lwd = 1)
+    points(df_quad$x0, exp(df_quad$log_y0), pch = 20, cex = 0.75)
+    points(df_quad$xm, exp(df_quad$log_ym), pch = 20, cex = 0.75, col = 4)
+    segments(df_quad$x0, exp(df_quad$log_y0), df_quad$xm, exp(df_quad$log_ym), col = 2)
+    segments(df_quad$xm, exp(df_quad$log_ym), df_quad$x1, exp(df_quad$log_y1), col = 2)
+    abline(h = 0, lty = 3)
+  }
   
   # return
-  names(output_raw) <- c("lower", "upper")
-  return(output_raw)
+  return(c(lower = CrI_lower, upper = CrI_upper))
+}
+
+#------------------------------------------------
+#' @title Rcpp implementation of \code{get_credible_ICC()}
+#'
+#' @description Equivalent to \code{get_credible_ICC()} in functionality, but
+#'   implemented in Rcpp for increased speed.
+#'
+#' @inheritParams get_credible_prevalence
+#'
+#' @export
+
+get_credible_ICC_fast <- function(n, N, alpha = 0.05,
+                                  prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
+                                  prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 1.0,
+                                  n_intervals = 20, debug_on = FALSE) {
+  
+  # check inputs
+  assert_vector_pos_int(n)
+  assert_vector_pos_int(N)
+  if (length(N) == 1) {
+    N <- rep(N, length(n))
+  }
+  assert_same_length(n, N, message = "N must be either a single value (all clusters the same size) or a vector with the same length as n")
+  assert_single_bounded(alpha, inclusive_left = FALSE, inclusive_right = FALSE)
+  assert_single_bounded(prior_prev_shape1, left = 1, right = 1e3)
+  assert_single_bounded(prior_prev_shape2, left = 1, right = 1e3)
+  assert_single_bounded(prior_ICC_shape1, left = 1, right = 1e3)
+  assert_single_bounded(prior_ICC_shape2, left = 1, right = 1e3)
+  assert_vector_pos_int(n_intervals)
+  assert_greq(n_intervals, 5)
+  assert_single_logical(debug_on)
+  
+  # get arguments into list
+  args_params <- list(n = n,
+                      N = rep(N, length(n)),
+                      alpha = alpha,
+                      prior_prev_shape1 = prior_prev_shape1,
+                      prior_prev_shape2 = prior_prev_shape2,
+                      prior_ICC_shape1 = prior_ICC_shape1,
+                      prior_ICC_shape2 = prior_ICC_shape2,
+                      n_intervals = n_intervals)
+  
+  # run efficient C++ function
+  output_raw <- get_credible_ICC_cpp(args_params)
+  df_quad <- as.data.frame(output_raw)
+  
+  # reorder in terms of increasing p
+  df_quad <- df_quad[order(df_quad$x0),]
+  
+  # normalise interval areas
+  log_area_Simp <- df_quad$log_area_Simp
+  log_area_sum <- max(log_area_Simp) + log(sum(exp(log_area_Simp - max(log_area_Simp))))
+  area <- exp(log_area_Simp - log_area_sum)
+  area_cs <- cumsum(area)
+  
+  # solve for lower and upper CrIs
+  w1 <- which(area_cs > alpha / 2)[1]
+  area_remaining1 <- alpha / 2 - (area_cs[w1] - area[w1])
+  CrI_lower <- solve_Simpsons_area(a = df_quad$x0[w1], b = df_quad$x1[w1],
+                                   fa = exp(df_quad$log_y0[w1] - log_area_sum),
+                                   fm = exp(df_quad$log_ym[w1] - log_area_sum),
+                                   fb = exp(df_quad$log_y1[w1] - log_area_sum),
+                                   target_area = area_remaining1)
+  
+  w2 <- which(area_cs > (1 - alpha / 2))[1]
+  area_remaining2 <- area_cs[w2] - (1 - alpha / 2)
+  CrI_upper <- solve_Simpsons_area(a = df_quad$x0[w2], b = df_quad$x1[w2],
+                                   fa = exp(df_quad$log_y0[w2] - log_area_sum),
+                                   fm = exp(df_quad$log_ym[w2] - log_area_sum),
+                                   fb = exp(df_quad$log_y1[w2] - log_area_sum),
+                                   target_area = area_remaining2)
+  
+  # debug distribution
+  if (debug_on) {
+    
+    # get in order of x0
+    df_order <- df_quad[order(df_quad$x0),]
+    
+    # calculate Simpson's rule coefficients
+    df_order$A <- get_Simp_A(df_order$x0, df_order$xm, df_order$x1, df_order$log_y0, df_order$log_ym, df_order$log_y1)
+    df_order$B <- get_Simp_B(df_order$x0, df_order$xm, df_order$log_y0, df_order$log_ym, df_order$A)
+    df_order$C <- get_Simp_C(df_order$x0, df_order$log_y0, df_order$A, df_order$B)
+    
+    # calculate interpolated curve from Simpson's rule
+    x <- seq(0, 1, l = 201)
+    z <- findInterval(x, vec = df_order$x0)
+    fx <- df_order$A[z]*x^2 + df_order$B[z]*x + df_order$C[z]
+    
+    # produce plot
+    plot(x, fx, type = 'l', col = 4, lty = 2, lwd = 1)
+    points(df_quad$x0, exp(df_quad$log_y0), pch = 20, cex = 0.75)
+    points(df_quad$xm, exp(df_quad$log_ym), pch = 20, cex = 0.75, col = 4)
+    segments(df_quad$x0, exp(df_quad$log_y0), df_quad$xm, exp(df_quad$log_ym), col = 2)
+    segments(df_quad$xm, exp(df_quad$log_ym), df_quad$x1, exp(df_quad$log_y1), col = 2)
+    abline(h = 0, lty = 3)
+  }
+  
+  # return
+  return(c(lower = CrI_lower, upper = CrI_upper))
 }
