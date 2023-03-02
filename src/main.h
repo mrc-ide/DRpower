@@ -44,8 +44,8 @@ double loglike_marginal_rho(const std::vector<int> &n,
 
 //------------------------------------------------
 // [[Rcpp::export]]
-Rcpp::List get_credible_prevalence_cpp(Rcpp::List args_params);
+Rcpp::List get_prevalence_cpp(Rcpp::List args_params);
 
 //------------------------------------------------
 // [[Rcpp::export]]
-Rcpp::List get_credible_ICC_cpp(Rcpp::List args_params);
+Rcpp::List get_ICC_cpp(Rcpp::List args_params);

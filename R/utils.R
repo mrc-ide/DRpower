@@ -60,48 +60,6 @@ get_Simpsons_curve <- function(x_new, node_left, node_right, f_left, f_mid, f_ri
   return(ret)
 }
 
-#------------------------------------------------
-# solve Simpson's rule over the interval [a, b] (with corresponging y-values
-# [fa, fb] and y-value at the midpoint equal to fm) to find the x-value at which
-# the area under the curve equals target_area
-#' @noRd
 
-solve_Simpsons_area <- function(a, b, fa, fm, fb, target_area) {
-  
-  # get half-width and midpoint of interval
-  h <- (b - a) / 2
-  m <- (a + b) / 2
-  
-  # define a series of coefficients. The equation of the quadratic line
-  # interpolating between the three points of interest is:
-  # a1*x^2 + a2*x + a3
-  c1 <- 0.5 * fa / h^2
-  c2 <- -fm / h^2
-  c3 <- 0.5 * fb / h^2
-  
-  a1 <- c1 + c2 + c3
-  a2 <- -c1*(m + b) - c2*(a + b) - c3*(m + a)
-  a3 <- (c1 * m * b) + (c2 * a * b) + (c3 * m * a)
-  
-  # define a new series of coefficients for the integral of this quadratic
-  # equation from 0 to z. The solution can be written:
-  # b1*z^3 + b2*z^2 + b3*z + b4
-  b1 <- a1 / 3
-  b2 <- a2 / 2
-  b3 <- a3
-  b4 <- -b1*a^3 - b2*a^2 - b3*a
-  
-  # solve for the z value at which the area under curve equals the target area
-  roots <- polyroot(c(b4 - target_area, b3, b2, b1))
-  
-  # there should be exactly one root within the interval
-  w <- which((Re(roots) > a) & (Re(roots) < b))
-  if (length(w) != 1) {
-    stop("could not find single root to cubic expression in Simpson's rule within the defined interval")
-  }
-  ret <- Re(roots)[w]
-  
-  return(ret)
-}
 
 

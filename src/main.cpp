@@ -16,6 +16,22 @@ double dbbinom_reparam(const vector<int> &n,
   // deal with special cases
   int n_clust = n.size();
   if (rho == 0.0) {
+    // special case if p=0 or p=1
+    if (p == 0) {
+      for (int i = 0; i < n_clust; ++ i) {
+        if (n[i] != 0) {
+          return -INFINITY;
+        }
+      }
+      return 0.0;
+    } else if (p == 1) {
+      for (int i = 0; i < n_clust; ++ i) {
+        if (n[i] != N[i]) {
+          return -INFINITY;
+        }
+      }
+      return 0.0;
+    }
     // simplifies to binomial distribution
     double ret = 0.0;
     for (int i = 0; i < n_clust; ++ i) {
@@ -24,7 +40,7 @@ double dbbinom_reparam(const vector<int> &n,
     }
     return ret;
   } else if (rho == 1.0) {
-    // likelihood still positive whenever k == 0 or k == m
+    // likelihood still positive whenever n == 0 or n == N
     double ret = 0.0;
     for (int i = 0; i < n_clust; ++ i) {
       if (n[i] == 0) {
@@ -39,7 +55,7 @@ double dbbinom_reparam(const vector<int> &n,
     return ret;
   }
   if (p == 0.0) {
-    // likelihood 1 whenever k == 0
+    // likelihood 1 if all k == 0, otherwise likelihood 0
     for (int i = 0; i < n_clust; ++ i) {
       if (n[i] != 0) {
         return -INFINITY;
@@ -47,7 +63,7 @@ double dbbinom_reparam(const vector<int> &n,
     }
     return 0.0;
   } else if (p == 1.0) {
-    // likelihood 1 whenever k == m
+    // likelihood 1 if all k == m, otherwise likelihood 0
     for (int i = 0; i < n_clust; ++ i) {
       if (n[i] != N[i]) {
         return -INFINITY;
@@ -77,28 +93,43 @@ double loglike_joint(const vector<int> &n,
                      double prior_p_shape1, double prior_p_shape2,
                      double prior_rho_shape1, double prior_rho_shape2) {
   
-  // calculate log-likelihood
-  double ret = dbbinom_reparam(n, N, p, rho);
+  // deal first with edge cases under the prior
+  double ret = 0.0;
+  if (p == 0) {
+    if (prior_p_shape1 > 1.0) {
+      return -INFINITY;
+    } else {
+      ret += lgamma(prior_p_shape1 + prior_p_shape2) - lgamma(prior_p_shape1) - lgamma(prior_p_shape2);
+    }
+  } else if (p == 1) {
+    if (prior_p_shape2 > 1.0) {
+      return -INFINITY;
+    } else {
+      ret += lgamma(prior_p_shape1 + prior_p_shape2) - lgamma(prior_p_shape1) - lgamma(prior_p_shape2);
+    }
+  } else {
+    ret += lgamma(prior_p_shape1 + prior_p_shape2) - lgamma(prior_p_shape1) - lgamma(prior_p_shape2) +
+      (prior_p_shape1 - 1)*log(p) + (prior_p_shape2 - 1)*log(1.0 - p);
+  }
+  if (rho == 0) {
+    if (prior_rho_shape1 > 1.0) {
+      return -INFINITY;
+    } else {
+      ret += lgamma(prior_rho_shape1 + prior_rho_shape2) - lgamma(prior_rho_shape1) - lgamma(prior_rho_shape2);
+    }
+  } else if (rho == 1) {
+    if (prior_rho_shape2 > 1.0) {
+      return -INFINITY;
+    } else {
+      ret += lgamma(prior_rho_shape1 + prior_rho_shape2) - lgamma(prior_rho_shape1) - lgamma(prior_rho_shape2);
+    }
+  } else {
+    ret += lgamma(prior_rho_shape1 + prior_rho_shape2) - lgamma(prior_rho_shape1) - lgamma(prior_rho_shape2) +
+      (prior_rho_shape1 - 1)*log(rho) + (prior_rho_shape2 - 1)*log(1.0 - rho);
+  }
   
-  // apply priors (skip if uniform)
-  if ((prior_p_shape1 != 1.0) || (prior_p_shape2 != 1.0)) {
-    ret += lgamma(prior_p_shape1 + prior_p_shape2) - lgamma(prior_p_shape1) - lgamma(prior_p_shape2);
-    if (p > 0) {
-      ret += (prior_p_shape1 - 1)*log(p);
-    }
-    if (p < 1) {
-      ret += (prior_p_shape2 - 1)*log(1.0 - p);
-    }
-  }
-  if ((prior_rho_shape1 != 1.0) || (prior_rho_shape2 != 1.0)) {
-    ret += lgamma(prior_rho_shape1 + prior_rho_shape2) - lgamma(prior_rho_shape1) - lgamma(prior_rho_shape2);
-    if (rho > 0) {
-      ret += (prior_rho_shape1 - 1)*log(rho);
-    }
-    if (rho < 1) {
-      ret += (prior_rho_shape2 - 1)*log(1.0 - rho);
-    }
-  }
+  // combine with log-likelihood
+  ret += dbbinom_reparam(n, N, p, rho);
   
   return ret;
 }
@@ -116,7 +147,7 @@ double loglike_marginal_p(const vector<int> &n,
                           vector<double> &log_ym, vector<double> &log_y1,
                           vector<double> &log_area_trap,
                           vector<double> &log_area_Simp,
-                          vector<double> &log_area_diff) {
+                          vector<double> &total_diff) {
   
   // use lambda method to define a version of loglike with p fixed and with rho
   // as the only free parameter
@@ -127,8 +158,8 @@ double loglike_marginal_p(const vector<int> &n,
                               };
   
   // integrate over rho via adaptive quadrature
-  adaptive_quadrature(loglike_interms_rho, n_intervals, 0.0, 1.0, x0, xm, x1,
-                      log_y0, log_ym, log_y1, log_area_trap, log_area_Simp, log_area_diff);
+  adaptive_quadrature(loglike_interms_rho, n_intervals, 0.0, 1.0, 1e-3, x0, xm, x1,
+                      log_y0, log_ym, log_y1, log_area_trap, log_area_Simp, total_diff);
   
   // get total area
   double log_area_sum = 0.0;
@@ -160,7 +191,7 @@ double loglike_marginal_rho(const vector<int> &n,
                             vector<double> &log_ym, vector<double> &log_y1,
                             vector<double> &log_area_trap,
                             vector<double> &log_area_Simp,
-                            vector<double> &log_area_diff) {
+                            vector<double> &total_diff) {
   
   // use lambda method to define a version of loglike with rho fixed and with p
   // as the only free parameter
@@ -171,8 +202,8 @@ double loglike_marginal_rho(const vector<int> &n,
                             };
   
   // integrate over rho via adaptive quadrature
-  adaptive_quadrature(loglike_interms_p, n_intervals, 0.0, 1.0, x0, xm, x1,
-                      log_y0, log_ym, log_y1, log_area_trap, log_area_Simp, log_area_diff);
+  adaptive_quadrature(loglike_interms_p, n_intervals, 0.0, 1.0, 1e-3, x0, xm, x1,
+                      log_y0, log_ym, log_y1, log_area_trap, log_area_Simp, total_diff);
   
   // get total area
   double log_area_sum = 0.0;
@@ -194,12 +225,11 @@ double loglike_marginal_rho(const vector<int> &n,
 //------------------------------------------------
 // TODO
 
-Rcpp::List get_credible_prevalence_cpp(Rcpp::List args_params) {
+Rcpp::List get_prevalence_cpp(Rcpp::List args_params) {
   
   // extract inputs
   vector<int> n = rcpp_to_vector_int(args_params["n"]);
   vector<int> N = rcpp_to_vector_int(args_params["N"]);
-  double alpha = rcpp_to_double(args_params["alpha"]);
   double prior_p_shape1 = rcpp_to_double(args_params["prior_prev_shape1"]);
   double prior_p_shape2 = rcpp_to_double(args_params["prior_prev_shape2"]);
   double prior_rho_shape1 = rcpp_to_double(args_params["prior_ICC_shape1"]);
@@ -207,28 +237,38 @@ Rcpp::List get_credible_prevalence_cpp(Rcpp::List args_params) {
   int n_intervals = rcpp_to_int(args_params["n_intervals"]);
   
   // define objects to be used repeatedly within inner adaptive quadrature
-  vector<double> Qx0(n_intervals);
-  vector<double> Qxm(n_intervals);
-  vector<double> Qx1(n_intervals);
-  vector<double> Qlog_y0(n_intervals);
-  vector<double> Qlog_ym(n_intervals);
-  vector<double> Qlog_y1(n_intervals);
-  vector<double> Qlog_area_trap(n_intervals);
-  vector<double> Qlog_area_Simp(n_intervals);
-  vector<double> Qlog_area_diff(n_intervals);
+  vector<double> x0_inner(n_intervals);
+  vector<double> xm_inner(n_intervals);
+  vector<double> x1_inner(n_intervals);
+  vector<double> log_y0_inner(n_intervals);
+  vector<double> log_ym_inner(n_intervals);
+  vector<double> log_y1_inner(n_intervals);
+  vector<double> log_area_trap_inner(n_intervals);
+  vector<double> log_area_Simp_inner(n_intervals);
+  vector<double> total_diff_inner(n_intervals);
   
   // use lambda method to define a version of loglike with p as the only free
   // parameter, marginalised over rho
-  auto loglike_interms_p = [&cref_n = n, &cref_N = N, &cref_n_intervals = n_intervals, &cref_prior_p_shape1 = prior_p_shape1,
-                            &cref_prior_p_shape2 = prior_p_shape2, &cref_prior_rho_shape1 = prior_rho_shape1,
-                            &cref_prior_rho_shape2 = prior_rho_shape2, &cref_x0 = Qx0, &cref_xm = Qxm, &cref_x1 = Qx1,
-                            &cref_log_y0 = Qlog_y0, &cref_log_ym = Qlog_ym, &cref_log_y1 = Qlog_y1,
-                            &cref_log_area_trap = Qlog_area_trap, &cref_log_area_Simp = Qlog_area_Simp,
-                            &cref_log_area_diff = Qlog_area_diff](auto p) {
+  auto loglike_interms_p = [&cref_n = n,
+                            &cref_N = N,
+                            &cref_n_intervals = n_intervals,
+                            &cref_prior_p_shape1 = prior_p_shape1,
+                            &cref_prior_p_shape2 = prior_p_shape2,
+                            &cref_prior_rho_shape1 = prior_rho_shape1,
+                            &cref_prior_rho_shape2 = prior_rho_shape2,
+                            &cref_x0 = x0_inner,
+                            &cref_xm = xm_inner,
+                            &cref_x1 = x1_inner,
+                            &cref_log_y0 = log_y0_inner,
+                            &cref_log_ym = log_ym_inner,
+                            &cref_log_y1 = log_y1_inner,
+                            &cref_log_area_trap = log_area_trap_inner,
+                            &cref_log_area_Simp = log_area_Simp_inner,
+                            &cref_total_diff = total_diff_inner](auto p) {
                               return loglike_marginal_p(cref_n, cref_N, p, cref_n_intervals, cref_prior_p_shape1, cref_prior_p_shape2,
-                                                        cref_prior_rho_shape1, cref_prior_rho_shape2,
-                                                        cref_x0, cref_xm, cref_x1, cref_log_y0, cref_log_ym, cref_log_y1,
-                                                        cref_log_area_trap, cref_log_area_Simp, cref_log_area_diff);
+                                                        cref_prior_rho_shape1, cref_prior_rho_shape2, cref_x0, cref_xm, cref_x1,
+                                                        cref_log_y0, cref_log_ym, cref_log_y1,
+                                                        cref_log_area_trap, cref_log_area_Simp, cref_total_diff);
                             };
   
   // define objects for storing outer quadrature results
@@ -240,11 +280,11 @@ Rcpp::List get_credible_prevalence_cpp(Rcpp::List args_params) {
   vector<double> log_y1(n_intervals);
   vector<double> log_area_trap(n_intervals);
   vector<double> log_area_Simp(n_intervals);
-  vector<double> log_area_diff(n_intervals);
+  vector<double> total_diff(n_intervals);
   
   // integrate over p via adaptive quadrature
-  adaptive_quadrature(loglike_interms_p, n_intervals, 0.0, 1.0, x0, xm, x1,
-                      log_y0, log_ym, log_y1, log_area_trap, log_area_Simp, log_area_diff);
+  adaptive_quadrature(loglike_interms_p, n_intervals, 0.0, 1.0, 1e-3, x0, xm, x1,
+                      log_y0, log_ym, log_y1, log_area_trap, log_area_Simp, total_diff);
   
   // return outputs as vector
   Rcpp::List ret = Rcpp::List::create(Rcpp::Named("x0") = x0,
@@ -255,19 +295,18 @@ Rcpp::List get_credible_prevalence_cpp(Rcpp::List args_params) {
                                       Rcpp::Named("log_y1") = log_y1,
                                       Rcpp::Named("log_area_trap") = log_area_trap,
                                       Rcpp::Named("log_area_Simp") = log_area_Simp,
-                                      Rcpp::Named("log_area_diff") = log_area_diff);
+                                      Rcpp::Named("total_diff") = total_diff);
   return ret;
 }
 
 //------------------------------------------------
 // TODO
 
-Rcpp::List get_credible_ICC_cpp(Rcpp::List args_params) {
+Rcpp::List get_ICC_cpp(Rcpp::List args_params) {
   
   // extract inputs
   vector<int> n = rcpp_to_vector_int(args_params["n"]);
   vector<int> N = rcpp_to_vector_int(args_params["N"]);
-  double alpha = rcpp_to_double(args_params["alpha"]);
   double prior_p_shape1 = rcpp_to_double(args_params["prior_prev_shape1"]);
   double prior_p_shape2 = rcpp_to_double(args_params["prior_prev_shape2"]);
   double prior_rho_shape1 = rcpp_to_double(args_params["prior_ICC_shape1"]);
@@ -275,28 +314,38 @@ Rcpp::List get_credible_ICC_cpp(Rcpp::List args_params) {
   int n_intervals = rcpp_to_int(args_params["n_intervals"]);
   
   // define objects to be used repeatedly within inner adaptive quadrature
-  vector<double> Qx0(n_intervals);
-  vector<double> Qxm(n_intervals);
-  vector<double> Qx1(n_intervals);
-  vector<double> Qlog_y0(n_intervals);
-  vector<double> Qlog_ym(n_intervals);
-  vector<double> Qlog_y1(n_intervals);
-  vector<double> Qlog_area_trap(n_intervals);
-  vector<double> Qlog_area_Simp(n_intervals);
-  vector<double> Qlog_area_diff(n_intervals);
+  vector<double> x0_inner(n_intervals);
+  vector<double> xm_inner(n_intervals);
+  vector<double> x1_inner(n_intervals);
+  vector<double> log_y0_inner(n_intervals);
+  vector<double> log_ym_inner(n_intervals);
+  vector<double> log_y1_inner(n_intervals);
+  vector<double> log_area_trap_inner(n_intervals);
+  vector<double> log_area_Simp_inner(n_intervals);
+  vector<double> total_diff_inner(n_intervals);
   
   // use lambda method to define a version of loglike with rho as the only free
   // parameter, marginalised over p
-  auto loglike_interms_rho = [&cref_n = n, &cref_N = N, &cref_n_intervals = n_intervals, &cref_prior_p_shape1 = prior_p_shape1,
-                              &cref_prior_p_shape2 = prior_p_shape2, &cref_prior_rho_shape1 = prior_rho_shape1,
-                              &cref_prior_rho_shape2 = prior_rho_shape2, &cref_x0 = Qx0, &cref_xm = Qxm, &cref_x1 = Qx1,
-                              &cref_log_y0 = Qlog_y0, &cref_log_ym = Qlog_ym, &cref_log_y1 = Qlog_y1,
-                              &cref_log_area_trap = Qlog_area_trap, &cref_log_area_Simp = Qlog_area_Simp,
-                              &cref_log_area_diff = Qlog_area_diff](auto rho) {
+  auto loglike_interms_rho = [&cref_n = n,
+                              &cref_N = N,
+                              &cref_n_intervals = n_intervals,
+                              &cref_prior_p_shape1 = prior_p_shape1,
+                              &cref_prior_p_shape2 = prior_p_shape2,
+                              &cref_prior_rho_shape1 = prior_rho_shape1,
+                              &cref_prior_rho_shape2 = prior_rho_shape2,
+                              &cref_x0 = x0_inner,
+                              &cref_xm = xm_inner, 
+                              &cref_x1 = x1_inner,
+                              &cref_log_y0 = log_y0_inner,
+                              &cref_log_ym = log_ym_inner,
+                              &cref_log_y1 = log_y1_inner,
+                              &cref_log_area_trap = log_area_trap_inner,
+                              &cref_log_area_Simp = log_area_Simp_inner,
+                              &cref_total_diff = total_diff_inner](auto rho) {
                                 return loglike_marginal_rho(cref_n, cref_N, rho, cref_n_intervals, cref_prior_p_shape1, cref_prior_p_shape2,
-                                                            cref_prior_rho_shape1, cref_prior_rho_shape2,
-                                                            cref_x0, cref_xm, cref_x1, cref_log_y0, cref_log_ym, cref_log_y1,
-                                                            cref_log_area_trap, cref_log_area_Simp, cref_log_area_diff);
+                                                            cref_prior_rho_shape1, cref_prior_rho_shape2, cref_x0, cref_xm, cref_x1,
+                                                            cref_log_y0, cref_log_ym, cref_log_y1,
+                                                            cref_log_area_trap, cref_log_area_Simp, cref_total_diff);
                               };
   
   // define objects for storing outer quadrature results
@@ -308,11 +357,11 @@ Rcpp::List get_credible_ICC_cpp(Rcpp::List args_params) {
   vector<double> log_y1(n_intervals);
   vector<double> log_area_trap(n_intervals);
   vector<double> log_area_Simp(n_intervals);
-  vector<double> log_area_diff(n_intervals);
+  vector<double> total_diff(n_intervals);
   
   // integrate over p via adaptive quadrature
-  adaptive_quadrature(loglike_interms_rho, n_intervals, 0.0, 1.0, x0, xm, x1,
-                      log_y0, log_ym, log_y1, log_area_trap, log_area_Simp, log_area_diff);
+  adaptive_quadrature(loglike_interms_rho, n_intervals, 0.0, 1.0, 1e-3, x0, xm, x1,
+                      log_y0, log_ym, log_y1, log_area_trap, log_area_Simp, total_diff);
   
   // return outputs as vector
   Rcpp::List ret = Rcpp::List::create(Rcpp::Named("x0") = x0,
@@ -323,6 +372,6 @@ Rcpp::List get_credible_ICC_cpp(Rcpp::List args_params) {
                                       Rcpp::Named("log_y1") = log_y1,
                                       Rcpp::Named("log_area_trap") = log_area_trap,
                                       Rcpp::Named("log_area_Simp") = log_area_Simp,
-                                      Rcpp::Named("log_area_diff") = log_area_diff);
+                                      Rcpp::Named("total_diff") = total_diff);
   return ret;
 }
