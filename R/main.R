@@ -1,8 +1,10 @@
 
 #------------------------------------------------
 # reparameterisation of the beta-binomial distribution in terms of a mean (p)
-# and an intra-cluster correlation coefficient (rho). Deals with special cases
-# that simplify to the binomial or bernoulli distributions
+# and an intra-cluster correlation coefficient (rho). The shape parameters of
+# this distribution are alpha = p*(1/rho - 1) and beta = (1 - p)*(1/rho - 1).
+# The implied beta distribution has mean p and variance rho. Deals with special
+# cases that simplify to the binomial or bernoulli distributions
 #' @importFrom extraDistr dbbinom
 #' @importFrom stats dbinom
 #' @noRd
@@ -17,19 +19,20 @@ dbbinom_reparam <- function(n, N, p, rho, log_on = TRUE) {
     ret <- dbinom(x = n, size = N, prob = p, log = TRUE)
     
   } else if (rho == 1) {
-    # likelihood still positive whenever n == 0 or n == N
+    # perfect correlation within clusters. Likelihood finite whenever n == 0 or
+    # n == N
     ret <- rep(-Inf, n_clust)
     ret[n == 0] <- log(1 - p)
     ret[n == N] <- log(p)
     
   } else {
     if (p == 0) {
-      # likelihood 1 whenever n == 0
+      # no positives allowed irrespective of ICC. Likelihood 1 whenever n == 0
       ret <- rep(-Inf, n_clust)
       ret[n == 0] <- 0
       
     } else if (p == 1) {
-      # likelihood 1 whenever n == N
+      # no negatives allowed irrespective of ICC. Likelihood 1 whenever n == N
       ret <- rep(-Inf, n_clust)
       ret[n == N] <- 0
       
@@ -38,7 +41,6 @@ dbbinom_reparam <- function(n, N, p, rho, log_on = TRUE) {
       alpha <- p * (1 - rho) / rho
       beta <- (1 - p) * (1 - rho) / rho
       ret <- extraDistr::dbbinom(x = n, size = N, alpha = alpha, beta = beta, log = TRUE)
-      
     }
   }
   if (!log_on) {
@@ -48,9 +50,9 @@ dbbinom_reparam <- function(n, N, p, rho, log_on = TRUE) {
 }
 
 #------------------------------------------------
-# draw from reparameterisation of the beta-binomial distribution in terms of a
-# mean (p) and an intra-cluster correlation coefficient (rho). Deals with
-# special cases that simplify to the binomial distribution
+# draw from reparameterisation of the beta-binomial distribution (see
+# dbbinom_reparam()). Deals with special cases that simplify to the binomial or
+# bernoulli distributions
 #' @importFrom extraDistr rbbinom
 #' @importFrom stats rbinom
 #' @noRd
@@ -85,14 +87,14 @@ loglike_joint <- function(n, N, p, rho,
 }
 
 #------------------------------------------------
-# marginal log-likelihood of rho, integrated over p by adaptive quadrature
+# joint probability of data and rho, integrated over the prior on p by adaptive
+# quadrature
 #' @noRd
 
-loglike_marginal_rho <- function(n, N, rho, n_intervals = 40,
-                                 prior_p_shape1 = 1, prior_p_shape2 = 1,
-                                 prior_rho_shape1 = 1, prior_rho_shape2 = 1,
-                                 debug_on = FALSE) {
-  
+loglike_joint_rho <- function(n, N, rho, n_intervals = 40,
+                              prior_p_shape1 = 1, prior_p_shape2 = 1,
+                              prior_rho_shape1 = 1, prior_rho_shape2 = 1,
+                              debug_on = FALSE) {
   
   # integrate over rho via adaptive quadrature
   df_quad <- adaptive_quadrature(f1 = function(p) {
@@ -113,13 +115,14 @@ loglike_marginal_rho <- function(n, N, rho, n_intervals = 40,
 }
 
 #------------------------------------------------
-# marginal log-likelihood of p, integrated over rho by adaptive quadrature
+# joint probability of data and p, integrated over the prior on rho by adaptive
+# quadrature
 #' @noRd
 
-loglike_marginal_p <- function(n, N, p, n_intervals = 40,
-                               prior_p_shape1 = 1, prior_p_shape2 = 1,
-                               prior_rho_shape1 = 1, prior_rho_shape2 = 1,
-                               debug_on = FALSE) {
+loglike_joint_p <- function(n, N, p, n_intervals = 40,
+                            prior_p_shape1 = 1, prior_p_shape2 = 1,
+                            prior_rho_shape1 = 1, prior_rho_shape2 = 1,
+                            debug_on = FALSE) {
   
   # integrate over rho via adaptive quadrature
   df_quad <- adaptive_quadrature(f1 = function(rho) {
@@ -147,8 +150,8 @@ loglike_marginal_p <- function(n, N, p, n_intervals = 40,
 #'
 #' @description Takes raw counts of the number of positive samples per cluster
 #'   (numerator) and the number of tested samples per cluster (denominator) and
-#'   returns posterior estimates of the prevalence and the intra-cluster
-#'   correlation coefficient (ICC).
+#'   returns posterior estimates of the prevalence and intra-cluster correlation
+#'   coefficient (ICC).
 #'
 #' @details There are two unknown quantities in the DRpower model: the
 #'   prevalence and the ICC. Thes following functions integrate over a prior on
@@ -291,9 +294,9 @@ get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
     
     # get distribution of p via adaptive quadrature
     df_quad <- adaptive_quadrature(f1 = function(p) {
-      loglike_marginal_p(n = n, N = N, p = p, n_intervals = n_intervals,
-                         prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
-                         prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
+      loglike_joint_p(n = n, N = N, p = p, n_intervals = n_intervals,
+                      prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
+                      prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
     }, n_intervals = n_intervals, left = 0, right = 1, debug_on = debug_on)
     
   }
@@ -356,6 +359,8 @@ get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
   return(ret)
 }
 
+# NB, this form of documentation means that both get_prevalence() and get_ICC()
+# fall within the same single help page
 ##' @rdname get_posterior
 #' @importFrom stats optim qbeta
 #' @importFrom graphics lines points abline
@@ -431,9 +436,9 @@ get_ICC <- function(n, N, alpha = 0.05,
     
     # get distribution of rho via adaptive quadrature
     df_quad <- adaptive_quadrature(f1 = function(rho) {
-      loglike_marginal_rho(n = n, N = N, rho = rho, n_intervals = n_intervals,
-                           prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
-                           prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
+      loglike_joint_rho(n = n, N = N, rho = rho, n_intervals = n_intervals,
+                        prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
+                        prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
     }, n_intervals = n_intervals, left = 0, right = 1, debug_on = debug_on)
     
   }
@@ -528,7 +533,10 @@ get_joint_grid <- function(n, N,
   alpha <- p*(1/rho - 1)
   beta <- (1 - p)*(1/rho - 1)
   
-  # evaluate beta-binomial likelihood
+  # evaluate beta-binomial likelihood. NB, we use a new implementation here
+  # rather than relying on the dbbinom_reparam() function because we need the
+  # likelihood to accept matrix input for both alpha and beta parameters and to
+  # be summed over all clusters
   ll <- 0
   for (i in seq_along(n)) {
     ll <- ll + extraDistr::dbbinom(x = n[i], size = N[i], alpha = alpha, beta = beta, log = TRUE)
@@ -588,9 +596,9 @@ get_joint_grid <- function(n, N,
 #'  \item If this probability is above \code{rejection_threshold} then
 #'  reject the null hypothesis, and encode this as a single correct conclusion.
 #'  \item Count the number of simulations for which the correct conclusion is
-#'  reached. This gives an estimate of empirical power, along with upper and
-#'  lower 95% binomial CIs on the power via the method of Clopper and Pearson
-#'  (1934).
+#'  reached, relative to the total number of simulations. This gives an estimate
+#'  of empirical power, along with upper and lower 95% binomial CIs on the power
+#'  via the method of Clopper and Pearson (1934).
 #' }
 #' 
 #' @param N vector giving the number of samples obtained from each cluster.

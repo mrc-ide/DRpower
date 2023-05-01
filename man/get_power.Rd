@@ -58,9 +58,9 @@ Estimates power using the following approach:
  \item If this probability is above \code{rejection_threshold} then
  reject the null hypothesis, and encode this as a single correct conclusion.
  \item Count the number of simulations for which the correct conclusion is
- reached. This gives an estimate of empirical power, along with upper and
- lower 95% binomial CIs on the power via the method of Clopper and Pearson
- (1934).
+ reached, relative to the total number of simulations. This gives an estimate
+ of empirical power, along with upper and lower 95% binomial CIs on the power
+ via the method of Clopper and Pearson (1934).
 }
 }
 \references{

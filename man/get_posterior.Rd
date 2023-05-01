@@ -100,8 +100,8 @@ the function a large number of times.}
 \description{
 Takes raw counts of the number of positive samples per cluster
   (numerator) and the number of tested samples per cluster (denominator) and
-  returns posterior estimates of the prevalence and the intra-cluster
-  correlation coefficient (ICC).
+  returns posterior estimates of the prevalence and intra-cluster correlation
+  coefficient (ICC).
 }
 \details{
 There are two unknown quantities in the DRpower model: the

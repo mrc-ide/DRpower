@@ -51,10 +51,11 @@ get_Simp_y <- function(x, A, B, C) {
 }
 
 #------------------------------------------------
-# solve Simpson's quadratic Ax^2 + Bx + C for x given y in a given x range. The
-# first solution within the range is returned, meaning if there is a single
-# solution within the range this is unique, otherwise this is arbitrary. If no
-# solution then error
+# solve Simpson's quadratic y = Ax^2 + Bx + C for x given y in a given x range.
+# The first solution within the range is returned, meaning if there is a single
+# solution within the range this is unique, otherwise the choice is arbitrary
+# (hence, this should only be used when there is a single unique solution). If
+# no solution then error
 #' @noRd
 
 get_Simp_x <- function(y, x0, x1, A, B, C) {
@@ -214,20 +215,20 @@ get_total_diff <- function(log_area_diff, grad_diff) {
 #'   discretised curve is reasonably smooth. The adaptive method uses Simpson's
 #'   rule, meaning the final curve can be approximated by a series of
 #'   quadratics. Returns a data.frame with all the intervals used in quadrature.
-#'   This method is only appropriate for simple, unimodal distributions, and is
-#'   not guaranteed to work for any distribution.
+#'   This method is only appropriate for simple, unimodal distributions and is
+#'   not guaranteed to work for every possible distribution shape.
 #'
 #' @details The adaptive method works by breaking the curve into a series of
 #'   intervals, and for each interval evaluating the area via both trapezoidal
 #'   rule and Simpson's rule. If an interval has a large discrepancy in area
-#'   between the two methods then this implies the function is not very linear
-#'   over this interval and so it is a good target for further subdivision.
-#'   However, there is an important edge-case in which the midpoint of the
-#'   interval happens to have a corresponding function value that is exactly at
-#'   the midpoint of the y-range by chance, in which case the function would
-#'   appear linear. For this reason, gradient information is also taken into
-#'   account. The gradient is evaluated over the full interval and at the
-#'   midpoint (searching a small distance delta from the midpoint). If the
+#'   between the two methods then this implies that the function is not very
+#'   linear over this interval and so it is a good target for further
+#'   subdivision. However, there is an important edge-case in which the midpoint
+#'   of the interval happens to have a corresponding function value that is
+#'   exactly at the midpoint of the y-range by chance, in which case the
+#'   function would appear linear. For this reason, gradient information is also
+#'   taken into account. The gradient is evaluated over the full interval and at
+#'   the midpoint (searching a small distance delta from the midpoint). If the
 #'   gradients are very different this also suggests the function is non-linear
 #'   over the interval and so is a target for further subdivision. Both area-
 #'   and gradient-based information are combined to produce a total score, and
@@ -328,9 +329,15 @@ adaptive_quadrature <- function(f1, n_intervals, left, right, debug_on = FALSE, 
 #'
 #' @description Takes data.frame output from the function
 #'   \code{adaptive_quadrature()} and normalises the y-values so the curve
-#'   integrates to 1 via Simpson's rule. Also reorders rows, drops some columns,
-#'   and appends the Simpson's rule coefficients of the quadratic Ax^2 + Bx + C
-#'   for each interval.
+#'   integrates to 1 via Simpson's rule. Also reorders rows in terms of
+#'   x-position, drops some columns, and appends some columns. The final columns
+#'   consist of:
+#'   \itemize{
+#'     \item The x and log(y) positions of all intervals.
+#'     \item The log(area) via Simpson's rule.
+#'     \item The Simpson's rule coefficients of the quadratic Ax^2 + Bx + C for
+#'     each interval.
+#'   }
 #'
 #' @param df_quad a data.frame output from the function
 #'   \code{adaptive_quadrature()}.
@@ -375,7 +382,8 @@ normalise_quadrature <- function(df_quad) {
 #'   \code{normalise_quadrature()}, and produces a plot comparing the
 #'   appximation with the true function evaluated over a grid.
 #'
-#' @param f1 the function used in adaptive quadrature.
+#' @param f1 the function used in adaptive quadrature. This is needed to compare
+#'   against the adaptive quadrature result by running on a grid.
 #' @param df_quad a data.frame output from the function
 #'   \code{adaptive_quadrature()}.
 #'  

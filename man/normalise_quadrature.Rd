@@ -13,7 +13,13 @@ normalise_quadrature(df_quad)
 \description{
 Takes data.frame output from the function
   \code{adaptive_quadrature()} and normalises the y-values so the curve
-  integrates to 1 via Simpson's rule. Also reorders rows, drops some columns,
-  and appends the Simpson's rule coefficients of the quadratic Ax^2 + Bx + C
-  for each interval.
+  integrates to 1 via Simpson's rule. Also reorders rows in terms of
+  x-position, drops some columns, and appends some columns. The final columns
+  consist of:
+  \itemize{
+    \item The x and log(y) positions of all intervals.
+    \item The log(area) via Simpson's rule.
+    \item The Simpson's rule coefficients of the quadratic Ax^2 + Bx + C for
+    each interval.
+  }
 }

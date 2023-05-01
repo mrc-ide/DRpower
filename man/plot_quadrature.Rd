@@ -7,7 +7,8 @@
 plot_quadrature(f1, df_quad)
 }
 \arguments{
-\item{f1}{the function used in adaptive quadrature.}
+\item{f1}{the function used in adaptive quadrature. This is needed to compare
+against the adaptive quadrature result by running on a grid.}
 
 \item{df_quad}{a data.frame output from the function
 \code{adaptive_quadrature()}.}

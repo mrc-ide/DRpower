@@ -37,21 +37,21 @@ Takes a function \code{f1(x)} that returns values in log space
   discretised curve is reasonably smooth. The adaptive method uses Simpson's
   rule, meaning the final curve can be approximated by a series of
   quadratics. Returns a data.frame with all the intervals used in quadrature.
-  This method is only appropriate for simple, unimodal distributions, and is
-  not guaranteed to work for any distribution.
+  This method is only appropriate for simple, unimodal distributions and is
+  not guaranteed to work for every possible distribution shape.
 }
 \details{
 The adaptive method works by breaking the curve into a series of
   intervals, and for each interval evaluating the area via both trapezoidal
   rule and Simpson's rule. If an interval has a large discrepancy in area
-  between the two methods then this implies the function is not very linear
-  over this interval and so it is a good target for further subdivision.
-  However, there is an important edge-case in which the midpoint of the
-  interval happens to have a corresponding function value that is exactly at
-  the midpoint of the y-range by chance, in which case the function would
-  appear linear. For this reason, gradient information is also taken into
-  account. The gradient is evaluated over the full interval and at the
-  midpoint (searching a small distance delta from the midpoint). If the
+  between the two methods then this implies that the function is not very
+  linear over this interval and so it is a good target for further
+  subdivision. However, there is an important edge-case in which the midpoint
+  of the interval happens to have a corresponding function value that is
+  exactly at the midpoint of the y-range by chance, in which case the
+  function would appear linear. For this reason, gradient information is also
+  taken into account. The gradient is evaluated over the full interval and at
+  the midpoint (searching a small distance delta from the midpoint). If the
   gradients are very different this also suggests the function is non-linear
   over the interval and so is a target for further subdivision. Both area-
   and gradient-based information are combined to produce a total score, and
