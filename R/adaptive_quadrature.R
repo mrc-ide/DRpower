@@ -425,11 +425,11 @@ plot_quadrature <- function(f1, df_quad) {
 #' @title Integrate adaptive quadrature object up to p
 #'
 #' @description Returns the area under the curve of an adaptive quadrature
-#'   object up to x=p (similar to e.g. \code{pnorm()}).
+#'   object up to x = p (similar to e.g. \code{pnorm()}).
 #'
 #' @param df_norm a normalised quadrature data.frame as produced by
 #'   \code{normalise_quadrature()}.
-#' @param p the target area
+#' @param p the target area.
 #'  
 #' @export
 
@@ -511,143 +511,69 @@ qquad <- function(df_norm, q = 0.5) {
 #' @description The HDI for a given alpha is defined as the narrowest interval
 #'   in which the area under curve equals 1 - alpha. This can be obtained by
 #'   searching down in the y-axis until the integrated area equals 1 - alpha.
-#'   The HDI method is one method of calculating credible intervals.
+#'   NB, although the HDI can be defined for multi-modal distributions,
+#'   sometimes resulting in non-contiguous intervals, this function only returns
+#'   a single interval and will throw an error if multiple intervals are
+#'   detected. See details for the method used.
+#'
+#' @details The method used to calculate the HDI is a simple grid-based
+#'   approach. The entire range implied by the quadrature object is divided up
+#'   into a grid of equally sizes slices. Simpson's rule is evaluated at all of
+#'   these points using the apropriate coefficients, and the size of each slice
+#'   is calculated. Slices are ordered in terms of decreasing y-value, and the
+#'   cumulative area of slices is calculated until we reach the desired area (1
+#'   - alpha). The x-range implied by these slices is calculated, and a check is
+#'   performed to ensure this results in a single contiguous interval.
 #'
 #' @param df_norm a normalised quadrature data.frame as produced by
 #'   \code{normalise_quadrature()}.
 #' @param alpha the significance level of the interval. Equivalently, one minus
 #'   the area under the curve of the interval.
+#' @param n_grid the number of intervals the final curve is broken into when
+#'   computing the HDI on a grid.
 #'  
 #' @export
 
-get_HDI <- function(df_norm, alpha = 0.05) {
+get_HDI <- function(df_norm, alpha = 0.05, n_grid = 1e3) {
+  
+  # avoid "no visible bindings" message
+  x0 <- x1 <- x_mid <- w_interval <- A <- B <- C <- y_mid <- y_area <- cum_area <- NULL
   
   # check inputs
   assert_dataframe(df_norm)
   assert_in(c("x0", "x1", "log_y0", "log_y1", "log_area_Simp", "A", "B", "C"), names(df_norm))
   assert_single_bounded(alpha)
   
-  # for each interval, work out whether it is increasing left-to-right
-  increasing_LR <- (df_norm$log_y1 > df_norm$log_y0)
+  # get full distribution range and define grid over this range
+  x_min <- min(df_norm$x0)
+  x_max <- max(df_norm$x1)
+  x_vec <- seq(x_min, x_max, l = n_grid)
   
-  # get min and max out of the two sides of each interval
-  ymin <- exp(pmin(df_norm$log_y0, df_norm$log_y1))
-  ymax <- exp(pmax(df_norm$log_y0, df_norm$log_y1))
+  # make data.frame holding the y-value and area of each slice in grid
+  df_grid <- data.frame(x0 = x_vec[-length(x_vec)],
+                        x1 = x_vec[-1]) %>%
+    dplyr::mutate(x_mid = (x0 + x1) / 2,
+                  w_interval = findInterval(x = x_mid, vec = c(df_norm$x0, x_max), rightmost.closed = TRUE),
+                  A = df_norm$A[w_interval],
+                  B = df_norm$B[w_interval],
+                  C = df_norm$C[w_interval],
+                  y_mid = A*x_mid^2 + B*x_mid + C,
+                  y_area = 1/3*A*(x1^3 - x0^3) + 1/2*B*(x1^2 - x0^2) + C*(x1 - x0))
   
-  # get area of each interval
-  area <- exp(df_norm$log_area_Simp)
+  # subset to HDI
+  df_subset <- df_grid %>%
+    dplyr::arrange(dplyr::desc(y_mid)) %>%
+    dplyr::mutate(cum_area = cumsum(y_area)) %>%
+    dplyr::arrange(x0) %>%
+    dplyr::filter(cum_area <= (1 - alpha)) %>%
+    dplyr::select(x0, x1)
   
-  # get the total area above each ymin value, including integrating other
-  # intervals that intersect with this y-value as needed
-  area_vec <- rep(NA, length(ymin))
-  for (i in seq_along(ymin)) {
-    
-    # get sum of all intervals that are completely above ymin[i]
-    area_vec[i] <- sum(area[ymin >= ymin[i]])
-    
-    # find which other interval (if any) intersects ymin[i]
-    w <- which((ymin < ymin[i]) & (ymax > ymin[i]))
-    if (any(w)) {
-      
-      # if multiple intersections then distribution is not uni-modal, hence exit
-      if (length(w) > 1) {
-        stop("Cannot compute credible intervals via the HDI method because distribution is not uni-modal. Try using CrI_type = ETI instead")
-      }
-      
-      # find the corresponding x value in this interval at the level ymin[i]
-      x_new <- get_Simp_x(ymin[i], df_norm$x0[w], df_norm$x1[w], df_norm$A[w], df_norm$B[w], df_norm$C[w])
-      
-      # integrate up to x_new to get area of this interval
-      x_max <- ifelse(increasing_LR[w], df_norm$x1[w], df_norm$x0[w])
-      area_new <- get_Simp_integral(x_new, x_max, df_norm$A[w], df_norm$B[w], df_norm$C[w])
-      
-      # add to total
-      area_vec[i] <- area_vec[i] + area_new
-    }
+  # check that final interval is contiguous
+  if (!all(df_subset$x0[-1] == df_subset$x1[-nrow(df_subset)])) {
+    stop("HDI does not define a single, contiguous interval")
   }
   
-  # search down through intervals until we find the one that pushes the total area
-  # over the threshold. Call this int1
-  ord <- order(area_vec)
-  w <- which(area_vec[ord] > (1 - alpha))[1]
-  int1 <- ord[w]
-  
-  # get the corresponding interval that ymin[int1] intersects. Call this int2.
-  # Note, there may be no int2
-  int2 <- setdiff(which((ymin <= ymin[int1]) & (ymax > ymin[int1])), int1)
-  
-  # if no int2 then special case
-  if (!any(int2)) {
-    if (increasing_LR[int1]) {
-      x_int1 <- qquad(df_norm, q = alpha)
-      x_int2 <- max(df_norm$x1)
-    } else {
-      x_int1 <- qquad(df_norm, q = 1 - alpha)
-      x_int2 <- min(df_norm$x0)
-    }
-    HDI <- sort(c(x_int1, x_int2))
-    names(HDI) <- c("lower", "upper")
-    return(HDI)
-  }
-  
-  # get the range of x-values in int1 that we need to explore
-  if (increasing_LR[int1]) {
-    x_lower <- df_norm$x0[int1]
-    if (ymax[int1] < ymax[int2]) {
-      x_upper <- df_norm$x1[int1]
-    } else {
-      x_upper <- get_Simp_x(ymax[int2], df_norm$x0[int1], df_norm$x1[int1], df_norm$A[int1], df_norm$B[int1], df_norm$C[int1])
-    }
-  } else {
-    x_upper <- df_norm$x1[int1]
-    if (ymax[int1] < ymax[int2]) {
-      x_lower <- df_norm$x0[int1]
-    } else {
-      x_lower <- get_Simp_x(ymax[int2], df_norm$x0[int1], df_norm$x1[int1], df_norm$A[int1], df_norm$B[int1], df_norm$C[int1])
-    }
-  }
-  
-  #abline(v = c(x_lower, x_upper))
-  
-  # get the upper limits of integration in int1 and int2
-  int1_limit <- ifelse(increasing_LR[int1], x_upper, x_lower)
-  if (ymax[int1] < ymax[int2]) {
-    int2_limit <- get_Simp_x(ymax[int1], df_norm$x0[int2], df_norm$x1[int2], df_norm$A[int2], df_norm$B[int2], df_norm$C[int2])
-  } else {
-    int2_limit <- ifelse(increasing_LR[int2], df_norm$x1[int2], df_norm$x0[int2])
-  }
-  
-  # calculate the area already completely covered by intervals above this one
-  area_min <- c(0, area_vec[ord])[w]
-  
-  # solve for remaining area via optim
-  opt1 <- optim(x_lower, fn = function(x) {
-    
-    # integrate int1 from x to x_upper
-    area1 <- get_Simp_integral(x, int1_limit, df_norm$A[int1], df_norm$B[int1], df_norm$C[int1])
-    
-    # get y value corresponding to this x
-    y <- get_Simp_y(x, df_norm$A[int1], df_norm$B[int1], df_norm$C[int1])
-    
-    # solve x in int2 for this y
-    x_new <- get_Simp_x(y, df_norm$x0[int2], df_norm$x1[int2], df_norm$A[int2], df_norm$B[int2], df_norm$C[int2])
-    
-    # integrate int2
-    area2 <- get_Simp_integral(x_new, int2_limit, df_norm$A[int2], df_norm$B[int2], df_norm$C[int2])
-    
-    # combine areas and compare with target
-    area_total <- area_min + area1 + area2
-    abs(area_total - (1 - alpha))
-  }, lower = x_lower, upper = x_upper, method = "Brent")
-  
-  # extract both x values
-  x_int1 <- opt1$par
-  y <- get_Simp_y(x_int1, df_norm$A[int1], df_norm$B[int1], df_norm$C[int1])
-  x_int2 <- get_Simp_x(y, df_norm$x0[int2], df_norm$x1[int2], df_norm$A[int2], df_norm$B[int2], df_norm$C[int2])
-  
-  # get HDI limits in increasing order
-  HDI <- sort(c(x_int1, x_int2))
-  names(HDI) <- c("lower", "upper")
-  
-  return(HDI)
+  # return final HDI
+  return(c(lower = min(df_subset$x0),
+           upper = max(df_subset$x1)))
 }

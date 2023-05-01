@@ -7,13 +7,13 @@
 get_power(
   N,
   prevalence = 0.1,
-  ICC = 0.25,
+  ICC = 0.1,
   prev_thresh = 0.05,
   rejection_threshold = 0.95,
   prior_prev_shape1 = 1,
   prior_prev_shape2 = 1,
   prior_ICC_shape1 = 1,
-  prior_ICC_shape2 = 3,
+  prior_ICC_shape2 = 9,
   n_intervals = 20,
   reps = 100
 )
@@ -37,7 +37,8 @@ ICC. Increasing the first shape parameter (e.g. \code{prior_prev_shape1})
 pushes the distribution towards 1, increasing the second shape parameter
 (e.g. \code{prior_prev_shape2}) pushes the distribution towards 0.
 Increasing both shape parameters squeezes the distribution towards the
-centre and therefore makes it narrower.}
+centre and therefore makes it narrower. The default values of these
+parameters are based on an analysis of historical pfhrp2/3 studies.}
 
 \item{n_intervals}{the number of intervals used in the adaptive quadrature
 method. Increasing this value gives a more accurate representation of the
@@ -46,7 +47,9 @@ true posterior, but comes at the cost of reduced speed.}
 \item{reps}{number of times to repeat simulation per parameter combination.}
 }
 \description{
-Estimates power empirically via repeated simulation.
+For a given sample design, estimates power empirically via
+  repeated simulation (see Details). Returns an estimate of the power, along
+  with lower and upper bounds of this estimate.
 }
 \details{
 Estimates power using the following approach:
@@ -59,9 +62,13 @@ Estimates power using the following approach:
  reject the null hypothesis, and encode this as a single correct conclusion.
  \item Count the number of simulations for which the correct conclusion is
  reached, relative to the total number of simulations. This gives an estimate
- of empirical power, along with upper and lower 95% binomial CIs on the power
+ of empirical power, along with upper and lower 95\% binomial CIs on the power
  via the method of Clopper and Pearson (1934).
 }
+}
+\examples{
+get_power(N = c(120, 90, 150), prevalence = 0.15, ICC = 0.1 , reps = 1e2)
+
 }
 \references{
 Clopper, C.J. and Pearson, E.S., 1934. The use of confidence or fiducial

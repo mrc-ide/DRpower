@@ -10,9 +10,9 @@ pquad(df_norm, p = 0.5)
 \item{df_norm}{a normalised quadrature data.frame as produced by
 \code{normalise_quadrature()}.}
 
-\item{p}{the target area}
+\item{p}{the target area.}
 }
 \description{
 Returns the area under the curve of an adaptive quadrature
-  object up to x=p (similar to e.g. \code{pnorm()}).
+  object up to x = p (similar to e.g. \code{pnorm()}).
 }

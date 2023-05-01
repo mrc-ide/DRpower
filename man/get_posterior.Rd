@@ -14,9 +14,12 @@ get_prevalence(
   prior_prev_shape1 = 1,
   prior_prev_shape2 = 1,
   prior_ICC_shape1 = 1,
-  prior_ICC_shape2 = 3,
-  return_type = list(mean_on = FALSE, median_on = TRUE, CrI_on = TRUE, thresh_on = TRUE,
-    full_on = FALSE),
+  prior_ICC_shape2 = 9,
+  post_mean_on = FALSE,
+  post_median_on = TRUE,
+  post_CrI_on = TRUE,
+  post_thresh_on = TRUE,
+  post_full_on = FALSE,
   CrI_type = "HDI",
   n_intervals = 20,
   debug_on = FALSE,
@@ -30,8 +33,11 @@ get_ICC(
   prior_prev_shape1 = 1,
   prior_prev_shape2 = 1,
   prior_ICC_shape1 = 1,
-  prior_ICC_shape2 = 1,
-  return_type = list(mean_on = FALSE, median_on = TRUE, CrI_on = TRUE, full_on = FALSE),
+  prior_ICC_shape2 = 9,
+  post_mean_on = FALSE,
+  post_median_on = TRUE,
+  post_CrI_on = TRUE,
+  post_full_on = FALSE,
   CrI_type = "HDI",
   n_intervals = 20,
   debug_on = FALSE,
@@ -55,20 +61,22 @@ ICC. Increasing the first shape parameter (e.g. \code{prior_prev_shape1})
 pushes the distribution towards 1, increasing the second shape parameter
 (e.g. \code{prior_prev_shape2}) pushes the distribution towards 0.
 Increasing both shape parameters squeezes the distribution towards the
-centre and therefore makes it narrower.}
+centre and therefore makes it narrower. The default values of these
+parameters are based on an analysis of historical pfhrp2/3 studies.}
 
-\item{return_type}{a list object specifying which outputs to produce (only a
-subset of outputs is active by default to reduce computation time and to
-simplify things for the basic user). The following options are available:
+\item{post_mean_on, post_median_on, post_CrI_on, post_thresh_on, post_full_on}{a
+series of boolean (TRUE/FALSE) objects specifying which outputs to produce.
+The following options are available:
 \itemize{
-  \item \code{mean_on}: if \code{TRUE} then return the posterior mean.
-  \item \code{median_on}: if \code{TRUE} then return the posterior median.
-  \item \code{CrI_on}: if \code{TRUE} then return the posterior credible
-  interval at significance level \code{alpha}. See \code{CrI_type} argument
-  for how this is calculated.
-  \item \code{thresh_on}: if \code{TRUE} then return the posterior
+  \item \code{post_mean_on}: if \code{TRUE} then return the posterior mean.
+  \item \code{post_median_on}: if \code{TRUE} then return the posterior
+  median.
+  \item \code{post_CrI_on}: if \code{TRUE} then return the posterior
+  credible interval at significance level \code{alpha}. See \code{CrI_type}
+  argument for how this is calculated.
+  \item \code{post_thresh_on}: if \code{TRUE} then return the posterior
   probability of being above the threshold specified by \code{prev_thresh}.
-  \item \code{full_on}: if \code{TRUE} then return the full posterior
+  \item \code{post_full_on}: if \code{TRUE} then return the full posterior
   distribution (as approximated using the adaptive quadrature approach) in
   0.1\% intervals from 0\% to 100\%.
 }}
@@ -114,4 +122,12 @@ There are two unknown quantities in the DRpower model: the
   of differing width and each intervals is approximated using Simpson's rule.
   The number of intervals used in quadrature can be increased for more
   accurate results, at the cost of slower speed.
+}
+\examples{
+# basic example of estimating prevalence and ICC from observed counts
+df_counts <- data.frame(sample_size = c(80, 110, 120),
+                        deletions = c(3, 5, 6))
+get_prevalence(n = df_counts$deletions, N = df_counts$sample_size)
+get_ICC(n = df_counts$deletions, N = df_counts$sample_size)
+
 }

@@ -10,24 +10,32 @@ get_joint_grid(
   prior_prev_shape1 = 1,
   prior_prev_shape2 = 1,
   prior_ICC_shape1 = 1,
-  prior_ICC_shape2 = 1,
+  prior_ICC_shape2 = 9,
   prev_cells = 64,
   ICC_cells = 64
 )
 }
 \arguments{
-\item{n, N}{the numerator (\code{n}) and denominator (\code{N}) per cluster.}
+\item{n, N}{the numerator (\code{n}) and denominator (\code{N}) per cluster
+(vectors).}
 
-\item{prior_prev_shape1, prior_prev_shape2, prior_ICC_shape1, prior_ICC_shape2}{parameters that dictate the shape of the priors on prevalence and the ICC.
-Increasing the first shape parameter (e.g. \code{prior_p_shape1}) pushes
-the distribution towards 1, increasing the second shape parameter (e.g.
-\code{prior_p_shape2}) pushes the distribution towards 0. Increasing both
-shape parameters squeezes the distribution and makes it narrower.}
+\item{prior_prev_shape1, prior_prev_shape2, prior_ICC_shape1, prior_ICC_shape2}{parameters that dictate the shape of the Beta priors on prevalence and the
+ICC. Increasing the first shape parameter (e.g. \code{prior_prev_shape1})
+pushes the distribution towards 1, increasing the second shape parameter
+(e.g. \code{prior_prev_shape2}) pushes the distribution towards 0.
+Increasing both shape parameters squeezes the distribution towards the
+centre and therefore makes it narrower. The default values of these
+parameters are based on an analysis of historical pfhrp2/3 studies.}
 
 \item{prev_cells, ICC_cells}{the number of cells in the grid in each
 dimension.}
 }
 \description{
 Get posterior distribution of both prevalence and the ICC on a
-  grid.
+  grid. This can be useful for producing e.g. a contour plot of the posterior
+  distribution of both parameters.
+}
+\examples{
+get_joint_grid(n = c(5, 2, 9), N = c(100, 80, 120))
+
 }

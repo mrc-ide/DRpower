@@ -4,7 +4,7 @@
 \alias{get_HDI}
 \title{Get High Density Interval from adaptive quadrature object}
 \usage{
-get_HDI(df_norm, alpha = 0.05)
+get_HDI(df_norm, alpha = 0.05, n_grid = 1000)
 }
 \arguments{
 \item{df_norm}{a normalised quadrature data.frame as produced by
@@ -12,10 +12,26 @@ get_HDI(df_norm, alpha = 0.05)
 
 \item{alpha}{the significance level of the interval. Equivalently, one minus
 the area under the curve of the interval.}
+
+\item{n_grid}{the number of intervals the final curve is broken into when
+computing the HDI on a grid.}
 }
 \description{
 The HDI for a given alpha is defined as the narrowest interval
   in which the area under curve equals 1 - alpha. This can be obtained by
   searching down in the y-axis until the integrated area equals 1 - alpha.
-  The HDI method is one method of calculating credible intervals.
+  NB, although the HDI can be defined for multi-modal distributions,
+  sometimes resulting in non-contiguous intervals, this function only returns
+  a single interval and will throw an error if multiple intervals are
+  detected. See details for the method used.
+}
+\details{
+The method used to calculate the HDI is a simple grid-based
+  approach. The entire range implied by the quadrature object is divided up
+  into a grid of equally sizes slices. Simpson's rule is evaluated at all of
+  these points using the apropriate coefficients, and the size of each slice
+  is calculated. Slices are ordered in terms of decreasing y-value, and the
+  cumulative area of slices is calculated until we reach the desired area (1
+  - alpha). The x-range implied by these slices is calculated, and a check is
+  performed to ensure this results in a single contiguous interval.
 }

@@ -178,19 +178,21 @@ loglike_joint_p <- function(n, N, p, n_intervals = 40,
 #'   pushes the distribution towards 1, increasing the second shape parameter
 #'   (e.g. \code{prior_prev_shape2}) pushes the distribution towards 0.
 #'   Increasing both shape parameters squeezes the distribution towards the
-#'   centre and therefore makes it narrower.
-#' @param return_type a list object specifying which outputs to produce (only a
-#'   subset of outputs is active by default to reduce computation time and to
-#'   simplify things for the basic user). The following options are available:
+#'   centre and therefore makes it narrower. The default values of these
+#'   parameters are based on an analysis of historical pfhrp2/3 studies.
+#' @param post_mean_on,post_median_on,post_CrI_on,post_thresh_on,post_full_on a
+#'   series of boolean (TRUE/FALSE) objects specifying which outputs to produce.
+#'   The following options are available:
 #'   \itemize{
-#'     \item \code{mean_on}: if \code{TRUE} then return the posterior mean.
-#'     \item \code{median_on}: if \code{TRUE} then return the posterior median.
-#'     \item \code{CrI_on}: if \code{TRUE} then return the posterior credible
-#'     interval at significance level \code{alpha}. See \code{CrI_type} argument
-#'     for how this is calculated.
-#'     \item \code{thresh_on}: if \code{TRUE} then return the posterior
+#'     \item \code{post_mean_on}: if \code{TRUE} then return the posterior mean.
+#'     \item \code{post_median_on}: if \code{TRUE} then return the posterior
+#'     median.
+#'     \item \code{post_CrI_on}: if \code{TRUE} then return the posterior
+#'     credible interval at significance level \code{alpha}. See \code{CrI_type}
+#'     argument for how this is calculated.
+#'     \item \code{post_thresh_on}: if \code{TRUE} then return the posterior
 #'     probability of being above the threshold specified by \code{prev_thresh}.
-#'     \item \code{full_on}: if \code{TRUE} then return the full posterior
+#'     \item \code{post_full_on}: if \code{TRUE} then return the full posterior
 #'     distribution (as approximated using the adaptive quadrature approach) in
 #'     0.1\% intervals from 0\% to 100\%.
 #'   }
@@ -219,21 +221,25 @@ NULL
 ##' @rdname get_posterior
 #' @importFrom stats optim
 #' @importFrom graphics lines points abline
+#' @examples
+#' # basic example of estimating prevalence and ICC from observed counts
+#' df_counts <- data.frame(sample_size = c(80, 110, 120),
+#'                         deletions = c(3, 5, 6))
+#' get_prevalence(n = df_counts$deletions, N = df_counts$sample_size)
+#' get_ICC(n = df_counts$deletions, N = df_counts$sample_size)
+#' 
 #' @export
 
 get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
                            prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
-                           prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 3.0,
-                           return_type = list(mean_on = FALSE,
-                                              median_on = TRUE,
-                                              CrI_on = TRUE,
-                                              thresh_on = TRUE,
-                                              full_on = FALSE),
-                           CrI_type = "HDI", n_intervals = 20,
-                           debug_on = FALSE, use_cpp = TRUE) {
+                           prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 9.0,
+                           post_mean_on = FALSE, post_median_on = TRUE,
+                           post_CrI_on = TRUE, post_thresh_on = TRUE,
+                           post_full_on = FALSE, CrI_type = "HDI",
+                           n_intervals = 20, debug_on = FALSE, use_cpp = TRUE) {
   
   # avoid "no visible binding" note
-  dummy <- NULL
+  dummy <- A <- B <- C <- x0 <- x1 <- post_mean <- NULL
   
   # check inputs
   assert_vector_pos_int(n)
@@ -248,8 +254,11 @@ get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
   assert_single_bounded(prior_prev_shape2, left = 1, right = 1e3)
   assert_single_bounded(prior_ICC_shape1, left = 1, right = 1e3)
   assert_single_bounded(prior_ICC_shape2, left = 1, right = 1e3)
-  assert_list(return_type, message = "return_type must be a list")
-  assert_in(c("mean_on", "median_on", "CrI_on", "thresh_on", "full_on"), names(return_type), name_y = "names(return_type)")
+  assert_single_logical(post_mean_on)
+  assert_single_logical(post_median_on)
+  assert_single_logical(post_CrI_on)
+  assert_single_logical(post_thresh_on)
+  assert_single_logical(post_full_on)
   assert_single_string(CrI_type)
   assert_in(CrI_type, c("HDI", "ETI"))
   assert_pos_int(n_intervals)
@@ -308,29 +317,32 @@ get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
   ret <- data.frame(dummy = NA)
   
   # solve for posterior mean
-  if (return_type$mean_on) {
-    ret$mean = NA
+  if (post_mean_on) {
+    ret$post_mean = df_norm %>%
+      dplyr::mutate(post_mean = 1/4*A*(x1^4 - x0^4) + 1/3*B*(x1^3 - x0^3) + 1/2*C*(x1^2 - x0^2)) %>%
+      dplyr::pull(post_mean) %>%
+      sum()
   }
   
   # solve for posterior median
-  if (return_type$median_on) {
-    ret$median <- qquad(df_norm, q = 0.5)
+  if (post_median_on) {
+    ret$post_median <- qquad(df_norm, q = 0.5)
   }
   
   # solve for lower and upper CrIs
-  if (return_type$CrI_on) {
+  if (post_CrI_on) {
     if (CrI_type == "ETI") {
-      ret$lower <- qquad(df_norm, q = alpha / 2)
-      ret$upper <- qquad(df_norm, q = 1 - alpha / 2)
+      ret$CrI_lower <- qquad(df_norm, q = alpha / 2)
+      ret$CrI_upper <- qquad(df_norm, q = 1 - alpha / 2)
     } else if (CrI_type == "HDI") {
       HDI <- get_HDI(df_norm, alpha = alpha)
-      ret$lower <- HDI["lower"]
-      ret$upper <- HDI["upper"]
+      ret$CrI_lower <- HDI["lower"]
+      ret$CrI_upper <- HDI["upper"]
     }
   }
   
   # solve for prob above threshold
-  if (return_type$thresh_on) {
+  if (post_thresh_on) {
     prob_above_threshold <- rep(NA, length(prev_thresh))
     for (i in seq_along(prev_thresh)) {
       prob_above_threshold[i] <- 1 - pquad(df_norm, p = prev_thresh[i])
@@ -344,11 +356,11 @@ get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
   }
   
   # get full posterior interpolated curve from Simpson's rule
-  if (return_type$full_on) {
+  if (post_full_on) {
     x <- seq(0, 1, l = 1001)
     z <- findInterval(x, vec = df_norm$x0)
     y <- df_norm$A[z]*x^2 + df_norm$B[z]*x + df_norm$C[z]
-    ret$full <- I(list(y))
+    ret$post_full <- I(list(y))
   }
   
   # finalise output
@@ -368,16 +380,14 @@ get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
 
 get_ICC <- function(n, N, alpha = 0.05,
                     prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
-                    prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 1.0,
-                    return_type = list(mean_on = FALSE,
-                                       median_on = TRUE,
-                                       CrI_on = TRUE,
-                                       full_on = FALSE),
+                    prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 9.0,
+                    post_mean_on = FALSE, post_median_on = TRUE,
+                    post_CrI_on = TRUE, post_full_on = FALSE,
                     CrI_type = "HDI", n_intervals = 20,
                     debug_on = FALSE, use_cpp = TRUE) {
   
   # avoid "no visible binding" note
-  dummy <- NULL
+  dummy <- A <- B <- C <- x0 <- x1 <- post_mean <- NULL
   
   # check inputs
   assert_vector_pos_int(n)
@@ -390,8 +400,10 @@ get_ICC <- function(n, N, alpha = 0.05,
   assert_single_bounded(prior_prev_shape2, left = 1, right = 1e3)
   assert_single_bounded(prior_ICC_shape1, left = 1, right = 1e3)
   assert_single_bounded(prior_ICC_shape2, left = 1, right = 1e3)
-  assert_list(return_type, message = "return_type must be a list")
-  assert_in(c("mean_on", "median_on", "CrI_on", "full_on"), names(return_type), name_y = "names(return_type)")
+  assert_single_logical(post_mean_on)
+  assert_single_logical(post_median_on)
+  assert_single_logical(post_CrI_on)
+  assert_single_logical(post_full_on)
   assert_single_string(CrI_type)
   assert_in(CrI_type, c("HDI", "ETI"))
   assert_pos_int(n_intervals)
@@ -450,33 +462,36 @@ get_ICC <- function(n, N, alpha = 0.05,
   ret <- data.frame(dummy = NA)
   
   # solve for posterior mean
-  if (return_type$mean_on) {
-    ret$mean = NA
+  if (post_mean_on) {
+    ret$post_mean = df_norm %>%
+      dplyr::mutate(post_mean = 1/4*A*(x1^4 - x0^4) + 1/3*B*(x1^3 - x0^3) + 1/2*C*(x1^2 - x0^2)) %>%
+      dplyr::pull(post_mean) %>%
+      sum()
   }
   
   # solve for posterior median
-  if (return_type$median_on) {
-    ret$median <- qquad(df_norm, q = 0.5)
+  if (post_median_on) {
+    ret$post_median <- qquad(df_norm, q = 0.5)
   }
   
   # solve for lower and upper CrIs
-  if (return_type$CrI_on) {
+  if (post_CrI_on) {
     if (CrI_type == "ETI") {
-      ret$lower <- qquad(df_norm, q = alpha / 2)
-      ret$upper <- qquad(df_norm, q = 1 - alpha / 2)
+      ret$CrI_lower <- qquad(df_norm, q = alpha / 2)
+      ret$CrI_upper <- qquad(df_norm, q = 1 - alpha / 2)
     } else if (CrI_type == "HDI") {
       HDI <- get_HDI(df_norm, alpha = alpha)
-      ret$lower <- HDI["lower"]
-      ret$upper <- HDI["upper"]
+      ret$CrI_lower <- HDI["lower"]
+      ret$CrI_upper <- HDI["upper"]
     }
   }
   
   # get full posterior interpolated curve from Simpson's rule
-  if (return_type$full_on) {
+  if (post_full_on) {
     x <- seq(0, 1, l = 1001)
     z <- findInterval(x, vec = df_norm$x0)
     y <- df_norm$A[z]*x^2 + df_norm$B[z]*x + df_norm$C[z]
-    ret$full <- I(list(y))
+    ret$post_full <- I(list(y))
   }
   
   # finalise output
@@ -491,23 +506,21 @@ get_ICC <- function(n, N, alpha = 0.05,
 #' @title Get posterior distribution of both prevalence and the ICC on a grid
 #'
 #' @description Get posterior distribution of both prevalence and the ICC on a
-#'   grid.
+#'   grid. This can be useful for producing e.g. a contour plot of the posterior
+#'   distribution of both parameters.
 #'
-#' @param n,N the numerator (\code{n}) and denominator (\code{N}) per cluster.
-#' @param prior_prev_shape1,prior_prev_shape2,prior_ICC_shape1,prior_ICC_shape2
-#'   parameters that dictate the shape of the priors on prevalence and the ICC.
-#'   Increasing the first shape parameter (e.g. \code{prior_p_shape1}) pushes
-#'   the distribution towards 1, increasing the second shape parameter (e.g.
-#'   \code{prior_p_shape2}) pushes the distribution towards 0. Increasing both
-#'   shape parameters squeezes the distribution and makes it narrower.
+#' @inheritParams get_posterior
 #' @param prev_cells,ICC_cells the number of cells in the grid in each
 #'   dimension.
-#'  
+#'
+#' @examples
+#' get_joint_grid(n = c(5, 2, 9), N = c(100, 80, 120))
+#' 
 #' @export
 
 get_joint_grid <- function(n, N, 
                            prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
-                           prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 1.0,
+                           prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 9.0,
                            prev_cells = 64, ICC_cells = 64) {
   
   # check inputs
@@ -584,7 +597,9 @@ get_joint_grid <- function(n, N,
 #------------------------------------------------
 #' @title Estimate power via simulation
 #'
-#' @description Estimates power empirically via repeated simulation.
+#' @description For a given sample design, estimates power empirically via
+#'   repeated simulation (see Details). Returns an estimate of the power, along
+#'   with lower and upper bounds of this estimate.
 #' 
 #' @details
 #' Estimates power using the following approach:
@@ -597,10 +612,11 @@ get_joint_grid <- function(n, N,
 #'  reject the null hypothesis, and encode this as a single correct conclusion.
 #'  \item Count the number of simulations for which the correct conclusion is
 #'  reached, relative to the total number of simulations. This gives an estimate
-#'  of empirical power, along with upper and lower 95% binomial CIs on the power
+#'  of empirical power, along with upper and lower 95\% binomial CIs on the power
 #'  via the method of Clopper and Pearson (1934).
 #' }
 #' 
+#' @inheritParams get_posterior
 #' @param N vector giving the number of samples obtained from each cluster.
 #' @param prevalence assumed true prevalence of pfhrp2 deletions. Input as
 #'   proportion between 0 and 1.
@@ -609,13 +625,6 @@ get_joint_grid <- function(n, N,
 #' @param rejection_threshold the posterior probability of being above the
 #'   prevalence threshold needs to be greater than \code{rejection_threshold} in
 #'   order to reject the null hypothesis.
-#' @param prior_prev_shape1,prior_prev_shape2,prior_ICC_shape1,prior_ICC_shape2
-#'   parameters that dictate the shape of the Beta priors on prevalence and the
-#'   ICC. Increasing the first shape parameter (e.g. \code{prior_prev_shape1})
-#'   pushes the distribution towards 1, increasing the second shape parameter
-#'   (e.g. \code{prior_prev_shape2}) pushes the distribution towards 0.
-#'   Increasing both shape parameters squeezes the distribution towards the
-#'   centre and therefore makes it narrower.
 #' @param n_intervals the number of intervals used in the adaptive quadrature
 #'   method. Increasing this value gives a more accurate representation of the
 #'   true posterior, but comes at the cost of reduced speed.
@@ -626,13 +635,16 @@ get_joint_grid <- function(n, N,
 #' limits illustrated in the case of the binomial. Biometrika, 26, 404–413. doi:
 #' 10.2307/2331986.
 #'
+#' @examples
+#' get_power(N = c(120, 90, 150), prevalence = 0.15, ICC = 0.1 , reps = 1e2)
+#' 
 #' @export
 
-get_power <- function(N, prevalence = 0.10, ICC = 0.25,
+get_power <- function(N, prevalence = 0.10, ICC = 0.10,
                       prev_thresh = 0.05,
                       rejection_threshold = 0.95,
                       prior_prev_shape1 = 1, prior_prev_shape2 = 1,
-                      prior_ICC_shape1 = 1, prior_ICC_shape2 = 3,
+                      prior_ICC_shape1 = 1, prior_ICC_shape2 = 9,
                       n_intervals = 20, reps = 1e2) {
   
   # check inputs
@@ -662,11 +674,11 @@ get_power <- function(N, prevalence = 0.10, ICC = 0.25,
                             prior_ICC_shape1 = prior_ICC_shape1,
                             prior_ICC_shape2 = prior_ICC_shape2,
                             prev_thresh = prev_thresh,
-                            return_type = list(mean_on = FALSE,
-                                               median_on = FALSE,
-                                               CrI_on = FALSE,
-                                               thresh_on = TRUE,
-                                               full_on = FALSE),
+                            post_mean_on = FALSE,
+                            post_median_on = FALSE,
+                            post_CrI_on = FALSE,
+                            post_thresh_on = TRUE,
+                            post_full_on = FALSE,
                             n_intervals = n_intervals)
     
     sim_correct[i] <- (p_est$prob_above_threshold > rejection_threshold)

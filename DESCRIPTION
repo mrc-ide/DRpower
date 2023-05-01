@@ -1,17 +1,21 @@
 Package: DRpower
 Type: Package
-Title: Sample size estimation and power analysis for drug- and diagnostic
-    resistance studies
+Title: Study design and analysis for pfhrp2/3 deletion prevalence studies
 Version: 1.0.0
 Authors@R: as.person(c(
     "Bob Verity <r.verity@imperial.ac.uk> [aut, cre]"
   ))
-Description: Can be used to analyse prevalence data typical of drug- and
-    diagnostic-resistance studies (i.e. pfhrp2/3 deletions in malaria). Uses a
-    Bayesian approach to estimate both the prevalence and the level of intra-
-    cluster correlation. Also estimates the power via simulation for a given
-    sample size, making it possible to choose a sample size to achieve a given
-    desired power.
+Description: This package can be used in the design and/or analysis stages of
+    Plasmodium falciparum pfhrp2/3 deletion prevalence studies. It assumes that
+    the study takes the form of a clustered prevalence survey, meaning the data
+    consists of a numerator (number tested) and denominator (number of deletions
+    found) over multiple clusters. Further, it assumes that we are interested in
+    estimating the study-level prevalence, i.e. over all clusters, while
+    accounting for the possibility of high intra-cluster correlation. It does
+    this using a Bayesian random effects model. When designing a study, rather
+    than analysing data, power can be estimated empirically by simulation. This
+    can be used to establish a minimum sample size required to achieve a given
+    target power.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -20,7 +24,6 @@ BugReports: https://github.com/mrc-ide/DRpower/issues
 Imports: 
     dplyr,
     extraDistr,
-    ICCbin,
     magrittr,
     Rcpp,
     rlang,
