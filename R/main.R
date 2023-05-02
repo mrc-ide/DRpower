@@ -595,11 +595,12 @@ get_joint_grid <- function(n, N,
 }
 
 #------------------------------------------------
-#' @title Estimate power via simulation
+#' @title Estimate power when testing prevalence against a threshold
 #'
-#' @description For a given sample design, estimates power empirically via
-#'   repeated simulation (see Details). Returns an estimate of the power, along
-#'   with lower and upper bounds of this estimate.
+#' @description Estimates power empirically via repeated simulation for the case
+#'   of a clustered prevalence survey comparing against a set threshold. Returns
+#'   an estimate of the power, along with lower and upper bounds of this
+#'   estimate.
 #' 
 #' @details
 #' Estimates power using the following approach:
@@ -636,16 +637,16 @@ get_joint_grid <- function(n, N,
 #' 10.2307/2331986.
 #'
 #' @examples
-#' get_power(N = c(120, 90, 150), prevalence = 0.15, ICC = 0.1 , reps = 1e2)
+#' get_power_threshold(N = c(120, 90, 150), prevalence = 0.15, ICC = 0.1 , reps = 1e2)
 #' 
 #' @export
 
-get_power <- function(N, prevalence = 0.10, ICC = 0.10,
-                      prev_thresh = 0.05,
-                      rejection_threshold = 0.95,
-                      prior_prev_shape1 = 1, prior_prev_shape2 = 1,
-                      prior_ICC_shape1 = 1, prior_ICC_shape2 = 9,
-                      n_intervals = 20, reps = 1e2) {
+get_power_threshold <- function(N, prevalence = 0.10, ICC = 0.10,
+                                prev_thresh = 0.05,
+                                rejection_threshold = 0.95,
+                                prior_prev_shape1 = 1, prior_prev_shape2 = 1,
+                                prior_ICC_shape1 = 1, prior_ICC_shape2 = 9,
+                                n_intervals = 20, reps = 1e2) {
   
   # check inputs
   assert_vector_pos_int(N)
@@ -691,6 +692,116 @@ get_power <- function(N, prevalence = 0.10, ICC = 0.10,
                     upper = power_CI["upper"])
   rownames(ret) <- NULL
   return(ret)
+}
+
+#------------------------------------------------
+#' @title Get power when testing for presence of deletions
+#'
+#' @description Calculates power directly for the case of a clustered prevalence
+#'   survey where the aim is to detect the presence of *any* deletions over all
+#'   clusters. This design can be useful as a pilot study to identify priority
+#'   regions where deletions are likely. Note that we need to take account of
+#'   intra-cluster correlation here, as a high ICC will make it more likely that
+#'   we see zero deletions even when the prevalence is, in fact, non-zero.
+#' 
+#' @inheritParams get_power_threshold
+#'
+#' @examples
+#' get_power_presence(N = c(120, 90, 150), prevalence = 0.01, ICC = 0.1)
+#' 
+#' @export
+
+get_power_presence <- function(N, prevalence = 0.01, ICC = 0.10) {
+  
+  # check inputs
+  assert_vector_pos_int(N, zero_allowed = FALSE)
+  assert_single_bounded(prevalence)
+  assert_single_bounded(ICC)
+  
+  # calculate log-probability of seeing zero deletions, dealing with special
+  # cases
+  if (prevalence == 0) {
+    log_prob_zero <- 0
+    
+  } else if (ICC == 0) {
+    log_prob_zero <- sum(N)*log(1 - prevalence)
+    
+  } else if (ICC == 1) {
+    log_prob_zero <- length(N)*log(1 - prevalence)
+    
+  } else {
+    alpha <- prevalence*(1 / ICC - 1)
+    beta <- (1 - prevalence)*(1 / ICC - 1)
+    log_prob_zero <-  sum(lgamma(alpha + beta) - lgamma(beta) + lgamma(N + beta) - lgamma(N + alpha + beta))
+    
+  }
+  
+  # power is probability of not seeing zero deletions
+  power <- 1 - exp(log_prob_zero)
+  
+  return(power)
+}
+
+#------------------------------------------------
+#' @title Get minimum sample size when testing for presence of deletions
+#'
+#' @description Calculates the minimum sample size required per cluster to
+#'   achieve a certain power for the case of a clustered prevalence survey where
+#'   the aim is to detect the presence of *any* deletions over all clusters (see
+#'   \code{?get_power_presence()}). Assumes the same sample size per cluster.
+#' 
+#' @inheritParams get_power_threshold
+#' @param n_clust the number of clusters.
+#' @param target_power the power we are aiming to achieve.
+#' @param N_max the maximum allowed sample size.
+#'
+#' @examples
+#' get_sample_size_presence(n_clust = 5, prevalence = 0.01, ICC = 0.1)
+#' 
+#' @export
+
+get_sample_size_presence <- function(n_clust, target_power = 0.8,
+                                     prevalence = 0.01, ICC = 0.10,
+                                     N_max = 2e3) {
+  
+  # check inputs
+  assert_single_pos_int(n_clust, zero_allowed = FALSE)
+  assert_single_bounded(target_power)
+  assert_single_bounded(prevalence)
+  assert_single_bounded(ICC)
+  assert_single_pos_int(N_max, zero_allowed = FALSE)
+  
+  # calculate log-probability of seeing zero deletions, dealing with special
+  # cases
+  N <- 1:N_max
+  if (prevalence == 0) {
+    log_prob_zero <- 0
+    
+  } else if (ICC == 0) {
+    log_prob_zero <- n_clust*N*log(1 - prevalence)
+    
+  } else if (ICC == 1) {
+    log_prob_zero <- n_clust*log(1 - prevalence)
+    
+  } else {
+    alpha <- prevalence*(1 / ICC - 1)
+    beta <- (1 - prevalence)*(1 / ICC - 1)
+    log_prob_zero <-  n_clust * (lgamma(alpha + beta) - lgamma(beta) + lgamma(N + beta) - lgamma(N + alpha + beta))
+    
+  }
+  
+  # power is probability of not seeing zero deletions
+  power <- 1 - exp(log_prob_zero)
+  
+  # break if power not reached
+  if (!any(power > target_power)) {
+    stop(sprintf("target power not reached within sample size up to N_max = %s", N_max))
+  }
+  
+  # get minimum sample size
+  N_opt <- N[which(power > target_power)[1]]
+  
+  return(N_opt)
 }
 
 #------------------------------------------------
