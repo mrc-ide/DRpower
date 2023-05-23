@@ -1,0 +1,47 @@
+---
+title: "Designing a study"
+author: "Bob Verity"
+date: "Last updated: `r format(Sys.Date(), '%d %b %Y')`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{tutorial_design}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(DRpower)
+library(kableExtra)
+library(dplyr)
+library(ggplot2)
+```
+
+This tutorial demonstrates how you can use the DRpower package in the design phase of a *pfhrp2/3* deletion study to ensure you have adequate power. This takes a purely statistical view of the problem; we will not talk about the *many* other factors that need to be factored in when designing a study, such as feasibility, costs and ethical considerations. The results presented here should therefore be taken alonside other sources of information.
+
+## 1. Consult sample size tables
+
+Our aim is to conduct a multi-cluster prevalence survey to test against a defined threshold, as described [here](TODO). The question is; how many clusters should I use, and how many samples per cluster?
+
+The fastest way to get an idea of adequate sample size is to consult pre-computed sample size tables. These can be found ??.
+
+TODO - also mention power curves.
+
+## 2. Create a plan for your final cluster sizes
+
+TODO
+
+```{r}
+N <- c(120, 50, 90, 110, 70, 50, 85, 100, 60, 40)
+get_power_threshold(N = N, reps = 1e2)
+```
+
+
+<p align="center">
+<button class="btn btn-primary" onclick="window.location.href='https://w3docs.com';"> Next topic </button>
+</p>

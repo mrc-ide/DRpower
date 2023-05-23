@@ -2,9 +2,11 @@
 
 export("%>%")
 export(adaptive_quadrature)
+export(check_DRpower_loaded)
 export(get_HDI)
 export(get_ICC)
 export(get_joint_grid)
+export(get_max_x)
 export(get_power_presence)
 export(get_power_threshold)
 export(get_prevalence)
