@@ -27,6 +27,7 @@ Imports:
     ggplot2,
     kableExtra,
     magrittr,
+    pandoc,
     Rcpp,
     rlang,
     statmod,
