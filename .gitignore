@@ -4,3 +4,5 @@
 .Ruserdata
 .DS_Store
 ignore/
+docs
+inst/doc

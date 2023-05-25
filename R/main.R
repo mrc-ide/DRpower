@@ -1,3 +1,14 @@
+#------------------------------------------------
+#' @title Check that DRpower package has loaded successfully
+#'
+#' @description Simple function to check that DRpower package has loaded 
+#'   successfully. Prints "DRpower loaded successfully!" if so.
+#'
+#' @export
+
+check_DRpower_loaded <- function() {
+  message("DRpower loaded successfully!")
+}
 
 #------------------------------------------------
 # reparameterisation of the beta-binomial distribution in terms of a mean (p)
@@ -180,10 +191,11 @@ loglike_joint_p <- function(n, N, p, n_intervals = 40,
 #'   Increasing both shape parameters squeezes the distribution towards the
 #'   centre and therefore makes it narrower. The default values of these
 #'   parameters are based on an analysis of historical pfhrp2/3 studies.
-#' @param post_mean_on,post_median_on,post_CrI_on,post_thresh_on,post_full_on a
+#' @param MAP_on,post_mean_on,post_median_on,post_CrI_on,post_thresh_on,post_full_on a
 #'   series of boolean (TRUE/FALSE) objects specifying which outputs to produce.
 #'   The following options are available:
 #'   \itemize{
+#'     \item \code{MAP_on}: if \code{TRUE} then return the maximum a posteriori.
 #'     \item \code{post_mean_on}: if \code{TRUE} then return the posterior mean.
 #'     \item \code{post_median_on}: if \code{TRUE} then return the posterior
 #'     median.
@@ -205,6 +217,12 @@ loglike_joint_p <- function(n, N, p, n_intervals = 40,
 #' @param n_intervals the number of intervals used in the adaptive quadrature
 #'   method. Increasing this value gives a more accurate representation of the
 #'   true posterior, but comes at the cost of reduced speed.
+#' @param round_digits the number of digits after the decimal point that are
+#'   used when reporting estimates. This is to simplify results and to avoid
+#'   giving the false impression of extreme precision. Note also that prevalence
+#'   is reported as a proportion between 0 and 1. For example, if
+#'   \code{round_digits = 3} (the default) then a prevalence of 12.432% will be
+#'   reported as 0.124.
 #' @param debug_on for use in debugging. If \code{TRUE} and if \code{use_cpp =
 #'   FALSE} then produces a plot of the posterior distribution evaluated by
 #'   brute force (black) overlaid with the adaptive quadrature approximation
@@ -233,10 +251,11 @@ NULL
 get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
                            prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
                            prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 9.0,
-                           post_mean_on = FALSE, post_median_on = TRUE,
+                           MAP_on = TRUE, post_mean_on = FALSE, post_median_on = FALSE,
                            post_CrI_on = TRUE, post_thresh_on = TRUE,
                            post_full_on = FALSE, CrI_type = "HDI",
-                           n_intervals = 20, debug_on = FALSE, use_cpp = TRUE) {
+                           n_intervals = 20, round_digits = 2,
+                           debug_on = FALSE, use_cpp = TRUE) {
   
   # avoid "no visible binding" note
   dummy <- A <- B <- C <- x0 <- x1 <- post_mean <- NULL
@@ -254,6 +273,7 @@ get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
   assert_single_bounded(prior_prev_shape2, left = 1, right = 1e3)
   assert_single_bounded(prior_ICC_shape1, left = 1, right = 1e3)
   assert_single_bounded(prior_ICC_shape2, left = 1, right = 1e3)
+  assert_single_logical(MAP_on)
   assert_single_logical(post_mean_on)
   assert_single_logical(post_median_on)
   assert_single_logical(post_CrI_on)
@@ -263,6 +283,7 @@ get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
   assert_in(CrI_type, c("HDI", "ETI"))
   assert_pos_int(n_intervals)
   assert_greq(n_intervals, 5)
+  assert_single_pos_int(round_digits, zero_allowed = FALSE)
   assert_single_logical(debug_on)
   assert_single_logical(use_cpp)
   
@@ -316,29 +337,39 @@ get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
   # initialise return data.frame
   ret <- data.frame(dummy = NA)
   
+  # solve for maximum a posteriori (MAP)
+  if (MAP_on) {
+    MAP <- get_max_x(df_norm)
+    ret$MAP <- round(MAP * 100, round_digits)
+  }
+  
   # solve for posterior mean
   if (post_mean_on) {
-    ret$post_mean = df_norm %>%
+    post_mean = df_norm %>%
       dplyr::mutate(post_mean = 1/4*A*(x1^4 - x0^4) + 1/3*B*(x1^3 - x0^3) + 1/2*C*(x1^2 - x0^2)) %>%
       dplyr::pull(post_mean) %>%
       sum()
+    ret$post_mean = round(post_mean * 100, round_digits)
   }
   
   # solve for posterior median
   if (post_median_on) {
-    ret$post_median <- qquad(df_norm, q = 0.5)
+    post_median <- qquad(df_norm, q = 0.5)
+    ret$post_median <- round(post_median * 100,  round_digits)
   }
   
   # solve for lower and upper CrIs
   if (post_CrI_on) {
     if (CrI_type == "ETI") {
-      ret$CrI_lower <- qquad(df_norm, q = alpha / 2)
-      ret$CrI_upper <- qquad(df_norm, q = 1 - alpha / 2)
+      CrI_lower <- qquad(df_norm, q = alpha / 2)
+      CrI_upper <- qquad(df_norm, q = 1 - alpha / 2)
     } else if (CrI_type == "HDI") {
       HDI <- get_HDI(df_norm, alpha = alpha)
-      ret$CrI_lower <- HDI["lower"]
-      ret$CrI_upper <- HDI["upper"]
+      CrI_lower <- HDI["lower"]
+      CrI_upper <- HDI["upper"]
     }
+    ret$CrI_lower <- round(CrI_lower * 100, round_digits)
+    ret$CrI_upper <- round(CrI_upper * 100, round_digits)
   }
   
   # solve for prob above threshold
@@ -348,6 +379,7 @@ get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
       prob_above_threshold[i] <- 1 - pquad(df_norm, p = prev_thresh[i])
     }
     prob_above_threshold[prob_above_threshold > 1] <- 1
+    prob_above_threshold <- round(prob_above_threshold, 4)
     if (length(prev_thresh) == 1) {
       ret$prob_above_threshold <- prob_above_threshold
     } else {
@@ -360,6 +392,7 @@ get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
     x <- seq(0, 1, l = 1001)
     z <- findInterval(x, vec = df_norm$x0)
     y <- df_norm$A[z]*x^2 + df_norm$B[z]*x + df_norm$C[z]
+    y[y < 0] <- 0
     ret$post_full <- I(list(y))
   }
   
@@ -381,9 +414,9 @@ get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
 get_ICC <- function(n, N, alpha = 0.05,
                     prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
                     prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 9.0,
-                    post_mean_on = FALSE, post_median_on = TRUE,
-                    post_CrI_on = TRUE, post_full_on = FALSE,
-                    CrI_type = "HDI", n_intervals = 20,
+                    MAP_on = TRUE, post_mean_on = FALSE, post_median_on = FALSE,
+                    post_CrI_on = TRUE, post_full_on = FALSE, CrI_type = "HDI",
+                    n_intervals = 20, round_digits = 2,
                     debug_on = FALSE, use_cpp = TRUE) {
   
   # avoid "no visible binding" note
@@ -400,6 +433,7 @@ get_ICC <- function(n, N, alpha = 0.05,
   assert_single_bounded(prior_prev_shape2, left = 1, right = 1e3)
   assert_single_bounded(prior_ICC_shape1, left = 1, right = 1e3)
   assert_single_bounded(prior_ICC_shape2, left = 1, right = 1e3)
+  assert_single_logical(MAP_on)
   assert_single_logical(post_mean_on)
   assert_single_logical(post_median_on)
   assert_single_logical(post_CrI_on)
@@ -408,6 +442,7 @@ get_ICC <- function(n, N, alpha = 0.05,
   assert_in(CrI_type, c("HDI", "ETI"))
   assert_pos_int(n_intervals)
   assert_greq(n_intervals, 5)
+  assert_single_pos_int(round_digits, zero_allowed = FALSE)
   assert_single_logical(debug_on)
   assert_single_logical(use_cpp)
   
@@ -461,29 +496,39 @@ get_ICC <- function(n, N, alpha = 0.05,
   # initialise return data.frame
   ret <- data.frame(dummy = NA)
   
+  # solve for maximum a posteriori (MAP)
+  if (MAP_on) {
+    MAP <- get_max_x(df_norm)
+    ret$MAP <- round(MAP * 100, round_digits)
+  }
+  
   # solve for posterior mean
   if (post_mean_on) {
-    ret$post_mean = df_norm %>%
+    post_mean = df_norm %>%
       dplyr::mutate(post_mean = 1/4*A*(x1^4 - x0^4) + 1/3*B*(x1^3 - x0^3) + 1/2*C*(x1^2 - x0^2)) %>%
       dplyr::pull(post_mean) %>%
       sum()
+    ret$post_mean = round(post_mean * 100, round_digits)
   }
   
   # solve for posterior median
   if (post_median_on) {
-    ret$post_median <- qquad(df_norm, q = 0.5)
+    post_median <- qquad(df_norm, q = 0.5)
+    ret$post_median <- round(post_median * 100, round_digits)
   }
   
   # solve for lower and upper CrIs
   if (post_CrI_on) {
     if (CrI_type == "ETI") {
-      ret$CrI_lower <- qquad(df_norm, q = alpha / 2)
-      ret$CrI_upper <- qquad(df_norm, q = 1 - alpha / 2)
+      CrI_lower <- qquad(df_norm, q = alpha / 2)
+      CrI_upper <- qquad(df_norm, q = 1 - alpha / 2)
     } else if (CrI_type == "HDI") {
       HDI <- get_HDI(df_norm, alpha = alpha)
-      ret$CrI_lower <- HDI["lower"]
-      ret$CrI_upper <- HDI["upper"]
+      CrI_lower <- HDI["lower"]
+      CrI_upper <- HDI["upper"]
     }
+    ret$CrI_lower <- round(CrI_lower * 100, round_digits)
+    ret$CrI_upper <- round(CrI_upper * 100, round_digits)
   }
   
   # get full posterior interpolated curve from Simpson's rule
@@ -491,6 +536,7 @@ get_ICC <- function(n, N, alpha = 0.05,
     x <- seq(0, 1, l = 1001)
     z <- findInterval(x, vec = df_norm$x0)
     y <- df_norm$A[z]*x^2 + df_norm$B[z]*x + df_norm$C[z]
+    y[y < 0] <- 0
     ret$post_full <- I(list(y))
   }
   

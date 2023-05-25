@@ -1,0 +1,42 @@
+---
+title: "Analysing data"
+author: "Bob Verity"
+date: "Last updated: `r format(Sys.Date(), '%d %b %Y')`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{tutorial_analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(DRpower)
+library(kableExtra)
+library(dplyr)
+library(ggplot2)
+```
+
+TODO
+
+## 1. Estimate prevalence
+
+```{r}
+n <- c(10, 20)
+N <- c(100, 200)
+get_prevalence(n = n,
+               N = N)
+```
+
+## 2. Retrospective power analysis
+
+
+```{r}
+get_power_threshold(N = N, reps = 1e2)
+```
+

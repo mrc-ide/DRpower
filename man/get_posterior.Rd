@@ -15,13 +15,15 @@ get_prevalence(
   prior_prev_shape2 = 1,
   prior_ICC_shape1 = 1,
   prior_ICC_shape2 = 9,
+  MAP_on = TRUE,
   post_mean_on = FALSE,
-  post_median_on = TRUE,
+  post_median_on = FALSE,
   post_CrI_on = TRUE,
   post_thresh_on = TRUE,
   post_full_on = FALSE,
   CrI_type = "HDI",
   n_intervals = 20,
+  round_digits = 2,
   debug_on = FALSE,
   use_cpp = TRUE
 )
@@ -34,12 +36,14 @@ get_ICC(
   prior_prev_shape2 = 1,
   prior_ICC_shape1 = 1,
   prior_ICC_shape2 = 9,
+  MAP_on = TRUE,
   post_mean_on = FALSE,
-  post_median_on = TRUE,
+  post_median_on = FALSE,
   post_CrI_on = TRUE,
   post_full_on = FALSE,
   CrI_type = "HDI",
   n_intervals = 20,
+  round_digits = 2,
   debug_on = FALSE,
   use_cpp = TRUE
 )
@@ -64,10 +68,11 @@ Increasing both shape parameters squeezes the distribution towards the
 centre and therefore makes it narrower. The default values of these
 parameters are based on an analysis of historical pfhrp2/3 studies.}
 
-\item{post_mean_on, post_median_on, post_CrI_on, post_thresh_on, post_full_on}{a
+\item{MAP_on, post_mean_on, post_median_on, post_CrI_on, post_thresh_on, post_full_on}{a
 series of boolean (TRUE/FALSE) objects specifying which outputs to produce.
 The following options are available:
 \itemize{
+  \item \code{MAP_on}: if \code{TRUE} then return the maximum a posteriori.
   \item \code{post_mean_on}: if \code{TRUE} then return the posterior mean.
   \item \code{post_median_on}: if \code{TRUE} then return the posterior
   median.
@@ -91,6 +96,13 @@ default.}
 \item{n_intervals}{the number of intervals used in the adaptive quadrature
 method. Increasing this value gives a more accurate representation of the
 true posterior, but comes at the cost of reduced speed.}
+
+\item{round_digits}{the number of digits after the decimal point that are
+used when reporting estimates. This is to simplify results and to avoid
+giving the false impression of extreme precision. Note also that prevalence
+is reported as a proportion between 0 and 1. For example, if
+\code{round_digits = 3} (the default) then a prevalence of 12.432% will be
+reported as 0.124.}
 
 \item{debug_on}{for use in debugging. If \code{TRUE} and if \code{use_cpp =
 FALSE} then produces a plot of the posterior distribution evaluated by
