@@ -1,0 +1,36 @@
+title: DRpower
+template:
+  bootstrap: 5
+  bootswatch: sandstone
+
+navbar:
+  title: "DRpower"
+  left:
+    - text: "How it works"
+      menu:
+        - text: "Background"
+          href: articles/rationale1_background.html
+        - text: "What's the issue?"
+          href: articles/rationale2_issue.html
+        - text: "The design effect"
+          href: articles/rationale3_design_effect.html
+        - text: "Weaknesses with the traditional approach"
+          href: articles/rationale4_weaknesses.html
+        - text: "The DRpower model"
+          href: articles/rationale5_DRpower.html
+    - text: "Installation"
+      href: articles/installation.html
+    - text: "Tutorials"
+      menu:
+        - text: "Designing a study"
+          href: articles/tutorial_design.html
+        - text: "Analysing data"
+          href: articles/tutorial_analysis.html
+    - text: "Misc"
+      menu:
+        - text: "Power curves and tables"
+          href: TODO
+        - text: "Comparison of central estimates"
+          href: TODO
+    - text: "Functions"
+      href: reference/index.html

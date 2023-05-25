@@ -1,7 +1,7 @@
 Package: DRpower
 Type: Package
 Title: Study design and analysis for pfhrp2/3 deletion prevalence studies
-Version: 1.0.0
+Version: 0.1.0
 Authors@R: as.person(c(
     "Bob Verity <r.verity@imperial.ac.uk> [aut, cre]"
   ))
@@ -24,13 +24,19 @@ BugReports: https://github.com/mrc-ide/DRpower/issues
 Imports: 
     dplyr,
     extraDistr,
+    ggplot2,
+    kableExtra,
     magrittr,
+    pandoc,
     Rcpp,
     rlang,
     statmod,
     tidyr
 Suggests: 
+    knitr,
+    rmarkdown,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 LinkingTo: 
     Rcpp
+VignetteBuilder: knitr

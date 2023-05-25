@@ -2,4 +2,9 @@
 ^\.Rproj\.user$
 ^ignore$
 ^R_ignore$
+^index.md$
 ^\.github$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^README\.Rmd$

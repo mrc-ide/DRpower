@@ -577,3 +577,30 @@ get_HDI <- function(df_norm, alpha = 0.05, n_grid = 1e3) {
   return(c(lower = min(df_subset$x0),
            upper = max(df_subset$x1)))
 }
+
+#------------------------------------------------
+#' @title Get maximum of interpolated curve
+#'
+#' @description Returns the x-value at which y reaches its maximum value under
+#'   an adaptive quadrature object.
+#'
+#' @param df_norm a normalised quadrature data.frame as produced by
+#'   \code{normalise_quadrature()}.
+#'  
+#' @export
+
+get_max_x <- function(df_norm) {
+  
+  # avoid "no visible binding" note
+  A <- B <- C <- max_x <- max_y <- x0 <- x1 <- NULL
+  
+  ret <- df_norm %>%
+    dplyr::mutate(max_x = -0.5*B / A,
+                  max_x = ifelse(max_x > x0, max_x, x0),
+                  max_x = ifelse(max_x < x1, max_x, x1),
+                  max_y = get_Simp_y(max_x, A, B, C)) %>%
+    dplyr::filter(max_y == max(max_y)) %>%
+    dplyr::pull(max_x)
+  
+  return(ret[1])
+}
