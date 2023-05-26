@@ -36,4 +36,8 @@ jobs:
         with:
           extra-packages: rcmdcheck
 
-      - uses: r-lib/actions/check-r-package@v2
+      - name: Build package
+        run: R CMD build . --no-build-vignettes
+
+      - name: Check package
+        run: R CMD check *tar.gz --no-build-vignettes

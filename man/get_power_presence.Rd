@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{get_power_presence}
 \alias{get_power_presence}
-\title{Get power when testing for presence of deletions}
+\title{Calculate power when testing for presence of deletions}
 \usage{
 get_power_presence(N, prevalence = 0.01, ICC = 0.1)
 }
