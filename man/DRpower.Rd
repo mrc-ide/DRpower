@@ -3,7 +3,8 @@
 \docType{package}
 \name{DRpower}
 \alias{DRpower}
-\title{DRpower}
+\title{The DRpower app for design and analysis of Plasmodium falciparum
+pfhrp2/3 data}
 \description{
 This package can be used in the design and/or analysis stages of
   Plasmodium falciparum pfhrp2/3 deletion prevalence studies. We assume that
