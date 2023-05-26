@@ -741,7 +741,7 @@ get_power_threshold <- function(N, prevalence = 0.10, ICC = 0.10,
 }
 
 #------------------------------------------------
-#' @title Get power when testing for presence of deletions
+#' @title Calculate power when testing for presence of deletions
 #'
 #' @description Calculates power directly for the case of a clustered prevalence
 #'   survey where the aim is to detect the presence of *any* deletions over all

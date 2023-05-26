@@ -251,8 +251,10 @@ get_total_diff <- function(log_area_diff, grad_diff) {
 #'   midpoint. This value is used as a proportion of the interval, not as an
 #'   absolute value, meaning values can never be proposed outside of the
 #'   quadrature range.
-#'  
-#' @export
+#'
+# do not document to keep package help simple
+# @export
+#' @noRd
 
 adaptive_quadrature <- function(f1, n_intervals, left, right, debug_on = FALSE, delta = 1e-3) {
   
@@ -343,7 +345,10 @@ adaptive_quadrature <- function(f1, n_intervals, left, right, debug_on = FALSE, 
 #'   \code{adaptive_quadrature()}.
 #'  
 #' @importFrom dplyr mutate select arrange
-#' @export
+#'  
+# do not document to keep package help simple
+# @export
+#' @noRd
 
 normalise_quadrature <- function(df_quad) {
   
@@ -387,7 +392,9 @@ normalise_quadrature <- function(df_quad) {
 #' @param df_quad a data.frame output from the function
 #'   \code{adaptive_quadrature()}.
 #'  
-#' @export
+# do not document to keep package help simple
+# @export
+#' @noRd
 
 plot_quadrature <- function(f1, df_quad) {
   
@@ -431,7 +438,9 @@ plot_quadrature <- function(f1, df_quad) {
 #'   \code{normalise_quadrature()}.
 #' @param p the target area.
 #'  
-#' @export
+# do not document to keep package help simple
+# @export
+#' @noRd
 
 pquad <- function(df_norm, p = 0.5) {
   
@@ -467,7 +476,9 @@ pquad <- function(df_norm, p = 0.5) {
 #'   \code{normalise_quadrature()}.
 #' @param q the target quantile.
 #'  
-#' @export
+# do not document to keep package help simple
+# @export
+#' @noRd
 
 qquad <- function(df_norm, q = 0.5) {
   
@@ -532,7 +543,9 @@ qquad <- function(df_norm, q = 0.5) {
 #' @param n_grid the number of intervals the final curve is broken into when
 #'   computing the HDI on a grid.
 #'  
-#' @export
+# do not document to keep package help simple
+# @export
+#' @noRd
 
 get_HDI <- function(df_norm, alpha = 0.05, n_grid = 1e3) {
   
@@ -587,7 +600,9 @@ get_HDI <- function(df_norm, alpha = 0.05, n_grid = 1e3) {
 #' @param df_norm a normalised quadrature data.frame as produced by
 #'   \code{normalise_quadrature()}.
 #'  
-#' @export
+# do not document to keep package help simple
+# @export
+#' @noRd
 
 get_max_x <- function(df_norm) {
   
