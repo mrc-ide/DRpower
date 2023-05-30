@@ -1,5 +1,5 @@
 ---
-title: "Rationale for DRpower analysis"
+title: "Using DRpower for analysis"
 author: "Bob Verity"
 date: "Last updated: `r format(Sys.Date(), '%d %b %Y')`"
 output: rmarkdown::html_vignette

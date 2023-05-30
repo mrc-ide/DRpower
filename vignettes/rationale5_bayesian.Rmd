@@ -1,10 +1,10 @@
 ---
-title: "Rationale for DRpower analysis"
+title: "Using DRpower for analysis"
 author: "Bob Verity"
 date: "Last updated: `r format(Sys.Date(), '%d %b %Y')`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{rationale5_DRpower}
+  %\VignetteIndexEntry{rationale5_bayesian}
   %\VignetteEngine{knitr::knitr}
   %\VignetteEncoding{UTF-8}
 ---

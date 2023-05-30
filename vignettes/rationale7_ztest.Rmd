@@ -1,0 +1,30 @@
+---
+title: "Using DRpower for study design"
+author: "Bob Verity"
+date: "Last updated: `r format(Sys.Date(), '%d %b %Y')`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{rationale7_ztest}
+  %\VignetteEngine{knitr::knitr}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(DRpower)
+library(kableExtra)
+library(dplyr)
+library(ggplot2)
+```
+
+## 7. The one-sample z-test
+
+Text
+
+
+

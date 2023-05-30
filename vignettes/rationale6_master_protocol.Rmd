@@ -1,0 +1,62 @@
+---
+title: "Using DRpower for study design"
+author: "Bob Verity"
+date: "Last updated: `r format(Sys.Date(), '%d %b %Y')`"
+output: rmarkdown::html_vignette
+bibliography: REFERENCES.bib
+vignette: >
+  %\VignetteIndexEntry{rationale6_master_protocol}
+  %\VignetteEngine{knitr::knitr}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(DRpower)
+library(kableExtra)
+library(dplyr)
+library(ggplot2)
+```
+
+## 6. The 2020 WHO master protocol
+
+In 2020, the WHO released the [master protocol for surveillance of pfhrp2/3 deletions and biobanking to support future research](https://tinyurl.com/73ds8a67)[-@world2020master]. This document was a major step forward.
+
+Contains a sample size calculation:
+
+$n \geq z_{\tiny 1 - \alpha/2}^2 \frac{\displaystyle p(1-p)}{\displaystyle (p-\mu)^2}D_{eff}$
+
+Text
+
+$CI_{lower} = \hat{p} - z_{\tiny 1 - \alpha/2}\sqrt{\frac{\displaystyle \hat{p}(1-\hat{p})}{\displaystyle n}D_{eff}}$
+
+Text
+
+$Z = \frac{\displaystyle |\hat{p} - \mu|}{\displaystyle \sqrt{\frac{\hat{p}(1-\hat{p})}{n}D_{eff}}}$
+
+Text
+
+$\text{Power} = \Phi\Bigg( \frac{|\hat{p} - \mu|}{\sqrt{\frac{\hat{p}(1-\hat{p})}{n}D_{eff} }} - z_{\tiny 1 - \alpha/2} \Bigg)$
+
+Text
+
+$\text{Power} = \Phi(0) = 0.5$
+
+Text
+
+$n \geq (z_{\tiny 1 - \beta} + z_{\tiny 1 - \alpha/2})^2 \frac{\displaystyle p(1-p)}{\displaystyle (p-\mu)^2}D_{eff}$
+
+Text
+
+$(1 + z_{\tiny 1 - \beta}/z_{\tiny 1 - \alpha/2})^2$
+
+which equals `r round((1 + qnorm(0.8) / qnorm(0.975))^2, 3)`.
+
+## References
+
+
