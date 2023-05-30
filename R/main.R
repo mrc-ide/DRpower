@@ -7,7 +7,7 @@
 #' @export
 
 check_DRpower_loaded <- function() {
-  message("DRpower loaded successfully!")
+  message("DRpower version 0.1.0 loaded successfully!")
 }
 
 #------------------------------------------------
@@ -662,6 +662,12 @@ get_joint_grid <- function(n, N,
 #'  of empirical power, along with upper and lower 95\% binomial CIs on the power
 #'  via the method of Clopper and Pearson (1934).
 #' }
+#' Note that this function can be run even when \code{prevalence} is less than
+#' \code{prev_thresh}, although in this case what is returned is not the power.
+#' Power is defined as the probability of *correctly* rejecting the null
+#' hypothesis, whereas here we would be incorrectly rejecting the null.
+#' Therefore, what we obtain in this case is an estimate of the false positive
+#' rate.
 #' 
 #' @inheritParams get_posterior
 #' @param N vector giving the number of samples obtained from each cluster.
@@ -699,7 +705,6 @@ get_power_threshold <- function(N, prevalence = 0.10, ICC = 0.10,
   assert_single_bounded(prevalence)
   assert_single_bounded(ICC)
   assert_single_bounded(prev_thresh)
-  assert_greq(prevalence, prev_thresh)
   assert_single_bounded(rejection_threshold)
   assert_single_bounded(prior_prev_shape1, left = 1, right = 1e3)
   assert_single_bounded(prior_prev_shape2, left = 1, right = 1e3)
@@ -734,21 +739,21 @@ get_power_threshold <- function(N, prevalence = 0.10, ICC = 0.10,
   # get 95% CIs on power
   power_CI <- ClopperPearson(n_success = sum(sim_correct), n_total = reps, alpha = 0.05)
   ret <- data.frame(power = mean(sim_correct),
-                    lower = power_CI["lower"],
-                    upper = power_CI["upper"])
+                    lower = power_CI$lower,
+                    upper = power_CI$upper)
   rownames(ret) <- NULL
   return(ret)
 }
 
 #------------------------------------------------
-#' @title Get power when testing for presence of deletions
+#' @title Calculate power when testing for presence of deletions
 #'
 #' @description Calculates power directly for the case of a clustered prevalence
 #'   survey where the aim is to detect the presence of *any* deletions over all
 #'   clusters. This design can be useful as a pilot study to identify priority
 #'   regions where deletions are likely. Note that we need to take account of
 #'   intra-cluster correlation here, as a high ICC will make it more likely that
-#'   we see zero deletions even when the prevalence is, in fact, non-zero.
+#'   we see zero deletions even when the prevalence is non-zero.
 #' 
 #' @inheritParams get_power_threshold
 #'
@@ -857,6 +862,6 @@ get_sample_size_presence <- function(n_clust, target_power = 0.8,
 ClopperPearson <- function(n_success, n_total, alpha = 0.05) {
   p_lower <- qbeta(p = alpha / 2, shape1 = n_success, shape2 = n_total - n_success + 1)
   p_upper <- qbeta(p = 1 - alpha / 2, shape1 = n_success + 1, shape2 = n_total - n_success)
-  ret <- c(lower = p_lower, upper = p_upper)
+  ret <- data.frame(lower = p_lower, upper = p_upper)
   return(ret)
 }

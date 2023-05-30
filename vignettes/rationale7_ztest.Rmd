@@ -1,10 +1,10 @@
 ---
-title: "Analysing data"
+title: "Using DRpower for study design"
 author: "Bob Verity"
 date: "Last updated: `r format(Sys.Date(), '%d %b %Y')`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{tutorial_analysis}
+  %\VignetteIndexEntry{rationale7_ztest}
   %\VignetteEngine{knitr::knitr}
   %\VignetteEncoding{UTF-8}
 ---
@@ -22,21 +22,9 @@ library(dplyr)
 library(ggplot2)
 ```
 
-TODO
+## 7. The one-sample z-test
 
-## 1. Estimate prevalence
-
-```{r}
-n <- c(10, 20)
-N <- c(100, 200)
-get_prevalence(n = n,
-               N = N)
-```
-
-## 2. Retrospective power analysis
+Text
 
 
-```{r}
-get_power_threshold(N = N, reps = 1e2)
-```
 

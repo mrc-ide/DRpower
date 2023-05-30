@@ -32,8 +32,12 @@ jobs:
         with:
           use-public-rspm: true
 
-      - uses: r-lib/actions/setup-r-dependencies@v1
+      - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: rcmdcheck
 
-      - uses: r-lib/actions/check-r-package@v1
+      - name: Build package
+        run: R CMD build . --no-build-vignettes
+
+      - name: Check package
+        run: R CMD check *tar.gz --no-build-vignettes

@@ -8,6 +8,7 @@ navbar:
   left:
     - text: "How it works"
       menu:
+        - text: "DRpower for analysis"
         - text: "Background"
           href: articles/rationale1_background.html
         - text: "What's the issue?"
@@ -16,8 +17,14 @@ navbar:
           href: articles/rationale3_design_effect.html
         - text: "Weaknesses with the traditional approach"
           href: articles/rationale4_weaknesses.html
-        - text: "The DRpower model"
-          href: articles/rationale5_DRpower.html
+        - text: "A Bayesian approach"
+          href: articles/rationale5_bayesian.html
+        - text: -------
+        - text: "DRpower for design"
+        - text: "The master protocol"
+          href: articles/rationale6_master_protocol.html
+        - text: "The one-sample z-test"
+          href: articles/rationale7_ztest.html
     - text: "Installation"
       href: articles/installation.html
     - text: "Tutorials"
