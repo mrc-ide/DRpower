@@ -129,13 +129,29 @@ solve_Simp_area <- function(x0, x1, A, B, C, target_area) {
   
   # solve for the z value at which the area under curve equals the target area
   roots <- polyroot(c(D2 - target_area, C2, B2, A2))
+  real_roots <- Re(roots)
   
-  # there should be exactly one root within the interval
-  w <- which((Re(roots) > x0) & (Re(roots) < x1))
-  if (length(w) != 1) {
-    stop("could not find single root to cubic expression in Simpson's rule within the defined interval")
+  # most often there will be a single root within the interval
+  if (any((real_roots >= x0) & (real_roots <= x1))) {
+    w <- which((real_roots >= x0) & (real_roots <= x1))[1]
+    ret <- real_roots[w]
+    
+  } else { # underflow can cause problems when the root is exactly at the border
+    
+    eq_x0 <- mapply(function(z) isTRUE(all.equal(z, x0)), real_roots)
+    if (any(eq_x0)) {
+      w <- which(eq_x0)[1]
+      ret <- real_roots[w]
+    } else {
+      eq_x1 <- mapply(function(z) isTRUE(all.equal(z, x1)), real_roots)
+      if (any(eq_x1)) {
+        w <- which(eq_x1)[1]
+        ret <- real_roots[w]
+      } else {
+        stop("function solve_Simp_area() unable to find roots to polynomial within defined interval")
+      }
+    }
   }
-  ret <- Re(roots)[w]
   
   return(ret)
 }
@@ -511,7 +527,7 @@ qquad <- function(df_norm, q = 0.5) {
                          A = df_norm$A[w],
                          B = df_norm$B[w],
                          C = df_norm$C[w],
-                         area_remaining)
+                         target_area = area_remaining)
   
   return(ret)
 }
