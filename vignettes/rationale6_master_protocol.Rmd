@@ -25,7 +25,7 @@ library(ggplot2)
 
 ## 6. The 2020 WHO master protocol
 
-In 2020, the WHO released the [master protocol for surveillance of pfhrp2/3 deletions and biobanking to support future research](https://tinyurl.com/73ds8a67)[-@world2020master]. This document was a major step forward.
+In 2020, the WHO released the [master protocol for surveillance of pfhrp2/3 deletions and biobanking to support future research](https://tinyurl.com/73ds8a67)[-@world2020master]. This document gave guidance on a wide range of issues related to *pfhrp2/3* studies, including data collection and fieldwork, data storage and laboratory analysis, and providing templates for various forms such as informed consent forms for participants. Overall, this document was a major step forward
 
 Contains a sample size calculation:
 
