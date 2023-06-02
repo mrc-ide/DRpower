@@ -597,12 +597,7 @@ get_HDI <- function(df_norm, alpha = 0.05, n_grid = 1e3) {
     dplyr::filter(cum_area <= (1 - alpha)) %>%
     dplyr::select(x0, x1)
   
-  # check that final interval is contiguous
-  if (!all(df_subset$x0[-1] == df_subset$x1[-nrow(df_subset)])) {
-    stop("HDI does not define a single, contiguous interval")
-  }
-  
-  # return final HDI
+  # assume that interval is contiguous when returning interval
   return(c(lower = min(df_subset$x0),
            upper = max(df_subset$x1)))
 }

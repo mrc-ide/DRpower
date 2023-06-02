@@ -21,6 +21,7 @@ get_prevalence(
   post_CrI_on = TRUE,
   post_thresh_on = TRUE,
   post_full_on = FALSE,
+  post_full_breaks = seq(0, 1, l = 1001),
   CrI_type = "HDI",
   n_intervals = 20,
   round_digits = 2,
@@ -41,9 +42,10 @@ get_ICC(
   post_median_on = FALSE,
   post_CrI_on = TRUE,
   post_full_on = FALSE,
+  post_full_breaks = seq(0, 1, l = 1001),
   CrI_type = "HDI",
   n_intervals = 20,
-  round_digits = 2,
+  round_digits = 4,
   debug_on = FALSE,
   use_cpp = TRUE
 )
@@ -85,6 +87,9 @@ The following options are available:
   distribution (as approximated using the adaptive quadrature approach) in
   0.1\% intervals from 0\% to 100\%.
 }}
+
+\item{post_full_breaks}{a vector of breaks at which to evaluate the full
+posterior distribution (if \code{post_full_on = TRUE}).}
 
 \item{CrI_type}{which method to use when computing credible intervals, with
 options "ETI" (equal-tailed interval) and "HDI" (high-density interval).

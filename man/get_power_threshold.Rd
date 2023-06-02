@@ -66,6 +66,12 @@ Estimates power using the following approach:
  of empirical power, along with upper and lower 95\% binomial CIs on the power
  via the method of Clopper and Pearson (1934).
 }
+Note that this function can be run even when \code{prevalence} is less than
+\code{prev_thresh}, although in this case what is returned is not the power.
+Power is defined as the probability of *correctly* rejecting the null
+hypothesis, whereas here we would be incorrectly rejecting the null.
+Therefore, what we obtain in this case is an estimate of the false positive
+rate.
 }
 \examples{
 get_power_threshold(N = c(120, 90, 150), prevalence = 0.15, ICC = 0.1 , reps = 1e2)

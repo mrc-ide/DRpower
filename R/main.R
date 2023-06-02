@@ -208,6 +208,8 @@ loglike_joint_p <- function(n, N, p, n_intervals = 40,
 #'     distribution (as approximated using the adaptive quadrature approach) in
 #'     0.1\% intervals from 0\% to 100\%.
 #'   }
+#' @param post_full_breaks a vector of breaks at which to evaluate the full
+#'   posterior distribution (if \code{post_full_on = TRUE}).
 #' @param CrI_type which method to use when computing credible intervals, with
 #'   options "ETI" (equal-tailed interval) and "HDI" (high-density interval).
 #'   The ETI searches a distance \code{alpha/2} from either side of the [0,1]
@@ -253,7 +255,8 @@ get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
                            prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 9.0,
                            MAP_on = TRUE, post_mean_on = FALSE, post_median_on = FALSE,
                            post_CrI_on = TRUE, post_thresh_on = TRUE,
-                           post_full_on = FALSE, CrI_type = "HDI",
+                           post_full_on = FALSE, post_full_breaks = seq(0, 1, l = 1001),
+                           CrI_type = "HDI",
                            n_intervals = 20, round_digits = 2,
                            debug_on = FALSE, use_cpp = TRUE) {
   
@@ -279,6 +282,7 @@ get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
   assert_single_logical(post_CrI_on)
   assert_single_logical(post_thresh_on)
   assert_single_logical(post_full_on)
+  assert_vector_bounded(post_full_breaks)
   assert_single_string(CrI_type)
   assert_in(CrI_type, c("HDI", "ETI"))
   assert_pos_int(n_intervals)
@@ -389,7 +393,7 @@ get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
   
   # get full posterior interpolated curve from Simpson's rule
   if (post_full_on) {
-    x <- seq(0, 1, l = 1001)
+    x <- post_full_breaks
     z <- findInterval(x, vec = df_norm$x0)
     y <- df_norm$A[z]*x^2 + df_norm$B[z]*x + df_norm$C[z]
     y[y < 0] <- 0
@@ -415,8 +419,9 @@ get_ICC <- function(n, N, alpha = 0.05,
                     prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
                     prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 9.0,
                     MAP_on = TRUE, post_mean_on = FALSE, post_median_on = FALSE,
-                    post_CrI_on = TRUE, post_full_on = FALSE, CrI_type = "HDI",
-                    n_intervals = 20, round_digits = 2,
+                    post_CrI_on = TRUE, post_full_on = FALSE,
+                    post_full_breaks = seq(0, 1, l = 1001), CrI_type = "HDI",
+                    n_intervals = 20, round_digits = 4,
                     debug_on = FALSE, use_cpp = TRUE) {
   
   # avoid "no visible binding" note
@@ -438,6 +443,7 @@ get_ICC <- function(n, N, alpha = 0.05,
   assert_single_logical(post_median_on)
   assert_single_logical(post_CrI_on)
   assert_single_logical(post_full_on)
+  assert_vector_bounded(post_full_breaks)
   assert_single_string(CrI_type)
   assert_in(CrI_type, c("HDI", "ETI"))
   assert_pos_int(n_intervals)
@@ -499,7 +505,7 @@ get_ICC <- function(n, N, alpha = 0.05,
   # solve for maximum a posteriori (MAP)
   if (MAP_on) {
     MAP <- get_max_x(df_norm)
-    ret$MAP <- round(MAP * 100, round_digits)
+    ret$MAP <- round(MAP, round_digits)
   }
   
   # solve for posterior mean
@@ -508,13 +514,13 @@ get_ICC <- function(n, N, alpha = 0.05,
       dplyr::mutate(post_mean = 1/4*A*(x1^4 - x0^4) + 1/3*B*(x1^3 - x0^3) + 1/2*C*(x1^2 - x0^2)) %>%
       dplyr::pull(post_mean) %>%
       sum()
-    ret$post_mean = round(post_mean * 100, round_digits)
+    ret$post_mean = round(post_mean, round_digits)
   }
   
   # solve for posterior median
   if (post_median_on) {
     post_median <- qquad(df_norm, q = 0.5)
-    ret$post_median <- round(post_median * 100, round_digits)
+    ret$post_median <- round(post_median, round_digits)
   }
   
   # solve for lower and upper CrIs
@@ -527,13 +533,13 @@ get_ICC <- function(n, N, alpha = 0.05,
       CrI_lower <- HDI["lower"]
       CrI_upper <- HDI["upper"]
     }
-    ret$CrI_lower <- round(CrI_lower * 100, round_digits)
-    ret$CrI_upper <- round(CrI_upper * 100, round_digits)
+    ret$CrI_lower <- round(CrI_lower, round_digits)
+    ret$CrI_upper <- round(CrI_upper, round_digits)
   }
   
   # get full posterior interpolated curve from Simpson's rule
   if (post_full_on) {
-    x <- seq(0, 1, l = 1001)
+    x <- post_full_breaks
     z <- findInterval(x, vec = df_norm$x0)
     y <- df_norm$A[z]*x^2 + df_norm$B[z]*x + df_norm$C[z]
     y[y < 0] <- 0

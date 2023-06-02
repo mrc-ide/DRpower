@@ -26,5 +26,24 @@ library(ggplot2)
 
 Text
 
+Text
 
+$Z = \frac{\displaystyle |\hat{p} - \mu|}{\displaystyle \sqrt{\frac{\hat{p}(1-\hat{p})}{n}D_{eff}}}$
 
+Text
+
+$\text{Power} = \Phi\Bigg( \frac{|\hat{p} - \mu|}{\sqrt{\frac{\hat{p}(1-\hat{p})}{n}D_{eff} }} - z_{\tiny 1 - \alpha/2} \Bigg)$
+
+Text
+
+$\text{Power} = \Phi(0) = 0.5$
+
+Text
+
+$n \geq (z_{\tiny 1 - \beta} + z_{\tiny 1 - \alpha/2})^2 \frac{\displaystyle p(1-p)}{\displaystyle (p-\mu)^2}D_{eff}$
+
+Text
+
+$(1 + z_{\tiny 1 - \beta}/z_{\tiny 1 - \alpha/2})^2$
+
+which equals `r round((1 + qnorm(0.8) / qnorm(0.975))^2, 3)`.
