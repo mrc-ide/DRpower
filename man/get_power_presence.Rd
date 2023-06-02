@@ -20,7 +20,7 @@ Calculates power directly for the case of a clustered prevalence
   clusters. This design can be useful as a pilot study to identify priority
   regions where deletions are likely. Note that we need to take account of
   intra-cluster correlation here, as a high ICC will make it more likely that
-  we see zero deletions even when the prevalence is, in fact, non-zero.
+  we see zero deletions even when the prevalence is non-zero.
 }
 \examples{
 get_power_presence(N = c(120, 90, 150), prevalence = 0.01, ICC = 0.1)
