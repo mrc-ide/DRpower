@@ -15,6 +15,7 @@ get_power_threshold(
   prior_ICC_shape1 = 1,
   prior_ICC_shape2 = 9,
   n_intervals = 20,
+  round_digits = 2,
   reps = 100
 )
 }
@@ -43,6 +44,10 @@ parameters are based on an analysis of historical pfhrp2/3 studies.}
 \item{n_intervals}{the number of intervals used in the adaptive quadrature
 method. Increasing this value gives a more accurate representation of the
 true posterior, but comes at the cost of reduced speed.}
+
+\item{round_digits}{the number of digits after the decimal point that are
+used when reporting estimates. This is to simplify results and to avoid
+giving the false impression of extreme precision.}
 
 \item{reps}{number of times to repeat simulation per parameter combination.}
 }

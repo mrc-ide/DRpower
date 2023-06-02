@@ -104,10 +104,7 @@ true posterior, but comes at the cost of reduced speed.}
 
 \item{round_digits}{the number of digits after the decimal point that are
 used when reporting estimates. This is to simplify results and to avoid
-giving the false impression of extreme precision. Note also that prevalence
-is reported as a proportion between 0 and 1. For example, if
-\code{round_digits = 3} (the default) then a prevalence of 12.432% will be
-reported as 0.124.}
+giving the false impression of extreme precision.}
 
 \item{debug_on}{for use in debugging. If \code{TRUE} and if \code{use_cpp =
 FALSE} then produces a plot of the posterior distribution evaluated by
