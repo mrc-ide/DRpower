@@ -221,10 +221,7 @@ loglike_joint_p <- function(n, N, p, n_intervals = 40,
 #'   true posterior, but comes at the cost of reduced speed.
 #' @param round_digits the number of digits after the decimal point that are
 #'   used when reporting estimates. This is to simplify results and to avoid
-#'   giving the false impression of extreme precision. Note also that prevalence
-#'   is reported as a proportion between 0 and 1. For example, if
-#'   \code{round_digits = 3} (the default) then a prevalence of 12.432% will be
-#'   reported as 0.124.
+#'   giving the false impression of extreme precision.
 #' @param debug_on for use in debugging. If \code{TRUE} and if \code{use_cpp =
 #'   FALSE} then produces a plot of the posterior distribution evaluated by
 #'   brute force (black) overlaid with the adaptive quadrature approximation
@@ -687,6 +684,9 @@ get_joint_grid <- function(n, N,
 #' @param n_intervals the number of intervals used in the adaptive quadrature
 #'   method. Increasing this value gives a more accurate representation of the
 #'   true posterior, but comes at the cost of reduced speed.
+#' @param round_digits the number of digits after the decimal point that are
+#'   used when reporting estimates. This is to simplify results and to avoid
+#'   giving the false impression of extreme precision.
 #' @param reps number of times to repeat simulation per parameter combination.
 #'
 #' @references
@@ -704,7 +704,8 @@ get_power_threshold <- function(N, prevalence = 0.10, ICC = 0.10,
                                 rejection_threshold = 0.95,
                                 prior_prev_shape1 = 1, prior_prev_shape2 = 1,
                                 prior_ICC_shape1 = 1, prior_ICC_shape2 = 9,
-                                n_intervals = 20, reps = 1e2) {
+                                n_intervals = 20, round_digits = 2,
+                                reps = 1e2) {
   
   # check inputs
   assert_vector_pos_int(N)
@@ -718,6 +719,7 @@ get_power_threshold <- function(N, prevalence = 0.10, ICC = 0.10,
   assert_single_bounded(prior_ICC_shape2, left = 1, right = 1e3)
   assert_single_pos_int(n_intervals)
   assert_greq(n_intervals, 5)
+  assert_single_pos_int(round_digits)
   assert_single_pos_int(reps)
   
   # simulate
@@ -744,9 +746,9 @@ get_power_threshold <- function(N, prevalence = 0.10, ICC = 0.10,
   
   # get 95% CIs on power
   power_CI <- ClopperPearson(n_success = sum(sim_correct), n_total = reps, alpha = 0.05)
-  ret <- data.frame(power = mean(sim_correct),
-                    lower = power_CI$lower,
-                    upper = power_CI$upper)
+  ret <- data.frame(power = round(mean(sim_correct) * 100, round_digits),
+                    lower = round(power_CI$lower * 100, round_digits),
+                    upper = round(power_CI$upper * 100, round_digits))
   rownames(ret) <- NULL
   return(ret)
 }
