@@ -24,26 +24,47 @@ library(ggplot2)
 
 ## 7. The one-sample z-test
 
-Text
+In the previous section, we found that using an approach that mixed CI estimation and hypothesis testing resulted in low power. For this reason, here we start from a purely hypothesis testing approach. Our null hypothesis is that the prevalence of deletions is equal to a known value (the threshold), and we are going to try to disprove this hypothesis.
 
-Text
+The appropriate test here is the one-sample z-test, also called the one-sample proportion test. We start by calculating the Z test statistic as follows:
 
-$Z = \frac{\displaystyle |\hat{p} - \mu|}{\displaystyle \sqrt{\frac{\hat{p}(1-\hat{p})}{n}D_{eff}}}$
+$Z = \frac{\displaystyle |\hat{p} - \mu|}{\displaystyle \sqrt{\frac{\hat{p}(1-\hat{p})}{N}D_{eff}}}$
 
-Text
+Under the null hypothesis, this statistic follows the z-distribution (i.e. the normal distribution). We can control how often we come to a false-positive conclusion by setting a significance level $\alpha$. We will reject the null hypothesis whenever our Z statistic is greater in magnitude (either positive or negative) than the critical value $z_{\tiny 1 - \alpha/2}$.
 
-$\text{Power} = \Phi\Bigg( \frac{|\hat{p} - \mu|}{\sqrt{\frac{\hat{p}(1-\hat{p})}{n}D_{eff} }} - z_{\tiny 1 - \alpha/2} \Bigg)$
+We can calculate power under the z-test as the probability of being more extreme than this critical value. This is given by the following formula:
 
-Text
+$\text{Power} = \Phi\Bigg( \frac{|p - \mu|}{\sqrt{\frac{p(1-p)}{N}D_{eff} }} - z_{\tiny 1 - \alpha/2} \Bigg)$
 
-$\text{Power} = \Phi(0) = 0.5$
+where $\Phi()$ is the cumulative density function of the normal distribution. For example, we can use this formula to calculate the power under the assumed sample size of 600 from the updated master protocol:
 
-Text
+```{r}
+N <- 600
+p <- 0.08
+mu <- 0.05
+Deff <- 1.5
 
-$n \geq (z_{\tiny 1 - \beta} + z_{\tiny 1 - \alpha/2})^2 \frac{\displaystyle p(1-p)}{\displaystyle (p-\mu)^2}D_{eff}$
+pnorm(abs(p - mu) / sqrt(Deff * p*(1 - p) / N) - qnorm(1 - 0.05/2))
+```
 
-Text
+We find that power is approximately 60%, which is very close to what we found by simulation.
 
-$(1 + z_{\tiny 1 - \beta}/z_{\tiny 1 - \alpha/2})^2$
+It is also very interesting to see what happens when we substitute in the formula for $N$ from the master protocol into the above. We find that *all* of the terms inside the brackets cancel, and we are left with $\text{Power} = \Phi(0)$, which is equal to 0.5. This is yet another proof that power is forced to equal 50% when using the formula from the master protocol.
 
-which equals `r round((1 + qnorm(0.8) / qnorm(0.975))^2, 3)`.
+So what should the sample size be? We can rearrange this formula to give us the exact sample size needed to achieve any given power. We will use the symbol $\beta$ to represent the false-negative rate, meaning $\text{Power} = 1 - \beta$. We will also define $z_{\tiny 1 - \beta}$ to be the critical value of the normal distribution at the value $1 - \beta$. Then we can use the following formula:
+
+$N \geq (z_{\tiny 1 - \beta} + z_{\tiny 1 - \alpha/2})^2 \frac{\displaystyle p(1-p)}{\displaystyle (p-\mu)^2}D_{eff}$
+
+Again, it is interesting to see how simmilar this is to the formula in the master protocol - the only difference is the addition of the extra $z_{\tiny 1 - \beta}$ term. This extra term means that we will always be underestimating sample sizes if we use the master protocol formula.
+
+But just how wrong was the original formula? Dividing one by the other, we find that z-test sample sizes are greater than master protocol sizes by a factor $(1 + z_{\tiny 1 - \beta}/z_{\tiny 1 - \alpha/2})^2$. If we are aiming for a power of 80% then this factor equals `r round((1 + qnorm(0.8) / qnorm(0.975))^2, 3)`. So, the actual sample size required is almost exactly double what we would get from the formula in the master protocol.
+
+```{r, echo=FALSE}
+p <- 0.032
+Deff <- 1.5
+
+#(qnorm(0.8) + qnorm(1 - 0.05/2))^2 * p*(1 - p) / (p - 0.05)^2 * Deff
+```
+
+To put this in context, if previously we found that 551 samples are needed, then with this new (corrected) formula we find that 1126 samples are needed. This is obviously significantly higher even than the updated recommendation of 600, and is likely to be beyond what many malaria control programmes can achieve within their logistic and financial constraints. Fortunately, power tends to be higher under the DRpower approach than under the z-test, and so sample sizes are also lower.
+

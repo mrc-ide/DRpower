@@ -621,10 +621,21 @@ get_max_x <- function(df_norm) {
   A <- B <- C <- max_x <- max_y <- x0 <- x1 <- NULL
   
   ret <- df_norm %>%
-    dplyr::mutate(max_x = -0.5*B / A,
-                  max_x = ifelse(max_x > x0, max_x, x0),
-                  max_x = ifelse(max_x < x1, max_x, x1),
-                  max_y = get_Simp_y(max_x, A, B, C)) %>%
+    dplyr::mutate(turn_x = -0.5*B / A,
+                  turn_x = ifelse(turn_x > x0, turn_x, NA),
+                  turn_x = ifelse(turn_x < x1, turn_x, NA),
+                  turn_y = ifelse(is.na(turn_x), NA, get_Simp_y(turn_x, A, B, C)),
+                  max_y = ifelse(is.na(turn_y),
+                                 ifelse(log_y0 > log_y1, exp(log_y0), exp(log_y1)),
+                                 ifelse( (turn_y > exp(log_y0)) & (turn_y > exp(log_y1)),
+                                         turn_y,
+                                         ifelse(log_y0 > log_y1, exp(log_y0), exp(log_y1) ))),
+                  max_x = ifelse(is.na(turn_y),
+                                 ifelse(log_y0 > log_y1, x0, x1),
+                                 ifelse( (turn_y > exp(log_y0)) & (turn_y > exp(log_y1)),
+                                         turn_x,
+                                         ifelse(log_y0 > log_y1, x0, x1 )))
+                  ) %>%
     dplyr::filter(max_y == max(max_y)) %>%
     dplyr::pull(max_x)
   

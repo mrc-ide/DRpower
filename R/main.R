@@ -249,7 +249,7 @@ NULL
 
 get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
                            prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
-                           prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 9.0,
+                           prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 1.0,
                            MAP_on = TRUE, post_mean_on = FALSE, post_median_on = FALSE,
                            post_CrI_on = TRUE, post_thresh_on = TRUE,
                            post_full_on = FALSE, post_full_breaks = seq(0, 1, l = 1001),
@@ -709,7 +709,7 @@ get_power_threshold <- function(N, prevalence = 0.10, ICC = 0.10,
   
   # check inputs
   assert_vector_pos_int(N)
-  assert_single_bounded(prevalence)
+  assert_bounded(prevalence)
   assert_single_bounded(ICC)
   assert_single_bounded(prev_thresh)
   assert_single_bounded(rejection_threshold)
@@ -722,13 +722,28 @@ get_power_threshold <- function(N, prevalence = 0.10, ICC = 0.10,
   assert_single_pos_int(round_digits)
   assert_single_pos_int(reps)
   
-  # simulate
-  sim_correct <- rep(NA, reps)
+  # prevalence has the option of drawing uniformly between limits
+  if (length(prevalence) == 1) {
+    prevalence <- rep(prevalence, 2)
+  }
+  
+  # draw n
+  l_n <- list()
   for (i in 1:reps) {
-    n <- rbbinom_reparam(n_clust = length(N), N = N,
-                         p = prevalence, rho = ICC)
+    l_n[[i]] <- sort(rbbinom_reparam(n_clust = length(N), N = N,
+                                     p = runif(1, min = prevalence[1], max = prevalence[2]),
+                                     rho = ICC))
+  }
+  
+  # group duplicates
+  l_u <- unique(l_n)
+  l_w <- tabulate(match(l_n, l_u))
+  
+  # simulate
+  sim_correct <- rep(NA, length(l_u))
+  for (i in seq_along(l_u)) {
     
-    p_est <- get_prevalence(n = n, N = N,
+    p_est <- get_prevalence(n = l_u[[i]], N = N,
                             prior_prev_shape1 = prior_prev_shape1,
                             prior_prev_shape2 = prior_prev_shape2,
                             prior_ICC_shape1 = prior_ICC_shape1,
@@ -739,14 +754,18 @@ get_power_threshold <- function(N, prevalence = 0.10, ICC = 0.10,
                             post_CrI_on = FALSE,
                             post_thresh_on = TRUE,
                             post_full_on = FALSE,
+                            CrI_type = "HDI",
                             n_intervals = n_intervals)
     
     sim_correct[i] <- (p_est$prob_above_threshold > rejection_threshold)
   }
   
+  # weighted sum
+  n_correct <- sum(sim_correct * l_w)
+  
   # get 95% CIs on power
-  power_CI <- ClopperPearson(n_success = sum(sim_correct), n_total = reps, alpha = 0.05)
-  ret <- data.frame(power = round(mean(sim_correct) * 100, round_digits),
+  power_CI <- ClopperPearson(n_success = n_correct, n_total = reps, alpha = 0.05)
+  ret <- data.frame(power = round(n_correct / reps * 100, round_digits),
                     lower = round(power_CI$lower * 100, round_digits),
                     upper = round(power_CI$upper * 100, round_digits))
   rownames(ret) <- NULL
