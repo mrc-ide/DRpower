@@ -249,7 +249,7 @@ NULL
 
 get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
                            prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
-                           prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 1.0,
+                           prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 9.0,
                            MAP_on = TRUE, post_mean_on = FALSE, post_median_on = FALSE,
                            post_CrI_on = TRUE, post_thresh_on = TRUE,
                            post_full_on = FALSE, post_full_breaks = seq(0, 1, l = 1001),
@@ -699,11 +699,11 @@ get_joint_grid <- function(n, N,
 #' 
 #' @export
 
-get_power_threshold <- function(N, prevalence = 0.10, ICC = 0.10,
+get_power_threshold <- function(N, prevalence = 0.10, ICC = 0.05,
                                 prev_thresh = 0.05,
                                 rejection_threshold = 0.95,
-                                prior_prev_shape1 = 1, prior_prev_shape2 = 1,
-                                prior_ICC_shape1 = 1, prior_ICC_shape2 = 9,
+                                prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
+                                prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 9.0,
                                 n_intervals = 20, round_digits = 2,
                                 reps = 1e2) {
   
@@ -730,9 +730,11 @@ get_power_threshold <- function(N, prevalence = 0.10, ICC = 0.10,
   # draw n
   l_n <- list()
   for (i in 1:reps) {
-    l_n[[i]] <- sort(rbbinom_reparam(n_clust = length(N), N = N,
-                                     p = runif(1, min = prevalence[1], max = prevalence[2]),
-                                     rho = ICC))
+    l_n[[i]] <- data.frame(N = N,
+                           n = rbbinom_reparam(n_clust = length(N), N = N,
+                                               p = runif(1, min = prevalence[1], max = prevalence[2]),
+                                               rho = ICC)) %>%
+      arrange(N, n)
   }
   
   # group duplicates
@@ -743,7 +745,7 @@ get_power_threshold <- function(N, prevalence = 0.10, ICC = 0.10,
   sim_correct <- rep(NA, length(l_u))
   for (i in seq_along(l_u)) {
     
-    p_est <- get_prevalence(n = l_u[[i]], N = N,
+    p_est <- get_prevalence(n = l_u[[i]]$n, N = l_u[[i]]$N,
                             prior_prev_shape1 = prior_prev_shape1,
                             prior_prev_shape2 = prior_prev_shape2,
                             prior_ICC_shape1 = prior_ICC_shape1,

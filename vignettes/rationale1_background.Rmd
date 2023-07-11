@@ -1,10 +1,10 @@
 ---
-title: "Using DRpower for analysis"
+title: "Background"
 author: "Bob Verity"
 date: "Last updated: `r format(Sys.Date(), '%d %b %Y')`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{rationale1_background}
+  %\VignetteIndexEntry{Background}
   %\VignetteEngine{knitr::knitr}
   %\VignetteEncoding{UTF-8}
 ---
@@ -22,10 +22,13 @@ library(dplyr)
 library(ggplot2)
 ```
 
+## 1. What are *pfhrp2* deletions?
 
-## 1. Background
+The majority of malaria diagnosis worldwide relies on rapid diagnostic tests (RDTs). A large proportion of these tests work by detecting the presence of the HPR2 protein in the blood of an infected individual, which reacts to give a positive result. However, *Plasmodium* parasites have been found around the world that carry a deletion of the *pfhrp2* gene. No *pfhrp2* gene means no HPR2 protein, rendering these parasites invisible to testing by HRP2-based RDTs. This can present a major clinical problem if these gene deletions are at high prevalence in the population, as patients presenting with signs of malaria may be misdiagnosed, resulting in treatment delays and poor health outcomes.
 
-Our aim is to design a survey to estimate the prevalence of *pfhrp2/3* deletions within a given region. More specifically, our aim is to determine whether the prevalence of deletions is above a given threshold (a 5% threshold is used by default, although this can be changed).
+## 2. What does DRpower do?
+
+For the purposes of DRpower, we assume that our aim is to design a survey to estimate the prevalence of *pfhrp2/3* deletions within a given region. More specifically, our aim is to determine whether the prevalence of deletions is above a given threshold (a 5% threshold is used by default, although this can be changed).
 
 We assume that this is a "province" level study. The exact meaning of this term will vary in geographical size from one province to the next, but what really matters here is that we are aiming to form conclusions about the prevalence of *pfhrp2/3* deletions at a higher level than just the sites used in the study. In other words, there is some degree of extrapolation from our handful of sites to a wider geographic area.
 

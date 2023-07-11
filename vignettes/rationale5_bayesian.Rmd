@@ -55,7 +55,7 @@ Neff <- n*c / Deff
 
 ## 5. The DRpower model
 
-In DRpower we take a different approach to analysis that deals with all of the issues listed in the previous section. We only describe the approach at a high level here, for those wanting more mathematical details please [see this page](TODO).
+In DRpower we take a different approach to analysis that deals with all of the issues listed in the previous section. We describe the approach at a high level here, for those wanting more mathematical details please [see this page](TODO).
 
 We start by assuming a [random effects](https://en.wikipedia.org/wiki/Random_effects_model) framework. Instead of assuming that all individuals have the same probability of carrying the *pfhrp2/3* deleted strain, we allow each cluster to have its own cluster-level prevalence. We model the mean and the spread of this cluster-level variation using a random effects distribution - in our case a [beta distribution](https://en.wikipedia.org/wiki/Beta_distribution) like the one shown below:
 
@@ -84,14 +84,14 @@ data.frame(x = seq(0, 1, 0.001)) %>%
 This distribution has a mean value $p$ that represents the province-level prevalence of deletions (i.e. the main thing we are trying to estimate). It also has a parameter $r$ that represents the level of intra-cluster correlation and hence overdispersion. Larger values of $r$ lead to more spread out distributions. Our objective is to estimate $p$ while taking into account uncertainty in $r$, which we can do very easily within a Bayesian framework. A full description of [Bayesian statistics](https://en.wikipedia.org/wiki/Bayesian_statistics) is beyond the scope of this document, but in short we:
 
 1. Write down the probability of the data under the model, which can be done exactly in this case without making any approximations.
-2. Come up with suitable [priors](https://en.wikipedia.org/wiki/Prior_probability) on our two unknown parameters; $p$ and $r$. We can look at historical data to help us here.
-3. Calculate the marginal posterior distribution of $p$, integrated over our uncertainty in $r$. Crucially, this method **takes into account everything the data tells us about intra-cluster correlation and propagates this uncertainty into our estimate of the prevalence**. 
+2. Come up with suitable [priors](https://en.wikipedia.org/wiki/Prior_probability) on our two unknown parameters; $p$ and $r$. We could use historical data to help us here, or we could try to keep our priors "diffuse" so we are guided primarily by the new data.
+3. Calculate the posterior distribution of $p$, integrated over our uncertainty in $r$. Crucially, this method **takes into account everything the data tells us about intra-cluster correlation and propagates this uncertainty into our estimate of the prevalence**. 
 
-What we end up with is a probability distribution that describes the plausible range of values that $p$ could take. We can use this in many different ways, for example we can calculate credible intervals (CrI). CrIs have a slightly different and more direct interpretation than CIs - a 95% CrI means there is a 95% probability that the true value lies inside this interval (compare this with [the definition of a CI](https://thestatsgeek.com/2020/11/21/interpretation-of-frequentist-confidence-intervals-and-bayesian-credible-intervals/)). This immediately deals with the first 4 out of 5 issues listed in the previous section.
+We end up with a probability distribution that describes the plausible range of values that $p$ could take. We can use this in many different ways, for example we can calculate a credible interval (CrI). CrIs have a slightly different and more direct interpretation than confidence intervals (CIs) - a 95% CrI means there is a 95% probability that the true value lies inside this interval (compare this with [the definition of a CI](https://thestatsgeek.com/2020/11/21/interpretation-of-frequentist-confidence-intervals-and-bayesian-credible-intervals/)). This immediately deals with the first 4 out of 5 issues listed in the previous section.
 
-We can also output from the model the posterior probability that prevalence is above the 5% threshold. We can turn this into a hypothesis test by rejecting the null hypothesis whenever this probability is above a certain level (0.95 by default). This gives us a binary decision tool just like the traditional approach, but now with all the advantages of the Bayesian method.
+We can also output from the model the posterior probability that prevalence is above the 5% threshold. We can turn this into a hypothesis test by rejecting the null hypothesis whenever this probability is above a certain level. This gives us a binary decision tool just like the traditional approach, but now with all the advantages of the Bayesian method.
 
-We can run this analysis in DRpower as follows:
+We can run the DRpower model on our example data as follows:
 
 ```{r}
 get_prevalence(n = n_deletions, N = n_tested)
@@ -100,7 +100,12 @@ get_prevalence(n = n_deletions, N = n_tested)
 gp <- get_prevalence(n = n_deletions, N = n_tested)
 ```
 
-The MAP gives us a central estimate of the prevalence of `r gp$MAP`%, which is very similar to our simple estimate of `r round(p*100, 2)`% (see [here](TODO) for a justification of using the MAP estimate). Our credible interval ranges from `r gp$CrI_lower`% to `r gp$CrI_upper`%.
+The first output is the *maximum a posteriori* (MAP) estimate, which gives us a point estimate of `r gp$MAP`% prevalence - very close to our original estimate of `r round(p*100, 2)`% from the raw data. There are other summaries that we might be interested in, but see [here](TODO) when deciding between them.
 
-We also estimate that there is a `r gp$prob_above_threshold` probability that the prevalence is above 5%. This probability is above 0.95, meaning we can reject the null hypothesis. Based on this analysis we have sufficient evidence to conclude that prevalence is above our target threshold, and therefore  this warrants a change in RDT use.
+Based on the output above, we also estimate that there is a `r gp$prob_above_threshold` probability that the prevalence is above 5%. By default we recommend using a cutoff of 0.95 when turning this into a hypothesis test, so in this case we can reject the null hypothesis. Based on this analysis, therefore, we have sufficient evidence to conclude that prevalence is above our target threshold, and so a switch of RDTs is justified.
 
+In summary, the DRpower model provides an alternative way of analysing clustered prevalence data that has some advantages over traditional methods. It can be used to calculate CrIs, and/or it can be used in a hypothesis testing framework. The next section describes how this framework can be used in study design.
+
+<p align="center">
+<button class="btn btn-primary" onclick="window.location.href='https://w3docs.com';"> Next topic </button>
+</p>
