@@ -37,7 +37,9 @@ jobs:
           extra-packages: any::rcmdcheck
           needs: check
 
-      - uses: r-lib/actions/check-r-package@v2
-        with:
-          args: "--no-build-vignettes"  # Add this line to disable vignette building
+      - run: |
+          R CMD build . --no-build-vignettes  # Skip vignette building during package build
+
+      - run: |
+          R CMD check *tar.gz --no-build-vignettes  # Skip vignette building during package check
 
