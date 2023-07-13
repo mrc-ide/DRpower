@@ -1,6 +1,6 @@
 ---
 title: "Installation"
-output: rmarkdown::html_vignette
+output: html_document
 vignette: >
   %\VignetteIndexEntry{Installation}
   %\VignetteEngine{knitr::knitr}

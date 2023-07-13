@@ -5,7 +5,7 @@ date: "Last updated: `r format(Sys.Date(), '%d %b %Y')`"
 output: html_document
 vignette: >
   %\VignetteIndexEntry{Historical analysis}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{knitr::knitr}
   %\VignetteEncoding{UTF-8}
 ---
 
