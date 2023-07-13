@@ -1,0 +1,22 @@
+---
+title: "Mathematical Details"
+author: "Bob Verity"
+date: "Last updated: `r format(Sys.Date(), '%d %b %Y')`"
+output: html_document
+vignette: >
+  %\VignetteIndexEntry{Mathematical Details}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+## 1. he Bayesian hierarchical model
+
+TODO

@@ -1,10 +1,10 @@
 ---
-title: "How to summarise the prevalence"
+title: "How to Summarise the Prevalence"
 author: "Bob Verity"
 date: "Last updated: `r format(Sys.Date(), '%d %b %Y')`"
 output: html_document
 vignette: >
-  %\VignetteIndexEntry{Using DRpower for study design}
+  %\VignetteIndexEntry{How to Summarise the Prevalence}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

@@ -697,6 +697,7 @@ get_joint_grid <- function(n, N,
 #' @examples
 #' get_power_threshold(N = c(120, 90, 150), prevalence = 0.15, ICC = 0.1 , reps = 1e2)
 #' 
+#' @importFrom stats runif
 #' @export
 
 get_power_threshold <- function(N, prevalence = 0.10, ICC = 0.05,
@@ -706,6 +707,9 @@ get_power_threshold <- function(N, prevalence = 0.10, ICC = 0.05,
                                 prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 9.0,
                                 n_intervals = 20, round_digits = 2,
                                 reps = 1e2) {
+  
+  # avoid "no visible binding" note
+  n <- NULL
   
   # check inputs
   assert_vector_pos_int(N)

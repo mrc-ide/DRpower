@@ -12,7 +12,7 @@ navbar:
           href: articles/rationale1_background.html
         - text: -------
         - text: Analysing data
-        - text: Why is this a tricky problem?
+        - text: CIs and overdispersion
           href: articles/rationale2_issue.html
         - text: The design effect
           href: articles/rationale3_design_effect.html
@@ -38,6 +38,8 @@ navbar:
           href: articles/tutorial_analysis.html
     - text: Misc
       menu:
+        - text: Mathematical details
+          href: articles/mathematical_details.html
         - text: Historical analysis
           href: articles/historical_analysis.html
         - text: How to summarise the prevalence

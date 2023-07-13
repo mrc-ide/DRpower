@@ -1,10 +1,10 @@
 ---
-title: "Using DRpower for analysis"
+title: "The DRpower model"
 author: "Bob Verity"
 date: "Last updated: `r format(Sys.Date(), '%d %b %Y')`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{rationale5_bayesian}
+  %\VignetteIndexEntry{The DRpower model}
   %\VignetteEngine{knitr::knitr}
   %\VignetteEncoding{UTF-8}
 ---
@@ -53,7 +53,7 @@ Deff <- v1 / v2
 Neff <- n*c / Deff
 ```
 
-## 5. The DRpower model
+## 5. A Bayesian approach
 
 In DRpower we take a different approach to analysis that deals with all of the issues listed in the previous section. We describe the approach at a high level here, for those wanting more mathematical details please [see this page](TODO).
 

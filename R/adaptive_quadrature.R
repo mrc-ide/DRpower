@@ -618,7 +618,7 @@ get_HDI <- function(df_norm, alpha = 0.05, n_grid = 1e3) {
 get_max_x <- function(df_norm) {
   
   # avoid "no visible binding" note
-  A <- B <- C <- max_x <- max_y <- x0 <- x1 <- NULL
+  A <- B <- C <- max_x <- max_y <- x0 <- x1 <- turn_x <- turn_y <- log_y0 <- log_y1 <- NULL
   
   ret <- df_norm %>%
     dplyr::mutate(turn_x = -0.5*B / A,

@@ -1,10 +1,10 @@
 ---
-title: "Using DRpower for analysis"
+title: "CIs and Overdispersion"
 author: "Bob Verity"
 date: "Last updated: `r format(Sys.Date(), '%d %b %Y')`"
 output: html_document
 vignette: >
-  %\VignetteIndexEntry{Using DRpower for analysis}
+  %\VignetteIndexEntry{CIs and overdispersion}
   %\VignetteEngine{knitr::knitr}
   %\VignetteEncoding{UTF-8}
 ---

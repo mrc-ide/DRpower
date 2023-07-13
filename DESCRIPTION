@@ -20,6 +20,7 @@ Description: This package can be used in the design and/or analysis stages of
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
+LazyDataCompression:xz
 RoxygenNote: 7.2.3
 BugReports: https://github.com/mrc-ide/DRpower/issues
 Imports: 
@@ -36,7 +37,9 @@ Imports:
 Suggests: 
     knitr,
     rmarkdown,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    ggridges,
+    tidyverse
 Config/testthat/edition: 3
 LinkingTo: 
     Rcpp

@@ -1,10 +1,10 @@
 ---
-title: "Using DRpower for analysis"
+title: "The Design Effect"
 author: "Bob Verity"
 date: "Last updated: `r format(Sys.Date(), '%d %b %Y')`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Using DRpower for analysis}
+  %\VignetteIndexEntry{The Design Effect}
   %\VignetteEngine{knitr::knitr}
   %\VignetteEncoding{UTF-8}
 ---
@@ -46,7 +46,7 @@ standard_lower <- p*100 - d
 standard_upper <- p*100 + d
 ```
 
-## 3. The Design Effect
+## 3. Defining the design effect
 
 The design effect ($D_{eff}$) is a measure of the statistical *inefficiency* of a study design. It is calculated relative to the efficiency under simple random sampling (SRS), where we sample individuals at random from the target population as a whole. SRS is a highly efficient design statistically even though it tends to be a horrible design here from a practical viewpoint! Higher values of $D_{eff}$ indicate that there is some statistical inefficiency introduced by our study design, although this should not necessarily be seen as a bad thing. A study design that is 5 times less efficient may be 100 times cheaper to run, meaning we can recruit more people and overall get a higher power. As with all things related to study design, statistical efficiency is just one aspect that must be balanced against other considerations when coming up with an optimal design.
 

@@ -1,10 +1,10 @@
 ---
-title: "Using DRpower for study design"
+title: "The One-sample Z-test"
 author: "Bob Verity"
 date: "Last updated: `r format(Sys.Date(), '%d %b %Y')`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{rationale7_ztest}
+  %\VignetteIndexEntry{The One-sample Z-test}
   %\VignetteEngine{knitr::knitr}
   %\VignetteEncoding{UTF-8}
 ---
@@ -22,7 +22,7 @@ library(dplyr)
 library(ggplot2)
 ```
 
-## 7. The one-sample z-test
+## 7. Power and sample size under the z-test
 
 In the previous section, we found that using an approach that mixed CI estimation with hypothesis testing resulted in low power. Here, we start from scratch with a purely hypothesis testing approach. Our null hypothesis will be that the prevalence of deletions is equal to a known value (the threshold), and we are going to try to disprove this hypothesis.
 

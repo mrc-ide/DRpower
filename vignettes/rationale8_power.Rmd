@@ -1,10 +1,10 @@
 ---
-title: "Using DRpower for study design"
+title: "Power and Sample Size in the DRpower Model"
 author: "Bob Verity"
 date: "Last updated: `r format(Sys.Date(), '%d %b %Y')`"
 output: html_document
 vignette: >
-  %\VignetteIndexEntry{Using DRpower for study design}
+  %\VignetteIndexEntry{Power and Sample Size in the DRpower Model}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -23,7 +23,7 @@ library(ggplot2)
 library(tidyverse)
 ```
 
-## 8. Power and sample size in the DRpower model
+## 8. Estimating power via simulation
 
 The power of a hypothesis test is intrinsically linked to the method we plan to use in our statistical analysis. We have found that if we plan to conduct a z-test on our data then, for the parameter values described in the 2020 master protocol, we will need 1126 samples. But what if we change our analysis plan to the [Bayesian model](TODO) in DRpower? Can we calculate power under this new approach?
 

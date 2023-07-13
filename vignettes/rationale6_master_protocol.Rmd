@@ -1,11 +1,11 @@
 ---
-title: "Using DRpower for study design"
+title: "Sample Size Calculation in the 2020 WHO Master Protocol"
 author: "Bob Verity"
 date: "Last updated: `r format(Sys.Date(), '%d %b %Y')`"
 output: rmarkdown::html_vignette
 bibliography: REFERENCES.bib
 vignette: >
-  %\VignetteIndexEntry{rationale6_master_protocol}
+  %\VignetteIndexEntry{Sample Size Calculation in the 2020 WHO Master Protocol}
   %\VignetteEngine{knitr::knitr}
   %\VignetteEncoding{UTF-8}
 ---
@@ -23,7 +23,7 @@ library(dplyr)
 library(ggplot2)
 ```
 
-## 6. Sample size calculation in the 2020 WHO master protocol
+## 6. The 2020 WHO master protocol
 
 In 2020, the WHO released the [master protocol for surveillance of pfhrp2/3 deletions and biobanking to support future research](https://apps.who.int/iris/handle/10665/331197)[-@world2020master]. This document gave guidance on a wide range of issues related to *pfhrp2/3* studies, including data collection and fieldwork, data storage and laboratory analysis, and provided templates such as informed consent forms for participants. This document was a major step forward in specifying what a well designed *pfhrp2/3* study might look like. However, it also contained some arguments around appropriate sample size that contained mistakes, and that we will explore here.
 

@@ -1,10 +1,10 @@
 ---
-title: "Using DRpower for analysis"
+title: "Weaknesses with the CI-based Approach"
 author: "Bob Verity"
 date: "Last updated: `r format(Sys.Date(), '%d %b %Y')`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{rationale4_weaknesses}
+  %\VignetteIndexEntry{Weaknesses with the CI-based Approach}
   %\VignetteEngine{knitr::knitr}
   %\VignetteEncoding{UTF-8}
 ---
@@ -22,7 +22,7 @@ library(dplyr)
 library(ggplot2)
 ```
 
-## 4. Weaknesses with the CI-based approach
+## 4. What's the problem?
 
 The method of constructing CIs described in section 2.1 is a major improvement over the naive approach described in section 2, as it deals with overdispersion. But there are still some issues with this approach that motivate the need for something better:
 
