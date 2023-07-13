@@ -15,8 +15,22 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 ```
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(kableExtra)
+```
 
 
-## 1. he Bayesian hierarchical model
+## 1. The Bayesian hierarchical model
 
-TODO
+Define the following terms:
+
+```{r, echo=FALSE, message=FALSE, warnings=FALSE}
+rbind.data.frame(list(Parameter = "$p$", Definition = "Prevalence at the province level")) %>%
+  rbind.data.frame(list(Parameter = "$r$", Definition = "Intra-cluster correlation coefficient")) %>%
+  rbind.data.frame(list(Parameter = "$x_i$", Definition = "Prevalence in cluster $i$")) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+  row_spec(0, extra_css = "border-bottom: 1px solid; border-top: 1px solid") %>%
+  row_spec(2, extra_css = "border-bottom: 1px solid") %>%
+  scroll_box(width = "500px", height = "200px")
+```
