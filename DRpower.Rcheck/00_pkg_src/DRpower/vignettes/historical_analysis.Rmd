@@ -1,0 +1,180 @@
+---
+title: "Historical analysis"
+author: "Bob Verity"
+date: "Last updated: `r format(Sys.Date(), '%d %b %Y')`"
+output: html_document
+vignette: >
+  %\VignetteIndexEntry{Historical analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(DRpower)
+library(ggridges)
+library(kableExtra)
+library(tidyverse)
+```
+
+## 1. Available data on *pfhrp2/3* deletions
+
+Our objective here is to learn from historical *pfhrp2/3* studies and to use this information to increase the power and validity of our approach. In particular, we are interested in coming up with sensible values for the intra-cluster correlation coefficient (ICC). Estimates of the ICC from historical data are vastly better than using simple rules of thumb, e.g. using 1.5 for the design effect, and thankfully the Bayesian framework gives us an excellent way of incorporating this information into our analys.
+
+A large number of *pfhrp2/3* studies can be explored through the [WHO malaria threats map](https://apps.who.int/malaria/maps/threats/). Although the data are not available for direct download from this site, they can be manually extracted, or in our case they were made available by request from the WHO. A data.frame giving all downloaded studies is available in the DRpower package through the `studies_inclusion` object (loaded by default). The raw data.frame consists of 94 studies. Our first step was to apply the following filters:
+
+1. **Must have at least 10 samples total**. Less than this and there is very little information in the data, meaning our conclusions are driven by our priors.
+2. **Must have at least 5 deletions total**. Although technically there is some information present on the ICC even when prevalence is zero, again we risk being strongly influenced by the prior.
+3. **Must have data available at sub-ADMIN1 level**. We are interested in estimating the ICC at the province (ADMIN1) level, meaning we need data at this level of spatial resolution.
+4. **Data must be from symptomatic individuals**. We are interested in *clinically relevant* *pfhrp2/3* deletions, and so we exclude studies on asymptomatic individuals.
+
+This filtered us down to 12 studies. Granular data from these 12 studies is available within the package through the `historical_data` object. At this point, a further filter was applied:
+
+1. **ADMIN1 units must contain data from 3 or more sites within the same sampling year**. Multiple sites are needed to provide information on the ICC, and 3 sites was chosen as a minimum as this is more informative than e.g. 2 sites while still providing adequate data.
+
+After applying this filter, data remained from 5 studies covering 4 countries and 6 ADMIN1 regions:
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# subset to ADMIN1 regions that have data for 3 or more lower geographical units
+# in the same year
+multi_site <- historical_data %>%
+  group_by(Paper_name, WHO_country_name, WHO_ADMIN1, Year) %>%
+  summarise(unique_count = n()) %>%
+  ungroup() %>%
+  filter(unique_count >= 3) %>%
+  mutate(study_ID = seq_along(unique_count)) %>%
+  mutate(plot_name = sprintf("%s: %s\n(%s)", WHO_country_name, WHO_ADMIN1, Paper_name))
+
+# make table
+multi_site %>%
+  left_join(studies_inclusion) %>%
+  select(Paper_name, WHO_country_name, WHO_ADMIN1, Year, unique_count, Paper_link) %>%
+  rename(Study_name = Paper_name,
+         Country = WHO_country_name,
+         ADMIN1 = WHO_ADMIN1,
+         Num_sites = unique_count) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+  row_spec(0, extra_css = "border-bottom: 1px solid; border-top: 1px solid") %>%
+  row_spec(6, extra_css = "border-bottom: 1px solid") %>%
+  scroll_box(width = "700px", height = "300px")
+
+```
+
+<br>
+<br>
+The filtered data from these studies are shown below:
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# merge dataset and finalise
+dat_final <- multi_site %>%
+  left_join(historical_data)
+
+# make table
+dat_final %>%
+  select(Paper_name, WHO_country_name, WHO_ADMIN1, WHO_ADMIN2, WHO_village_or_health_facility,
+         Year, Tested, Count_deletions) %>%
+  rename(Study_name = Paper_name,
+         Country = WHO_country_name,
+         ADMIN1 = WHO_ADMIN1,
+         ADMIN2 = WHO_ADMIN2,
+         Site = WHO_village_or_health_facility,
+         Deletions = Count_deletions) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+  row_spec(0, extra_css = "border-bottom: 1px solid; border-top: 1px solid") %>%
+  row_spec(29, extra_css = "border-bottom: 1px solid") %>%
+  scroll_box(width = "700px", height = "300px")
+```
+
+## 2. Estimating the ICC
+
+We can estimate the ICC using the Bayesian model in DRpower by running the `get_ICC()` function on each of the 6 studies. We will assume a completely flat prior on the ICC by setting `prior_ICC_shape1 = 1` and `prior_ICC_shape2 = 1`, and we will return the full posterior distribution by setting `post_full_on = TRUE`.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# loop through studies and get full posterior in each case
+x <- seq(0, 1, l = 1001)
+l <- list()
+for (i in 1:nrow(multi_site)) {
+  
+  # subset to this study and get raw posterior ICC
+  dat_sub <- dat_final %>%
+    filter(study_ID == multi_site$study_ID[i])
+  post_df <- get_ICC(n = dat_sub$Count_deletions, N = dat_sub$Tested,
+                     prior_ICC_shape2 = 1, n_intervals = 100,
+                     post_full_on = TRUE, post_full_breaks = x)
+  
+  # save results
+  y <- post_df$post_full[[1]]
+  l[[i]] <- data.frame(col = "data",
+                       group = multi_site$plot_name[i],
+                       x = x,
+                       y = y / sum(y))
+}
+df1 <- l %>%
+  bind_rows()
+
+# plot
+df1 %>%
+  mutate(group = factor(group, levels = c(multi_site$plot_name))) %>%
+  ggplot() + theme_bw() +
+  geom_ridgeline(aes(x = x, y = group, height = y, group = group, fill = col),
+                 scale = 40) +
+  xlim(c(0, 0.5)) +
+  xlab("Intra-cluster correlation") + ylab("Probability density") +
+  guides(fill = "none")
+```
+
+We can see that there is limited information on the ICC, as evidenced by the relatively spread out posteriors. That being said, there is evidence that it is greater than 0 and less than around 0.3. We can combine information over sites by multiplying together these posteriors to give the following:
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=2.5, fig.width=5}
+# add combined posterior
+post_comb <- df1 %>%
+  pivot_wider(names_from = group, values_from = y) %>%
+  select(-c(col, x)) %>%
+  apply(1, prod)
+
+df1 <- rbind(df1, data.frame(col = "posterior",
+                             group = "Combined posterior",
+                             x = x,
+                             y = post_comb / sum(post_comb)))
+
+df1 %>%
+  filter(group == "Combined posterior") %>%
+  ggplot() + theme_bw() +
+  geom_ridgeline(aes(x = x, y = group, height = y, group = group, fill = col),
+                 scale = 40) +
+  xlim(c(0, 0.5)) + scale_y_discrete(expand = c(0, 0)) +
+  xlab("Intra-cluster correlation") + ylab("Probability density") +
+  guides(fill = "none")
+```
+
+This distribution is much sharper, peaking at ICC = `r x[which.max(post_comb)]` and entertaining values up to around 0.1. However, combining posteriors in this way makes the hard assumption that there is a single ICC that is the same everywhere, which may not be true for different populations and geographic regions. For this reason, we take a more practical approach when defining priors; we manually define the prior on ICC to be consistent with historical data while also capturing the plausible range between studies. We opt for a Beta(1, 9) distribution, as shown below:
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=2.5, fig.width=5}
+# add default prior
+y <- dbeta(x, shape1 = 1, shape2 = 9)
+df1 <- rbind(df1, data.frame(col = "prior",
+                             group = "Default prior",
+                             x = x,
+                             y = y / sum(y)))
+
+df1 %>%
+  filter(group == "Default prior") %>%
+  ggplot() + theme_bw() +
+  geom_ridgeline(aes(x = x, y = group, height = y, group = group, fill = col),
+                 scale = 40) +
+  xlim(c(0, 0.5)) + scale_y_discrete(expand = c(0, 0)) +
+  xlab("Intra-cluster correlation") + ylab("Probability density") +
+  guides(fill = "none")
+```
+
+This distribution allows for ICC values anywhere in the plausible range from 0 to 0.3, while at the same time putting very low probability on values greater than this. This prior is adopted as the default in all DRpower functions, and can be overwritten by setting  `prior_ICC_shape1` and `prior_ICC_shape2` manually.
+
+The other place we need ICC estimates is when estimating power, as we are forced to simulate under an assumed ICC. For the reasons above, we focus on the case of ICC = 0.05 as this is a realistic value that is likely to hold true for most studies. However, if we want to be cautious about the ICC then we can instead opt for a larger value, which will in turn lead to larger sample sizes.
+

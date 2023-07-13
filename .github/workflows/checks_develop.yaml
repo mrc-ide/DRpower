@@ -10,6 +10,9 @@ on:
 
 name: checks_develop
 
+r_build_args: --no-build-vignettes --no-manual --no-resave-data
+r_check_args: --no-build-vignettes --no-manual
+
 jobs:
   R-CMD-check:
     
@@ -37,9 +40,4 @@ jobs:
           extra-packages: any::rcmdcheck
           needs: check
 
-      - run: |
-          R CMD build . --no-build-vignettes  # Skip vignette building during package build
-
-      - run: |
-          R CMD check *tar.gz --no-build-vignettes  # Skip vignette building during package check
-
+      - uses: r-lib/actions/check-r-package@v2

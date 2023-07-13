@@ -1,0 +1,134 @@
+---
+title: "How to Summarise the Prevalence"
+author: "Bob Verity"
+date: "Last updated: `r format(Sys.Date(), '%d %b %Y')`"
+output: html_document
+vignette: >
+  %\VignetteIndexEntry{How to Summarise the Prevalence}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(DRpower)
+library(kableExtra)
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+```
+
+## 1. Is our Bayesian method biased?
+
+The `get_prevalence()` function calculates the full posterior distribution of the prevalence, but then it usually returns just a summary of this distribution. There are many summaries that we could choose, for example, we might be tempted to take the posterior mean. But how good a summary is this? The plot below shows the posterior mean for the 6-cluster case compared with the true prevalence used in simulation, averaged over 1000 simulations. If the method is unbiased then the coloured lines should match the 1:1 line (dashed):
+
+```{r, echo=FALSE}
+df_sim %>%
+  filter(prior_ICC_shape2 == 9) %>%
+  filter(prev_thresh == 0.05) %>%
+  filter(n_clust == 6) %>%
+  filter(N %in% c(5, 50, 100)) %>%
+  filter(ICC == 0.05) %>%
+  mutate(N = as.factor(N)) %>%
+  ggplot() + theme_bw() +
+  geom_abline(slope = 1, linetype = "dashed") +
+  geom_line(aes(x = prevalence * 1e2, y = post_mean_mean, col = N)) +
+  xlim(c(0, 20)) + ylim(c(0, 25)) +
+  xlab("True prevalence") + ylab("Estimated prevalence (posterior mean)") +
+  scale_colour_discrete(name = "Sample size\nper cluster") +
+  ggtitle("Number of clusters = 6")
+```
+
+We can see from this plot that the posterior mean doesn't match the 1:1 line very well, rather it tends to overestimate the prevalence. This is a particular problem when cluster sizes are very small (5), but the issue remains with larger sizes (100). What does this mean for our Bayesian method?
+
+To understand this, it's worth looking at the complete posterior distribution for a single simulation. We can obtain this distribution directly from the `get_prevalence()` function by setting `post_full_on = TRUE`. The following plot is for 6 clusters, each containing 5 positives out of 50 samples.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# get posterior
+gp <- get_prevalence(n = rep(5, 6),
+                     N = 50,
+                     post_mean_on = TRUE,
+                     post_median_on = TRUE,
+                     post_full_on = TRUE,
+                     post_full_breaks = seq(0, 1, l = 10001))
+
+# get y-values corresponding to central estimates
+y_MAP <- gp$post_full[[1]][gp$MAP * 1e2 + 1]
+y_mean <- gp$post_full[[1]][gp$post_mean * 1e2 + 1]
+y_median <- gp$post_full[[1]][gp$post_median * 1e2 + 1]
+y_CrI_lower <- gp$post_full[[1]][gp$CrI_lower * 1e2 + 1]
+y_CrI_upper <- gp$post_full[[1]][gp$CrI_upper * 1e2 + 1]
+
+# plot
+data.frame(x = seq(0, 100, l = 10001),
+           y = gp$post_full[[1]]) %>%
+  ggplot() + theme_bw() +
+  geom_vline(xintercept = 10, linetype = "dashed") +
+  geom_ribbon(aes(x = x, ymax = y, ymin = 0), fill = "dodgerblue",
+              alpha = 0.5) +
+  geom_line(aes(x = x, y = y), col = "dodgerblue2") +
+  
+  geom_segment(aes(x = gp$MAP, y = y_MAP, xend = gp$MAP, yend = 0),
+               col = "dodgerblue2") +
+  geom_segment(aes(x = gp$MAP, y = 25, xend = gp$MAP, yend = y_MAP),
+               arrow = arrow(length = unit(0.2, "cm"))) +
+  geom_segment(aes(x = 14, xend = gp$MAP, y = 25, yend = 25)) +
+  annotate(geom = "text", x = 14.2, y = 25, label = "MAP", hjust = 0) +
+  
+  geom_segment(aes(x = gp$post_median, y = y_median, xend = gp$post_median, yend = 0),
+               col = "dodgerblue2") +
+  geom_segment(aes(x = gp$post_median, y = 23, xend = gp$post_median, yend = y_median),
+               arrow = arrow(length = unit(0.2, "cm"))) +
+  geom_segment(aes(x = 13, xend = gp$post_median, y = 23, yend = 23)) +
+  annotate(geom = "text", x = 13.2, y = 23, label = "Posterior median", hjust = 0) +
+  
+  geom_segment(aes(x = gp$post_mean, y = y_mean, xend = gp$post_mean, yend = 0),
+               col = "dodgerblue2") +
+  geom_segment(aes(x = gp$post_mean, y = 21, xend = gp$post_mean, yend = y_mean),
+               arrow = arrow(length = unit(0.2, "cm"))) +
+  geom_segment(aes(x = 12, xend = gp$post_mean, y = 21, yend = 21)) +
+  annotate(geom = "text", x = 12.2, y = 21, label = "Posterior mean", hjust = 0) +
+  
+  geom_segment(aes(x = gp$CrI_lower, y = y_CrI_lower, xend = gp$CrI_lower, yend = 0),
+               col = "dodgerblue2") +
+  geom_segment(aes(x = gp$CrI_lower, y = 5, xend = gp$CrI_lower, yend = y_CrI_lower),
+               arrow = arrow(length = unit(0.2, "cm"))) +
+  annotate(geom = "text", x = 5.5, y = 7, label = "Lower\n95% CrI", hjust = 0) +
+  
+  geom_segment(aes(x = gp$CrI_upper, y = y_CrI_upper, xend = gp$CrI_upper, yend = 0),
+               col = "dodgerblue2") +
+  geom_segment(aes(x = gp$CrI_upper, y = 5, xend = gp$CrI_upper, yend = y_CrI_upper),
+               arrow = arrow(length = unit(0.2, "cm"))) +
+  annotate(geom = "text", x = 15.5, y = 7, label = "Upper\n95% CrI", hjust = 0) +
+  
+  xlim(c(5, 20)) + ylim(c(0, 25)) +
+  xlab("Prevalence") + ylab("Probability density")
+```
+
+The dashed line gives the basic estimate we would obtain from the raw data (30 / 300 = 10% prevalence). Notice that all three Bayesian estimates of central tendency are higher than this 10% value. There are a number of reasons for this, including the skew of the distribution and the priors that we assume. But the most important take-home from this plot is that **the prevalence has a good chance of being anywhere inside the body of this distribution, and so we shouldn't rely too much on any single central estimate**. In other words, if the 95% CrI says that prevalence is likely between 6.5% and 16% then this is the plausible range we should consider, and whether our central estimate is 10% or 10.3% is less important.
+
+That being said, there are some cases where we need a central estimate, and in this case **we recommend using the MAP estimate**. The plot below explores the bias of the MAP estimate:
+
+```{r, echo=FALSE}
+df_sim %>%
+  filter(prior_ICC_shape2 == 9) %>%
+  filter(prev_thresh == 0.05) %>%
+  filter(n_clust == 6) %>%
+  filter(N %in% c(5, 50, 100)) %>%
+  filter(ICC == 0.05) %>%
+  mutate(N = as.factor(N)) %>%
+  ggplot() + theme_bw() +
+  geom_abline(slope = 1, linetype = "dashed") +
+  geom_line(aes(x = prevalence * 1e2, y = MAP_mean, col = N)) +
+  xlim(c(0, 20)) + ylim(c(0, 25)) +
+  xlab("True prevalence") + ylab("Estimated prevalence (posterior mean)") +
+  scale_colour_discrete(name = "Sample size\nper cluster") +
+  ggtitle("Number of clusters = 6")
+```
+
+Some bias remains for 5 samples per cluster, but for larger sample sizes the bias is very small.

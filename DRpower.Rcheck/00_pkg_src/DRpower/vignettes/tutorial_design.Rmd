@@ -1,0 +1,169 @@
+---
+title: "Designing a study"
+author: "Bob Verity"
+date: "Last updated: `r format(Sys.Date(), '%d %b %Y')`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Designing a study}
+  %\VignetteEngine{knitr::knitr}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(DRpower)
+library(kableExtra)
+library(dplyr)
+library(ggplot2)
+
+```
+
+This tutorial demonstrates how you can use the DRpower package in the design phase of a *pfhrp2/3* deletion study to ensure you have adequate power. This takes a purely statistical view of the problem; the results presented here should be taken alonside other considerations such as logistcal, financial and ethical factors.
+
+## 1. Consult sample size tables
+
+Our aim is to conduct a multi-cluster survey to test the prevalence of *pfhrp2/3* deletions against a defined threshold. The question is; how many clusters should I use and how many samples per cluster?
+
+The fastest way to get an idea of adequate sample size is to consult pre-computed sample size tables. These are distributed as part of the DRpower package and can be accessed through the `df_ss` object. This data.frame contains sample sizes for a wide range of parameter combinations, so we will start by filtering down to the parameters we care about. In our case, we will power the study to detect a prevalence of 10% deletions in our region, and we will assume an intra-cluster correlation coefficient of 0.05 based on [historical data](TODO):
+
+```{r, message=FALSE, warning=FALSE}
+# load tidyverse package for manipulating data
+library(tidyverse)
+
+# filter sample size data.frame
+df_ss %>%
+  filter(prior_ICC_shape2 == 9) %>%
+  filter(ICC == 0.05) %>%
+  filter(prev_thresh == 0.05) %>%
+  filter(near(prevalence, 0.1)) %>%
+  select(n_clust, N_opt)  # show just these two columns
+```
+
+Note that **these values are only valid if you intend to analyse your data using the DRpower model**. If you plan to do a different statistical analysis then a different power analysis should be conducted.
+
+We can see that at least 5 clusters are needed, otherwise sample sizes are too large to be reported in this table. It's also interesting to note that the total sample size (`n_clust * N_opt`) *decreases* as we recruit more clusters. For example, a 6-cluster design would require 678 samples in total, but a 10-cluster design would need only 300. This is one of *many* arguments for why it's a good idea to recruit as many clusters as possible.
+
+Let's assume that we can only recruit 6 clusters for logistical reasons, meaning we would aim for 113 samples per cluster. These clusters can be chosen through randomisation of all health facilities, or by using predesignated sentinel surveillance sites. In the latter case, it is important that sentinel sites are chosen to be representative of the population in the province as a whole (e.g. in terms of demographic and social characteristics), otherwise we risk getting a biased view of *pfhrp2/3* deletion prevalence.
+
+
+## 2. Consult power curves
+
+Although sample size tables are a good starting point, they do not tell us how power is changing with $N$. It could be that the curve is very steep, in which case dropping even just a few samples would really hurt our power. On the other hand, it could be that it is very shallow, in which case we have some more wiggle room.
+
+All of the power curves that were used to produce the sample size table above are distributed with the DRpower package and accessible via the `df_sim` object. As before, we need to filter this very large data.frame to get the curve we are interested in:
+
+```{r, message=FALSE, warning=FALSE}
+# filter data
+df_sim_filter <- df_sim %>%
+  filter(prior_ICC_shape2 == 9) %>%
+  filter(n_clust == 6) %>%
+  filter(ICC == 0.05) %>%
+  filter(prev_thresh == 0.05) %>%
+  filter(near(prevalence, 0.1))
+
+# plot power as a function of N
+df_sim_filter %>%
+  ggplot() + theme_bw() +
+  geom_point(aes(x = N, y = power_mean)) +
+  geom_hline(yintercept = 0.8, alpha = 0.5) +
+  xlim(c(0, 150)) + ylim(c(0, 1))
+```
+
+We find that the power curve is fairly shallow around the chosen value of N = 113. For example, the value N = 70 still achieves 75% power. We need to be pragmatic about these numbers, and not stick dogmatically to the target value of 80% power without thinking about what it means. We should remember that power is defined as the probability of finding an interesting result if it is there, so a study with 75% power has alsmost as good a chance of success as a study with 80% power, i.e. it's not the case that if we fail to hit 80% then the study is completely invalid. This is important because a drop in sample size from 113 per cluster to 70 may be the difference between a study that is feasible to conduct and one that is not. We need to balance these factors against each other when coming up with a study design.
+
+That being said, we should not allow power to drop too low or the study may not be worth doing. In our case we will stick to the target value of 113 samples per cluster, as we believe we can raise funds to this level and successfully carry out the project in practice.
+
+## 3. Refine cluster sizes
+
+Next, we should examine our 6 clusters individually to see if they are able to recruit 113 samples. Ideally, this should be informed by historical case reports, which can give a good indication of how many malaria cases tend to be seen throughout the transmission season.
+
+In our case, let's assume that two sites are in low transmission areas, meaning they can only recruit 60 samples during the study timeframe. Another two sites are very small, and only have the capacity to enrol 40 samples.
+
+The question is - how much do these smaller clusters hurt our power? We cannot work this out from sample size tables or power curves because it is very unlikely that we have results for this exact situation. But we can explore power directly using the `get_power_threshold()` function:
+
+```{r, echo=FALSE}
+set.seed(1)
+```
+```{r}
+get_power_threshold(N = c(113, 113, 60, 60, 40, 40),   # new cluster sizes
+                    prevalence = 0.1,
+                    ICC = 0.05,
+                    prev_thresh = 0.05,
+                    reps = 1000)
+```
+
+We find that power is slightly lower than before, probably around 74%. We could try to balance things out by obtaining more samples from our remaining two clusters:
+
+```{r, echo=FALSE}
+set.seed(1)
+```
+```{r}
+get_power_threshold(N = c(250, 250, 60, 60, 40, 40),   # rebalanced cluster sizes
+                    prevalence = 0.1,
+                    ICC = 0.05,
+                    prev_thresh = 0.05,
+                    reps = 1000)
+```
+
+This rebalancing has helped, power is now back up to around 78%, but it comes at the cost of obtaining more samples. The total sample size has now gone up to 700 from the original 678.
+
+As an aside, compare this with what happens if we were able to recruit just one more cluster, rather than expanding our existing clusters:
+
+```{r, echo=FALSE}
+set.seed(1)
+```
+```{r}
+get_power_threshold(N = c(113, 113, 60, 60, 40, 40, 40),   # one more cluster of size 40
+                    prevalence = 0.1,
+                    ICC = 0.05,
+                    prev_thresh = 0.05,
+                    reps = 1000)
+```
+
+Power is now recovered to around 78% while the total sample size is only 466. This emphasises the point that *where possible* we should put our efforts into recruiting more clusters rather than increasing per-cluster sample sizes.
+
+In our case, we assume a hard limit of 6 clusters, so we will stick with the rebalanced numbers:
+
+```{r}
+# final sample sizes per cluster
+N <- c(250, 250, 60, 60, 40, 40)
+```
+
+This should give us power of around 78% (somewhere in the range 75% to 80%), which is a balance between the target power we would like and what we can realistically achieve given real world constraints.
+
+## 4. Account for dropout
+
+The numbers above refer to *confirmed malaria cases* (by some gold standard that is *not* HRP2-based RDTs). But when designing a study we need to know how many *suspected* malaria cases to enrol, which may be much higher. Many suspected malaria cases come back negative due to the symptoms overlapping with many other illnesses.
+
+To calculate the number of suspected cases that we need to enrol, we should divide our sample sizes through by the expected positive fraction. For example, if we assume that 40% of suspected cases will come back positive then we would do the following:
+
+```{r}
+N_suspected <- ceiling(N / 0.4)
+
+print(N_suspected)
+```
+
+The `ceiling()` function round values up to the nearest whole number. Here, we have assumed the same positive fraction over all sites, but if you have data from individual sites that can be used then that is even better. We might also expect the positive fraction to have a relationship with transmission intensity, so it's a good idea to tailor these values where possible.
+
+We also need to account for dropout, meaning samples that - for one reason or another - do not make it all the way to the final analysis. Reasons can include people withdrawing consent from the study, RDTs getting lost, samples getting contaminated or failing the molecular laboritory methods. It is always a good idea to assume *some* level of dropout, and a local technician is often the best person to give informed advice. In our case we will assume dropout of 10%, meaning we need to divide through again by 0.9:
+
+```{r}
+N_final <- ceiling(N_suspected / 0.9)
+
+print(N_final)
+```
+
+This are the final numbers that we want to enrol. At this stage, it is worth doing a sanity check with the staff at the local facilities that they expect to be able to enrol these numbers within the study period. This is also the point at which we can do full budget calculations.
+
+## 5. Iterate and improve
+
+Although we have completed a full statistical analysis of the number of clusters and samples, we should not think of these values as set in stone. Rather, they give a first sketch of a study design that may be workable, and that has nice statistical properties. But if this turns out to be impractical, either from logistical or budgetary perspectives, then we are free to explore variations in the hope of getting something that will work. What we should *not* do is 1) continue doggedly with a plan that we believe will fail in practice, or 2) throw all statistical arguments out the window and just collect whatever samples we can get our hands on. It is normally possible to balance statistical arguments against real world constraints to get something that satisfies both.
+
+<p align="center">
+<button class="btn btn-primary" onclick="window.location.href='https://w3docs.com';"> Next topic </button>
+</p>
