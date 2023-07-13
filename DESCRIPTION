@@ -43,4 +43,4 @@ Suggests:
 Config/testthat/edition: 3
 LinkingTo: 
     Rcpp
-VignetteBuilder: knitr
+VignetteBuilder: knitr, rmarkdown
