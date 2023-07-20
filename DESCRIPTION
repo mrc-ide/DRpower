@@ -44,3 +44,5 @@ Config/testthat/edition: 3
 LinkingTo: 
     Rcpp
 VignetteBuilder: knitr, rmarkdown
+Depends:
+    R (>= 3.5.0)

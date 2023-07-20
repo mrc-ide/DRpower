@@ -5,7 +5,7 @@ date: "Last updated: `r format(Sys.Date(), '%d %b %Y')`"
 output: html_document
 vignette: >
   %\VignetteIndexEntry{Mathematical Details}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{knitr::knitr}
   %\VignetteEncoding{UTF-8}
 ---
 
@@ -36,7 +36,7 @@ rbind.data.frame(list(Parameter = "$p$", Definition = "Prevalence at the provinc
   kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
   row_spec(0, extra_css = "border-bottom: 1px solid; border-top: 1px solid") %>%
   row_spec(2, extra_css = "border-bottom: 1px solid") %>%
-  scroll_box(width = "500px", height = "360px")
+  scroll_box(width = "800px", height = "380px")
 ```
 
 We assume a multilevel model in which $p$ is the overall prevalence at the province level, but the individual cluster-level prevalence varies around this value according to a beta distribution. The parameters of this beta distribution are chosen such that $r$ represents the level of intra-cluster correlation.
@@ -61,4 +61,4 @@ $Pr(p | \mathbf{k}, \mathbf{n}) \propto \int_0^1 Pr(p, r | \mathbf{k}, \mathbf{n
 
 $Pr(r | \mathbf{k}, \mathbf{n}) \propto \int_0^1 Pr(p, r | \mathbf{k}, \mathbf{n}) dp$
 
-This integration is performed by a numerical quadrature-based method. The marginal posterior distributions can be returned in full, or can be summarised using various measures of central tendency and/or credible intervals (CrI). There are multiple methods of calculating CrIs - we use the high density region (HDI) by default because this avoids the possibility of the maximum a posteriori (MAP) estimate being outside the CrI, which is possible by the more commonly used equal-tailed interval.
+This integration is performed by a numerical quadrature-based method. The marginal posterior distributions can be returned in full, or can be summarised using various measures of central tendency and/or credible intervals (CrI). There are multiple methods of calculating CrIs - we use the high density region (HDI) by default as this avoids the possibility of the maximum a posteriori (MAP) estimate being outside the CrI, which is possible by the more commonly used equal-tailed interval (ETI).

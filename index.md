@@ -8,6 +8,6 @@ The DRpower package is designed to assist with the development of *Plasmodium fa
 
 The simplest way to interact with the package is through the [interactive web app](TODO), which contains all the main functions of the package in a user-friendly environment. If you are looking for a simple way to design a study or analyse your data then you should start with the app.
 
-The ["How it works"](articles/rationale1_background.html) section gives a thorough explanation of the rationale behind the DRpower method. If you want to gain a deeper understanding of the statistical issues in this area then you should start here.
+The ["How it works"](articles/rationale1_background.html) section gives a thorough explanation of the rationale behind the DRpower method. If you want to gain a deeper understanding of the statistical issues that motivate this software then you should start here.
 
-For those wanting to jump straight into using the software, see the [installation instructions](articles/installation.html) followed by a series of [tutorials](articles/tutorial_design.html) on how to perform various analyses. Most of these analyses can also be performed through the [interactive web app](TODO), so this is really for people who want to do their own more detailed investigations.
+For those wanting to jump straight into using the software, see the [installation instructions](articles/installation.html) followed by a series of [tutorials](articles/tutorial_design.html) on how to perform various analyses. Bear in mind that most of these analyses can also be performed through the [interactive web app](TODO), so working directly with this package is recommended for people who want to do more advanced analyses.

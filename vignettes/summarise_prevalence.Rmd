@@ -5,7 +5,7 @@ date: "Last updated: `r format(Sys.Date(), '%d %b %Y')`"
 output: html_document
 vignette: >
   %\VignetteIndexEntry{How to Summarise the Prevalence}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{knitr::knitr}
   %\VignetteEncoding{UTF-8}
 ---
 
@@ -44,7 +44,7 @@ df_sim %>%
   ggtitle("Number of clusters = 6")
 ```
 
-We can see from this plot that the posterior mean doesn't match the 1:1 line very well, rather it tends to overestimate the prevalence. This is a particular problem when cluster sizes are very small (5), but the issue remains with larger sizes (100). What does this mean for our Bayesian method?
+We can see from this plot that the posterior mean doesn't match the 1:1 line very well, rather it tends to overestimate the prevalence. This is a particular problem when cluster sizes are very small (e.g. 5), but the issue remains with larger sizes (e.g. 100). What does this mean for our Bayesian method?
 
 To understand this, it's worth looking at the complete posterior distribution for a single simulation. We can obtain this distribution directly from the `get_prevalence()` function by setting `post_full_on = TRUE`. The following plot is for 6 clusters, each containing 5 positives out of 50 samples.
 
@@ -126,7 +126,7 @@ df_sim %>%
   geom_abline(slope = 1, linetype = "dashed") +
   geom_line(aes(x = prevalence * 1e2, y = MAP_mean, col = N)) +
   xlim(c(0, 20)) + ylim(c(0, 25)) +
-  xlab("True prevalence") + ylab("Estimated prevalence (posterior mean)") +
+  xlab("True prevalence") + ylab("Estimated prevalence (MAP)") +
   scale_colour_discrete(name = "Sample size\nper cluster") +
   ggtitle("Number of clusters = 6")
 ```
