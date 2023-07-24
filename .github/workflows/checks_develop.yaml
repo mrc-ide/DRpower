@@ -36,7 +36,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          Rscript -e "devtools::install_deps(dep = TRUE)"
+          Rscript -e "install.packages(c('devtools', 'roxygen2', 'testthat'))"
       
       - name: Build Package
         run: |
@@ -45,8 +45,12 @@ jobs:
       - name: Check Package
         run: |
           R CMD check *tar.gz --ignore-vignettes
+          
+      - name: Install Package Dependencies
+        run: |
+          Rscript -e "devtools::install_deps(dep = TRUE)"
 
-      - name: Run Tests
+      - name: Run Package Tests
         run: |
           Rscript -e "devtools::test()"
 
