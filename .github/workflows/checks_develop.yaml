@@ -40,4 +40,4 @@ jobs:
       
       - name: Build Package
         run: |
-          Rscript -e "Sys.which('make')"
+          R
