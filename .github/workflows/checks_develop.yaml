@@ -40,4 +40,4 @@ jobs:
       
       - name: Build Package
         run: |
-          ls
+          R CMD build --help
