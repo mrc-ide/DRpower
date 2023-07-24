@@ -36,8 +36,8 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          Rscript -e "install.packages(c('devtools', 'roxygen2', 'testthat', 'PkgUtils'))"
+          Rscript -e "install.packages(c('devtools', 'roxygen2', 'testthat'))"
       
       - name: Build Package
         run: |
-          R CMD build --help
+          Rscript -e "Sys.which('make')"
