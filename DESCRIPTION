@@ -26,23 +26,18 @@ BugReports: https://github.com/mrc-ide/DRpower/issues
 Imports: 
     dplyr,
     extraDistr,
-    ggplot2,
-    kableExtra,
     magrittr,
-    pandoc,
-    Rcpp,
-    rlang,
-    statmod,
-    tidyr
+    Rcpp
 Suggests: 
     knitr,
-    rmarkdown,
+    ggplot2,
+    kableExtra,
     testthat (>= 3.0.0),
     ggridges,
     tidyverse
 Config/testthat/edition: 3
 LinkingTo: 
     Rcpp
-VignetteBuilder: knitr, rmarkdown
+VignetteBuilder: knitr
 Depends:
     R (>= 3.5.0)

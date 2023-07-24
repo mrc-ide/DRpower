@@ -19,8 +19,7 @@ knitr::opts_chunk$set(
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 library(DRpower)
 library(kableExtra)
-library(dplyr)
-library(ggplot2)
+library(tidyverse)
 ```
 
 ## 6. The 2020 WHO master protocol
