@@ -40,4 +40,4 @@ jobs:
       
       - name: Build Package
         run: |
-          R --vanilla CMD build . --no-build-vignettes
+          R CMD INSTALL . --no-docs
