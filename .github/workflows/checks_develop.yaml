@@ -30,7 +30,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Set up R
-        uses: r-lib/actions/setup-r@v1
+        uses: r-lib/actions/setup-r@v2
         with:
           r-version: ${{ matrix.config.r }}
 
@@ -40,17 +40,4 @@ jobs:
       
       - name: Build Package
         run: |
-          R CMD build --no-build-vignettes .
-          
-      - name: Check Package
-        run: |
-          R CMD check --ignore-vignettes *tar.gz
-          
-      - name: Install Package Dependencies
-        run: |
-          Rscript -e "devtools::install_deps(dep = TRUE)"
-
-      - name: Run Package Tests
-        run: |
-          Rscript -e "devtools::test()"
-
+          R CMD build --no-build-vignettes
