@@ -40,11 +40,11 @@ jobs:
       
       - name: Build Package
         run: |
-          R CMD build . --no-build-vignettes
+          R CMD build --no-build-vignettes .
           
       - name: Check Package
         run: |
-          R CMD check *tar.gz --ignore-vignettes
+          R CMD check --ignore-vignettes *tar.gz
           
       - name: Install Package Dependencies
         run: |
