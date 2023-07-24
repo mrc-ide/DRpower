@@ -40,4 +40,4 @@ jobs:
       
       - name: Build Package
         run: |
-          R CMD INSTALL . --no-docs
+          R CMD build
