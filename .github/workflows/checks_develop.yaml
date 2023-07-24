@@ -40,4 +40,4 @@ jobs:
       
       - name: Build Package
         run: |
-          R
+          R --vanilla
