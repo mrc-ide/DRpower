@@ -79,5 +79,5 @@ Notice that when $r = 1$ (perfect correlation within clusters) we find that $D_{
 But this formula also reveals one of the tricky things about $D_{eff}$; it only applies for a particular sample size. From the formula above we can see that a clustered prevalence survey with twice the sample size (i.e., twice the $n$) will have roughly twice the $D_{eff}$, making it difficult to compare values between studies. A design effect of 2 can mean a lot or a little, depending on the sample size of the study. On the other hand, the parameter $r$ does not change with sample size, and so is more of an *intrinsic* property of the population. For this reason, we prefer to talk in terms of the ICC inside the DRpower package.
 
 <p align="center">
-<button class="btn btn-primary" onclick="window.location.href='https://w3docs.com';"> Next topic </button>
+<button class="btn btn-primary" onclick="window.location.href='https://mrc-ide.github.io/DRpower/articles/rationale4_weaknesses.html';"> Next topic </button>
 </p>

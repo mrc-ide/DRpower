@@ -1,0 +1,20 @@
+pandoc: 3.1.1
+pkgdown: 2.0.7
+pkgdown_sha: ~
+articles:
+  historical_analysis: historical_analysis.html
+  installation: installation.html
+  mathematical_details: mathematical_details.html
+  rationale1_background: rationale1_background.html
+  rationale2_issue: rationale2_issue.html
+  rationale3_design_effect: rationale3_design_effect.html
+  rationale4_weaknesses: rationale4_weaknesses.html
+  rationale5_bayesian: rationale5_bayesian.html
+  rationale6_master_protocol: rationale6_master_protocol.html
+  rationale7_ztest: rationale7_ztest.html
+  rationale8_power: rationale8_power.html
+  summarise_prevalence: summarise_prevalence.html
+  tutorial_analysis: tutorial_analysis.html
+  tutorial_design: tutorial_design.html
+last_built: 2023-07-25T15:08Z
+

@@ -31,5 +31,5 @@ We will refer to the sites at which people are tested as "clusters", which in re
 Finally, we refer to "*pfhrp2/3*" deletions to capture the fact that researchers may be interested in either the *pfhrp2* or *pfhrp3* locus, but DRpower does not consider joint analysis of multiple loci and so we assume you are powering for just one set of deletion counts.
 
 <p align="center">
-<button class="btn btn-primary" onclick="window.location.href='https://w3docs.com';"> Next topic </button>
+<button class="btn btn-primary" onclick="window.location.href='https://mrc-ide.github.io/DRpower/articles/rationale2_issue.html';"> Next topic </button>
 </p>

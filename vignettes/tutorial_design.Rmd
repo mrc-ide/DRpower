@@ -28,7 +28,7 @@ This tutorial demonstrates how you can use the DRpower package in the design pha
 
 Our aim is to conduct a multi-cluster survey to test the prevalence of *pfhrp2/3* deletions against a defined threshold. The question is; how many clusters should I use and how many samples per cluster?
 
-The fastest way to get an idea of adequate sample size is to consult pre-computed sample size tables. These are distributed as part of the DRpower package and can be accessed through the `df_ss` object. This data.frame contains sample sizes for a wide range of parameter combinations, so we will start by filtering down to the parameters we care about. In our case, we will power the study to detect a prevalence of 10% deletions in our region, and we will assume an intra-cluster correlation coefficient of 0.05 based on [historical data](TODO):
+The fastest way to get an idea of adequate sample size is to consult pre-computed sample size tables. These are distributed as part of the DRpower package and can be accessed through the `df_ss` object. This data.frame contains sample sizes for a wide range of parameter combinations, so we will start by filtering down to the parameters we care about. In our case, we will power the study to detect a prevalence of 10% deletions in our region, and we will assume an intra-cluster correlation coefficient of 0.05 based on [historical data](articles/historical_analysis.html):
 
 ```{r, message=FALSE, warning=FALSE}
 # load tidyverse package for manipulating data
@@ -164,5 +164,5 @@ This are the final numbers that we want to enrol. At this stage, it is worth doi
 Although we have completed a full statistical analysis of the number of clusters and samples, we should not think of these values as set in stone. Rather, they give a first sketch of a study design that may be workable, and that has nice statistical properties. But if this turns out to be impractical, either from logistical or budgetary perspectives, then we are free to explore variations in the hope of getting something that will work. What we should *not* do is 1) continue doggedly with a plan that we believe will fail in practice, or 2) throw all statistical arguments out the window and just collect whatever samples we can get our hands on. It is normally possible to balance statistical arguments against real world constraints to get something that satisfies both.
 
 <p align="center">
-<button class="btn btn-primary" onclick="window.location.href='https://w3docs.com';"> Next topic </button>
+<button class="btn btn-primary" onclick="window.location.href='https://mrc-ide.github.io/DRpower/articles/tutorial_analysis.html';"> Next topic </button>
 </p>
