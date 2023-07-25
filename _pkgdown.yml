@@ -11,22 +11,23 @@ navbar:
         - text: Background
           href: articles/rationale1_background.html
         - text: -------
-        - text: How to analyse data
-          menu:
-            - text: Why is this a tricky problem?
-              href: articles/rationale2_issue.html
-            - text: The design effect
-              href: articles/rationale3_design_effect.html
-            - text: Weaknesses with the traditional approach
-              href: articles/rationale4_weaknesses.html
-            - text: A Bayesian approach
-              href: articles/rationale5_bayesian.html
-        - text: How to design a study
-          menu:
-            - text: The 2020 master protocol
-              href: articles/rationale6_master_protocol.html
-            - text: The one-sample z-test
-              href: articles/rationale7_ztest.html
+        - text: Analysing data
+        - text: CIs and overdispersion
+          href: articles/rationale2_issue.html
+        - text: The design effect
+          href: articles/rationale3_design_effect.html
+        - text: Weaknesses with the traditional approach
+          href: articles/rationale4_weaknesses.html
+        - text: A Bayesian approach
+          href: articles/rationale5_bayesian.html
+        - text: -------
+        - text: Designing a study
+        - text: Sample size calculation in the 2020 master protocol
+          href: articles/rationale6_master_protocol.html
+        - text: The one-sample z-test
+          href: articles/rationale7_ztest.html
+        - text: Power and sample size in the DRpower model
+          href: articles/rationale8_power.html
     - text: Installation
       href: articles/installation.html
     - text: Tutorials
@@ -37,10 +38,12 @@ navbar:
           href: articles/tutorial_analysis.html
     - text: Misc
       menu:
-        - text: Power curves and tables
-          href: TODO
-        - text: Comparison of central estimates
-          href: TODO
+        - text: Mathematical details
+          href: articles/mathematical_details.html
+        - text: Historical analysis
+          href: articles/historical_analysis.html
+        - text: How to summarise the prevalence
+          href: articles/summarise_prevalence.html
     - text: Functions
       href: reference/index.html
 

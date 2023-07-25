@@ -7,7 +7,7 @@
 get_power_threshold(
   N,
   prevalence = 0.1,
-  ICC = 0.1,
+  ICC = 0.05,
   prev_thresh = 0.05,
   rejection_threshold = 0.95,
   prior_prev_shape1 = 1,

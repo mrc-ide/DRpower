@@ -1,11 +1,11 @@
 ---
-title: "Using DRpower for study design"
+title: "Sample Size Calculation in the 2020 WHO Master Protocol"
 author: "Bob Verity"
 date: "Last updated: `r format(Sys.Date(), '%d %b %Y')`"
 output: rmarkdown::html_vignette
 bibliography: REFERENCES.bib
 vignette: >
-  %\VignetteIndexEntry{rationale6_master_protocol}
+  %\VignetteIndexEntry{Sample Size Calculation in the 2020 WHO Master Protocol}
   %\VignetteEngine{knitr::knitr}
   %\VignetteEncoding{UTF-8}
 ---
@@ -19,18 +19,17 @@ knitr::opts_chunk$set(
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 library(DRpower)
 library(kableExtra)
-library(dplyr)
-library(ggplot2)
+library(tidyverse)
 ```
 
 ## 6. The 2020 WHO master protocol
 
-In 2020, the WHO released the [master protocol for surveillance of pfhrp2/3 deletions and biobanking to support future research](https://apps.who.int/iris/handle/10665/331197)[-@world2020master]. This document gave guidance on a wide range of issues related to *pfhrp2/3* studies, including data collection and fieldwork, data storage and laboratory analysis, and templates such as informed consent forms for participants. Overall, this document was a major step forward in specifying what a well designed *pfhrp2/3* study might look like. It also contained arguments around appropriate sample size, which we will explore here.
+In 2020, the WHO released the [master protocol for surveillance of pfhrp2/3 deletions and biobanking to support future research](https://apps.who.int/iris/handle/10665/331197)[-@world2020master]. This document gave guidance on a wide range of issues related to *pfhrp2/3* studies, including data collection and fieldwork, data storage and laboratory analysis, and provided templates such as informed consent forms for participants. This document was a major step forward in specifying what a well designed *pfhrp2/3* study might look like. However, it also contained some arguments around appropriate sample size that contained mistakes, and that we will explore here.
 
-The original version of the master protocol recommended a sample size of 370 per domain (e.g. province), split into 10 clusters of 37 each. It was later found that there were some numerical errors in this calculation, and the protocol was updated to 600 samples per domain. This larger sample size leads to increased power and more precise estimates of the prevalence of *pfhrp2/3* deletions. However, there are some lingering issues with the sample size argument that are deeper than simple numerical errors, and that motivate the need for an alternative approach.
+The original version of the master protocol recommended a sample size of 370 per domain (e.g. province), split into 10 clusters of 37 each. It was later found that there were some numerical errors in this calculation, and the protocol was updated to 600 samples per domain. This larger sample size has increased power and leads to more precise estimates of the prevalence of *pfhrp2/3* deletions. However, there are some lingering issues with the sample size argument that are deeper than simple numerical errors, and that motivate the need for an alternative approach.
 
 
-### 6.1 The logic behind the sample size calculation
+### 6.1. The logic behind the sample size calculation
 
 The recommended approach in the 2020 master protocol begins with estimating the prevalence of deletions and constructing a 95% CI around this estimate. There are three possible outcomes per province:
 
@@ -40,7 +39,7 @@ The recommended approach in the 2020 master protocol begins with estimating the 
 
 Examples of these three outcomes are shown in the plot below:
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, fig.width=5, fig.height=4}
 data.frame(y = as.factor(1:3), x = c(6, 8, 2.5)) %>%
   ggplot() + theme_bw() +
   geom_errorbar(aes(x = x, y = y, xmin = x - 2, xmax = x + 2), width = 0.1) +
@@ -59,19 +58,19 @@ Let $N$ be the *total* sample size over all clusters (in our earlier notation we
 
 $N \geq z_{\tiny 1 - \alpha/2}^2 \frac{\displaystyle p(1-p)}{\displaystyle (p-\mu)^2}D_{eff}$
 
-where $p$ is the true prevalence of *pfhrp2/3* deletions, $\mu$ is the threshold that we are comparing against (normally 5%), $D_{eff}$ is the design effect, and $z_{\tiny 1 - \alpha/2}$ is the two-tailed critical value of the normal distribution at significance level $\alpha$ (for example, $z_{\tiny 1 - \alpha/2}=1.96$ for $\alpha=0.05$). This formula can be found on page 4 of the 2020 master protocol, although in slightly different notation.
+where $p$ is the true prevalence of *pfhrp2/3* deletions, $\mu$ is the threshold that we are comparing against (normally 5%), $D_{eff}$ is the design effect, and $z_{\tiny 1 - \alpha/2}$ is the two-tailed critical value of the normal distribution at significance level $\alpha$ (for example, $z_{\tiny 1 - \alpha/2}=1.96$ for $\alpha=0.05$). This formula can be found on page 4 of the 2020 master protocol in slightly different notation.
 
-The sample size formula above has a direct connection to how we calculate CIs. Recall from our [earlier discussion](TODO) that a standard way of constructing a confidence interval around the prevalence estimate $\hat{p}$ is to use the formula $\hat{p} \pm z_{\tiny 1 - \alpha/2}\sqrt{\frac{\displaystyle \hat{p}(1-\hat{p})}{\displaystyle N}D_{eff}}$. Our objective is to make CIs just touch the target threshold, which we can do by equating this formula to $\mu$. We can then rearrange the CI formula in terms of $N$ to get the sample size formula above (those handy with algebra might want to give this a go). Interestingly, we get the same formula whether we treat the $\pm$ symbol as a plus (upper CI) or a minus (lower CI), meaning we can use the same sample size formula whether the prevalence is above or below the threshold.
+The sample size formula above has a direct connection to how we calculate CIs. Recall from [previous sections](TODO) that a standard way of constructing a confidence interval around the prevalence estimate $\hat{p}$ is to use the formula $\hat{p} \pm z_{\tiny 1 - \alpha/2}\sqrt{\frac{\displaystyle \hat{p}(1-\hat{p})}{\displaystyle N}D_{eff}}$. If our objective is to make CIs just touch the target threshold then we can achieve this by equating this formula to $\mu$. We can then rearrange the CI formula in terms of $N$ to get the sample size formula above (if you are handy with algebra you might want to give this a go). Interestingly, we get the same formula whether we treat the $\pm$ symbol as a plus (upper CI) or a minus (lower CI), meaning we can use the same sample size formula whether the prevalence is above or below the threshold. The reason for highlighting this connection is to emphasize that the sample size formula is intrinsicly linked to method for calculating confidence intervals. More generally, the power of a study is **intrinsically linked to the statistical analysis plan**. This is true no matter what our analysis plan is - the concept of power only makes sense if we have a clear plan how we will analyse our data.
 
-There is one difference worth mentioning; the sample size formula is in terms of $p$, whereas the CI formula is in terms of $\hat{p}$. The value $p$ is our assumed *true* prevalence of deletions, whereas $\hat{p}$ is our *estimate* of the prevalence of deletions. So $p$ is a fixed value but $\hat{p}$ will vary around the true value $p$, sometimes being slightly higher and sometimes slightly lower. We will come back to this point later.
+There is one subtle point worth mentioning; the sample size formula from the master protocol is in terms of $p$, but the CI formula is in terms of $\hat{p}$. The value $p$ is our assumed *true* prevalence of deletions, whereas $\hat{p}$ is our *estimate* of the prevalence of deletions. So $p$ is a fixed value but $\hat{p}$ will vary around the true value, sometimes being slightly higher and sometimes slightly lower. We will come back to this point later.
 
-### 6.2 Working through the updated protocol numbers
+### 6.2. Working through the updated protocol numbers
 
-As mentioned in the introduction, there were some numerical mistakes in the original version of the master protocol that meant the value $N=370$ had to be revised. Let's work through the revised protocol to update this value ourselves.
+As mentioned in the introduction to this section, there were some numerical mistakes in the original version of the master protocol that meant the value $N=370$ had to be revised. Let's work through the revised protocol to update this value ourselves.
 
-The updated protocol assumes $p=8\%$ as a representative high prevalence level (i.e., above 5%) and $p=3.2\%$ as a representative low prevalence level. It uses a design effect of $D_{eff}=1.5$ to account for observations correlated within clinics. It also somewhat confusingly mentions a 1-sided test at 95% confidence, which is at odds with the description of a two-sided CI - we will explore both assumptions below.
+The updated protocol assumes $p=8\%$ as a representative high prevalence level (i.e., above 5%) and $p=3.2\%$ as a representative low prevalence level. It uses a design effect of $D_{eff}=1.5$ to account for observations correlated within clinics. It also (somewhat confusingly) mentions a 1-sided test at 95% confidence, which is at odds with the description of a two-sided CI - we will assume a two-sided test below.
 
-For the two-sided test at the high prevalence level we obtain:
+For the high prevalence level we obtain:
 ```{r}
 p <- 0.08
 Deff <- 1.5
@@ -89,15 +88,17 @@ z <- qnorm(1 - 0.05/2)
 Deff * z^2 * p * (1 - p) / (p - 0.05)^2
 ```
 
-We would round these values to 472 and 551. These numbers are slightly at odds with those in the updated protocol (500 and 584, respectively), indicating there is still some discrepancy between the formula in the protocol and how these values are calculated. Note that we cannot fix this by using a one-sided assumption ($z_{\tiny 1 - \alpha}=1.64$), as this leads to different values again. The good news is that the updated master protocol is conservative, rounding up to 600. The bad news is that even this value is not sufficient given the assumptions due to deeper issues with the approach.
+We would round these values to 472 and 551. These numbers are slightly at odds with those in the updated protocol (500 and 584, respectively), indicating there is still some discrepancy between the formula in the protocol and how these values are calculated. Note that we cannot fix this by using a one-sided assumption ($z_{\tiny 1 - \alpha}=1.64$), as this leads to different values again. The good news is that the updated master protocol is conservative, rounding up to 600. The bad news is that even this value is not sufficient to achieve good power due to deeper issues with the approach.
 
-### 6.3 Issues with the approach
+### 6.3. Issues with the approach
 
-The main issue with the approach above is that it mixes precision-based arguments with hypothesis testing. If we are trying to design a study to achieve a particular margin of error around our prevalence estimate then it makes sense to work from the CI formula above. However, in the case of the master protocol we will use the CI to make a categorical decision as to whether prevalence is above or below a threshold or inconclusive, meaning this is more akin to a hypothesis test. We can therefore ask what is the power of this test.
+The main issue with the approach above is that it mixes precision-based arguments with hypothesis testing. If we are trying to design a study to achieve a particular margin of error around our prevalence estimate then it makes sense to work from the CI formula above. However, in the case of the master protocol we will use the CI to make a categorical decision as to whether prevalence is above or below a threshold or inconclusive, meaning this is more akin to a hypothesis test. We can therefore ask - what is the power of this test?
 
-Imagine we have chosen our sample size such that the lower CI just touches the 5% threshold. This is based on an assumed true prevalence of $p$, which we will assume is $p=8\%$ here. But the estimated prevalence, $\hat{p}$, will vary around the true value, sometimes being higher and sometimes lower. When it is lower we will find that the CI crosses the 5% threshold, and we will get an inconclusive result. When it is higher we will find that it does not cross the 5% threshold and so we will (correctly) conclude that prevalence is above 5%. There is roughly the same chance that $\hat{p}$ will be be above or below $p$, meaning we expect power to be around 50%. This is far below the usual level of 80% that is used when designing a study.
+Statistical power is defined as the probability of correctly rejecting the null hypothesis. In other words, it is the probably of detecting an effect if it is really there. We want power to be high - typically 80% or higher. In this particular use case, a high power means our study has a good chance of concluding that the prevalence of *pfhrp2/3* deletions is above 5% if it really is above 5%. If power is low then our study has a good chance of missing this interesting result, which begs the question of whether it was really worth investing time and resources into a study that had a high chance of failure.
 
-We can explore this in various ways in code. First, let us completely remove the design effect just to simplify the problem. In this case, the total number of deletions is binomial irrespective of the number of clusters, meaning we can calculate the exact power of the approach numerically. The sample size formula above would give $N=315$ when $D_{eff}=1$, so we will use this value here.
+Imagine we have chosen our sample size using the method above, such that the lower CI just touches the 5% threshold. This is based on an assumed true prevalence of $p$, which we will assume is $p=8\%$. But the estimated prevalence, $\hat{p}$, will vary around the true value, sometimes being higher and sometimes lower. When it is lower, we will find that the CI crosses the 5% threshold and we will get an inconclusive result. When it is higher, we will find that it does not cross the 5% threshold and we will (correctly) conclude that prevalence is above 5%. There is roughly equal chance that $\hat{p}$ will be be above or below $p$, meaning we expect power to be around 50%. This is far below the usual level of 80% that is used when designing a study.
+
+We can explore this in various ways in code. First, let us completely remove the design effect just to simplify the problem. In this case we can calculate the power of the approach exactly by brute force. The sample size formula above would give $N=315$ when $D_{eff}=1$, so we will use this value here.
 
 ```{r}
 # specify assumed values
@@ -120,7 +121,7 @@ exact_power
 
 We can see that power is around 46%, which matches our intuition that it should be around 50%. The slight discrepancy comes from the fact that $\hat{p}$ is slightly more likely to be below $p$ than above it for these assumed values.
 
-But what about if we include the design effect of $D_{eff}=1.5$? Here, the formula gave $N=472$ for the same assumptions. It is slightly more tricky to evaluate the true power here, but one way is through simulation. We repeatedly simulate data with a level of intra-cluster correlation corresponding to our chosen design effect, then we calculate CIs and proceed as normal.
+But what about if we include the design effect of $D_{eff}=1.5$? Here, the formula gave $N=472$ for the same assumptions. It is slightly more tricky to evaluate the true power here, but one way is through simulation. We repeatedly simulate data with a knwon level of intra-cluster correlation corresponding to our chosen design effect, then we calculate CIs and proceed as normal.
 
 ```{r}
 N <- 472  # we will assume 8 clusters of 59 so we can hit this value exactly
@@ -148,9 +149,9 @@ sim_power <- mean(CI_lower > 0.05)
 sim_power
 ```
 
-Again, we find that power is around 50%. In other words, including the design effect does not fix this issue as the increased sample size is matched by wider CIs.
+Again, we find that power is around 50%. In other words, including the design effect does not fix this issue as the increased sample size is matched by wider CIs. This would be true for any design effect.
 
-Finally, what happens if we use the actual recommended value of $N=600$ from the updated protocol? Recall that this was rounded up from the sample size calculation, and so is conservative. Running the same simulation-based analysis but with 10 clusters of size 60 we obtain the following result:
+Finally, what happens if we use the actual recommended value of $N=600$ from the updated protocol? Running the same simulation-based analysis but with 10 clusters of size 60 we obtain the following result:
 
 ```{r, echo=FALSE}
 N <- 600
@@ -170,7 +171,7 @@ message("empirical power:")
 mean(CI_lower > 0.05)
 ```
 
-So power is still below 80% even for the updated values. This is a fundamental issue with the formula, and so to rectify this we need to take a different approach.
+So power is still far below 80% even for the updated values. This is not due to a numerical mistake, but rather is a fundamental issue with the logic of the approach. The best way to deal with issue is to go back to the drawing board and approach this from a different statistical angle.
 
 <p align="center">
 <button class="btn btn-primary" onclick="window.location.href='https://w3docs.com';"> Next topic </button>
