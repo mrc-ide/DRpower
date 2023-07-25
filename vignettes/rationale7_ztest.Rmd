@@ -68,5 +68,5 @@ Deff <- 1.5
 To put this in context, if previously we found that 551 samples are needed, then with this new (corrected) formula we find that 1126 samples are needed. This is obviously significantly higher even than the updated recommendation of 600, and is likely to be beyond what many malaria control programmes can achieve within their logistic and financial constraints. To overcome this, we need to turn to more powerful statistical approaches.
 
 <p align="center">
-<button class="btn btn-primary" onclick="window.location.href='https://w3docs.com';"> Next topic </button>
+<button class="btn btn-primary" onclick="window.location.href='https://mrc-ide.github.io/DRpower/articles/rationale8_power.html';"> Next topic </button>
 </p>

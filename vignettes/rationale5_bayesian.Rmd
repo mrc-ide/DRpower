@@ -54,7 +54,7 @@ Neff <- n*c / Deff
 
 ## 5. A Bayesian approach
 
-In DRpower we take a different approach to analysis that deals with all of the issues listed in the previous section. We describe the approach at a high level here, for those wanting more mathematical details please [see this page](TODO).
+In DRpower we take a different approach to analysis that deals with all of the issues listed in the previous section. We describe the approach at a high level here, for those wanting more mathematical details please [see this page](articles/mathematical_details.html).
 
 We start by assuming a [random effects](https://en.wikipedia.org/wiki/Random_effects_model) framework. Instead of assuming that all individuals have the same probability of carrying the *pfhrp2/3* deleted strain, we allow each cluster to have its own cluster-level prevalence. We model the mean and the spread of this cluster-level variation using a random effects distribution - in our case a [beta distribution](https://en.wikipedia.org/wiki/Beta_distribution) like the one shown below:
 
@@ -99,12 +99,12 @@ get_prevalence(n = n_deletions, N = n_tested)
 gp <- get_prevalence(n = n_deletions, N = n_tested)
 ```
 
-The first output is the *maximum a posteriori* (MAP) estimate, which gives us a point estimate of `r gp$MAP`% prevalence - very close to our original estimate of `r round(p*100, 2)`% from the raw data. There are other summaries that we might be interested in, but see [here](TODO) when deciding between them.
+The first output is the *maximum a posteriori* (MAP) estimate, which gives us a point estimate of `r gp$MAP`% prevalence - very close to our original estimate of `r round(p*100, 2)`% from the raw data. There are other summaries that we might be interested in, but see [here](articles/summarise_prevalence.html) when deciding between them.
 
 Based on the output above, we also estimate that there is a `r gp$prob_above_threshold` probability that the prevalence is above 5%. By default we recommend using a cutoff of 0.95 when turning this into a hypothesis test, so in this case we can reject the null hypothesis. Based on this analysis, therefore, we have sufficient evidence to conclude that prevalence is above our target threshold, and so a switch of RDTs is justified.
 
 In summary, the DRpower model provides an alternative way of analysing clustered prevalence data that has some advantages over traditional methods. It can be used to calculate CrIs, and/or it can be used in a hypothesis testing framework. The next section describes how this framework can be used in study design.
 
 <p align="center">
-<button class="btn btn-primary" onclick="window.location.href='https://w3docs.com';"> Next topic </button>
+<button class="btn btn-primary" onclick="window.location.href='https://mrc-ide.github.io/DRpower/articles/rationale6_master_protocol.html';"> Next topic </button>
 </p>

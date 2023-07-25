@@ -49,7 +49,7 @@ where $B(x, y)$ is the beta function. The overall likelihood is the product of t
 
 $Pr(\mathbf{k} | \mathbf{n}, p, r) = \prod_{i=1}^c Pr(k_i | n_i, p, r)$
 
-We assume beta priors on the two free parameters, $p$ and $r$. By default, the shape parameters of the prior on $p$ are both equal to 1, meaning this simplifies to the uniform distribution. In contrast, based on [historical data](TODO) we assume shape parameters of 1 and 9 for the prior on $r$, giving a mean of 0.1 and entertaining values in the plausible range [0, 0.3]:
+We assume beta priors on the two free parameters, $p$ and $r$. By default, the shape parameters of the prior on $p$ are both equal to 1, meaning this simplifies to the uniform distribution. In contrast, based on [historical data](articles/historical_analysis.html) we assume shape parameters of 1 and 9 for the prior on $r$, giving a mean of 0.1 and entertaining values in the plausible range [0, 0.3]:
 
 The joint posterior probability is obtained (up to a constant of proportionality) by multiplying the likelihood by both priors:
 

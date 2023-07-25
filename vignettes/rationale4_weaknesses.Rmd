@@ -38,5 +38,5 @@ The method of constructing CIs described in section 2.1 is a major improvement o
 Sometimes these issues will be very minor, and sometimes they may even cancel each other out, but *sometimes they won't*! We need to be confident that our analysis plan is robust no matter what our data end up looking like.
 
 <p align="center">
-<button class="btn btn-primary" onclick="window.location.href='https://w3docs.com';"> Next topic </button>
+<button class="btn btn-primary" onclick="window.location.href='https://mrc-ide.github.io/DRpower/articles/rationale5_bayesian.html';"> Next topic </button>
 </p>

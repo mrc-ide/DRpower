@@ -8,7 +8,7 @@ The DRpower package is designed to assist with the development of *Plasmodium
 falciparum* *pfhrp2/3* gene deletion studies.
 
 All documentation, including installation instructions and tutorials, are on
-[the DRpower website](TODO).
+[the DRpower website](https://mrc-ide.github.io/DRpower/).
 
 
 # Version History

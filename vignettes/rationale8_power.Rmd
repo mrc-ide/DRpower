@@ -23,7 +23,7 @@ library(tidyverse)
 
 ## 8. Estimating power via simulation
 
-The power of a hypothesis test is intrinsically linked to the method we plan to use in our statistical analysis. We have found that if we plan to conduct a z-test on our data then, for the parameter values described in the 2020 master protocol, we will need 1126 samples. But what if we change our analysis plan to the [Bayesian model](TODO) in DRpower? Can we calculate power under this new approach?
+The power of a hypothesis test is intrinsically linked to the method we plan to use in our statistical analysis. We have found that if we plan to conduct a z-test on our data then, for the parameter values described in the 2020 master protocol, we will need 1126 samples. But what if we change our analysis plan to the [Bayesian model](articles/rationale5_bayesian.html) in DRpower? Can we calculate power under this new approach?
 
 The answer is both yes and no. We cannot produce a neat formula for the power as we could for the z-test, as this Bayesian model is simply too involved. We can, however, *estimate* the power by simulation. The approach is:
 
@@ -77,7 +77,7 @@ Once we have a power curve like the one above, we can work out what sample size 
 2. Intuitively, we would expect per-cluster sample sizes to decrease as the number of clusters increases. In some rare cases this method can give the opposite result due to random fluctuations in our estimation method. We remove this effect by manually modifying results so that sample size can never decrease with more clusters.
 3. Sample sizes greater than 2000 are coded as `NA`, because these are prohibitively large. Sample sizes less than 5 are fixed at 5, because it would not be worth enrolling a cluster and collecting fewer than this many samples.
 
-For an assumed ICC of 0.05 based on [historical data](TODO), this leads to the sample size table shown below:
+For an assumed ICC of 0.05 based on [historical data](articles/historical_analysis.html), this leads to the sample size table shown below:
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 df_ss %>%
@@ -134,4 +134,4 @@ Using the DRpower table above (not the z-test table!) we can come up with reason
 5. Examine whether it will be possible to recruit this many samples in each of your sites. This may depend on things like catchment population size, staff numbers, and malaria transmission intensity throughout the season. It may be that in some cases it is not possible to reach these numbers.
 6. For your newly refined sample size estimates, estimate power directly using the `get_power_threshold()` function.
 
-The best way to get a feel for this process is through a tutorial, so at this point we recomment you [jump into the code](TODO)!
+The best way to get a feel for this process is through a tutorial, so at this point we recomment you [jump into the code](articles/tutorial_design.html)!
