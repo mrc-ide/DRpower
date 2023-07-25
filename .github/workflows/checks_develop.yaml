@@ -40,4 +40,4 @@ jobs:
       
       - name: Build Package
         run: |
-          where R.exe
+          R CMD build
