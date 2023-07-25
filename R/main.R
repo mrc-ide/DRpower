@@ -7,7 +7,7 @@
 #' @export
 
 check_DRpower_loaded <- function() {
-  message("DRpower loaded successfully!")
+  message("DRpower version 0.1.0 loaded successfully!")
 }
 
 #------------------------------------------------
@@ -208,6 +208,8 @@ loglike_joint_p <- function(n, N, p, n_intervals = 40,
 #'     distribution (as approximated using the adaptive quadrature approach) in
 #'     0.1\% intervals from 0\% to 100\%.
 #'   }
+#' @param post_full_breaks a vector of breaks at which to evaluate the full
+#'   posterior distribution (if \code{post_full_on = TRUE}).
 #' @param CrI_type which method to use when computing credible intervals, with
 #'   options "ETI" (equal-tailed interval) and "HDI" (high-density interval).
 #'   The ETI searches a distance \code{alpha/2} from either side of the [0,1]
@@ -219,10 +221,7 @@ loglike_joint_p <- function(n, N, p, n_intervals = 40,
 #'   true posterior, but comes at the cost of reduced speed.
 #' @param round_digits the number of digits after the decimal point that are
 #'   used when reporting estimates. This is to simplify results and to avoid
-#'   giving the false impression of extreme precision. Note also that prevalence
-#'   is reported as a proportion between 0 and 1. For example, if
-#'   \code{round_digits = 3} (the default) then a prevalence of 12.432% will be
-#'   reported as 0.124.
+#'   giving the false impression of extreme precision.
 #' @param debug_on for use in debugging. If \code{TRUE} and if \code{use_cpp =
 #'   FALSE} then produces a plot of the posterior distribution evaluated by
 #'   brute force (black) overlaid with the adaptive quadrature approximation
@@ -253,7 +252,8 @@ get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
                            prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 9.0,
                            MAP_on = TRUE, post_mean_on = FALSE, post_median_on = FALSE,
                            post_CrI_on = TRUE, post_thresh_on = TRUE,
-                           post_full_on = FALSE, CrI_type = "HDI",
+                           post_full_on = FALSE, post_full_breaks = seq(0, 1, l = 1001),
+                           CrI_type = "HDI",
                            n_intervals = 20, round_digits = 2,
                            debug_on = FALSE, use_cpp = TRUE) {
   
@@ -279,6 +279,7 @@ get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
   assert_single_logical(post_CrI_on)
   assert_single_logical(post_thresh_on)
   assert_single_logical(post_full_on)
+  assert_vector_bounded(post_full_breaks)
   assert_single_string(CrI_type)
   assert_in(CrI_type, c("HDI", "ETI"))
   assert_pos_int(n_intervals)
@@ -389,7 +390,7 @@ get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
   
   # get full posterior interpolated curve from Simpson's rule
   if (post_full_on) {
-    x <- seq(0, 1, l = 1001)
+    x <- post_full_breaks
     z <- findInterval(x, vec = df_norm$x0)
     y <- df_norm$A[z]*x^2 + df_norm$B[z]*x + df_norm$C[z]
     y[y < 0] <- 0
@@ -415,8 +416,9 @@ get_ICC <- function(n, N, alpha = 0.05,
                     prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
                     prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 9.0,
                     MAP_on = TRUE, post_mean_on = FALSE, post_median_on = FALSE,
-                    post_CrI_on = TRUE, post_full_on = FALSE, CrI_type = "HDI",
-                    n_intervals = 20, round_digits = 2,
+                    post_CrI_on = TRUE, post_full_on = FALSE,
+                    post_full_breaks = seq(0, 1, l = 1001), CrI_type = "HDI",
+                    n_intervals = 20, round_digits = 4,
                     debug_on = FALSE, use_cpp = TRUE) {
   
   # avoid "no visible binding" note
@@ -438,6 +440,7 @@ get_ICC <- function(n, N, alpha = 0.05,
   assert_single_logical(post_median_on)
   assert_single_logical(post_CrI_on)
   assert_single_logical(post_full_on)
+  assert_vector_bounded(post_full_breaks)
   assert_single_string(CrI_type)
   assert_in(CrI_type, c("HDI", "ETI"))
   assert_pos_int(n_intervals)
@@ -499,7 +502,7 @@ get_ICC <- function(n, N, alpha = 0.05,
   # solve for maximum a posteriori (MAP)
   if (MAP_on) {
     MAP <- get_max_x(df_norm)
-    ret$MAP <- round(MAP * 100, round_digits)
+    ret$MAP <- round(MAP, round_digits)
   }
   
   # solve for posterior mean
@@ -508,13 +511,13 @@ get_ICC <- function(n, N, alpha = 0.05,
       dplyr::mutate(post_mean = 1/4*A*(x1^4 - x0^4) + 1/3*B*(x1^3 - x0^3) + 1/2*C*(x1^2 - x0^2)) %>%
       dplyr::pull(post_mean) %>%
       sum()
-    ret$post_mean = round(post_mean * 100, round_digits)
+    ret$post_mean = round(post_mean, round_digits)
   }
   
   # solve for posterior median
   if (post_median_on) {
     post_median <- qquad(df_norm, q = 0.5)
-    ret$post_median <- round(post_median * 100, round_digits)
+    ret$post_median <- round(post_median, round_digits)
   }
   
   # solve for lower and upper CrIs
@@ -527,13 +530,13 @@ get_ICC <- function(n, N, alpha = 0.05,
       CrI_lower <- HDI["lower"]
       CrI_upper <- HDI["upper"]
     }
-    ret$CrI_lower <- round(CrI_lower * 100, round_digits)
-    ret$CrI_upper <- round(CrI_upper * 100, round_digits)
+    ret$CrI_lower <- round(CrI_lower, round_digits)
+    ret$CrI_upper <- round(CrI_upper, round_digits)
   }
   
   # get full posterior interpolated curve from Simpson's rule
   if (post_full_on) {
-    x <- seq(0, 1, l = 1001)
+    x <- post_full_breaks
     z <- findInterval(x, vec = df_norm$x0)
     y <- df_norm$A[z]*x^2 + df_norm$B[z]*x + df_norm$C[z]
     y[y < 0] <- 0
@@ -662,6 +665,12 @@ get_joint_grid <- function(n, N,
 #'  of empirical power, along with upper and lower 95\% binomial CIs on the power
 #'  via the method of Clopper and Pearson (1934).
 #' }
+#' Note that this function can be run even when \code{prevalence} is less than
+#' \code{prev_thresh}, although in this case what is returned is not the power.
+#' Power is defined as the probability of *correctly* rejecting the null
+#' hypothesis, whereas here we would be incorrectly rejecting the null.
+#' Therefore, what we obtain in this case is an estimate of the false positive
+#' rate.
 #' 
 #' @inheritParams get_posterior
 #' @param N vector giving the number of samples obtained from each cluster.
@@ -675,6 +684,9 @@ get_joint_grid <- function(n, N,
 #' @param n_intervals the number of intervals used in the adaptive quadrature
 #'   method. Increasing this value gives a more accurate representation of the
 #'   true posterior, but comes at the cost of reduced speed.
+#' @param round_digits the number of digits after the decimal point that are
+#'   used when reporting estimates. This is to simplify results and to avoid
+#'   giving the false impression of extreme precision.
 #' @param reps number of times to repeat simulation per parameter combination.
 #'
 #' @references
@@ -685,21 +697,25 @@ get_joint_grid <- function(n, N,
 #' @examples
 #' get_power_threshold(N = c(120, 90, 150), prevalence = 0.15, ICC = 0.1 , reps = 1e2)
 #' 
+#' @importFrom stats runif
 #' @export
 
-get_power_threshold <- function(N, prevalence = 0.10, ICC = 0.10,
+get_power_threshold <- function(N, prevalence = 0.10, ICC = 0.05,
                                 prev_thresh = 0.05,
                                 rejection_threshold = 0.95,
-                                prior_prev_shape1 = 1, prior_prev_shape2 = 1,
-                                prior_ICC_shape1 = 1, prior_ICC_shape2 = 9,
-                                n_intervals = 20, reps = 1e2) {
+                                prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
+                                prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 9.0,
+                                n_intervals = 20, round_digits = 2,
+                                reps = 1e2) {
+  
+  # avoid "no visible binding" note
+  n <- NULL
   
   # check inputs
   assert_vector_pos_int(N)
-  assert_single_bounded(prevalence)
+  assert_bounded(prevalence)
   assert_single_bounded(ICC)
   assert_single_bounded(prev_thresh)
-  assert_greq(prevalence, prev_thresh)
   assert_single_bounded(rejection_threshold)
   assert_single_bounded(prior_prev_shape1, left = 1, right = 1e3)
   assert_single_bounded(prior_prev_shape2, left = 1, right = 1e3)
@@ -707,15 +723,33 @@ get_power_threshold <- function(N, prevalence = 0.10, ICC = 0.10,
   assert_single_bounded(prior_ICC_shape2, left = 1, right = 1e3)
   assert_single_pos_int(n_intervals)
   assert_greq(n_intervals, 5)
+  assert_single_pos_int(round_digits)
   assert_single_pos_int(reps)
   
-  # simulate
-  sim_correct <- rep(NA, reps)
+  # prevalence has the option of drawing uniformly between limits
+  if (length(prevalence) == 1) {
+    prevalence <- rep(prevalence, 2)
+  }
+  
+  # draw n
+  l_n <- list()
   for (i in 1:reps) {
-    n <- rbbinom_reparam(n_clust = length(N), N = N,
-                         p = prevalence, rho = ICC)
+    l_n[[i]] <- data.frame(N = N,
+                           n = rbbinom_reparam(n_clust = length(N), N = N,
+                                               p = runif(1, min = prevalence[1], max = prevalence[2]),
+                                               rho = ICC)) %>%
+      arrange(N, n)
+  }
+  
+  # group duplicates
+  l_u <- unique(l_n)
+  l_w <- tabulate(match(l_n, l_u))
+  
+  # simulate
+  sim_correct <- rep(NA, length(l_u))
+  for (i in seq_along(l_u)) {
     
-    p_est <- get_prevalence(n = n, N = N,
+    p_est <- get_prevalence(n = l_u[[i]]$n, N = l_u[[i]]$N,
                             prior_prev_shape1 = prior_prev_shape1,
                             prior_prev_shape2 = prior_prev_shape2,
                             prior_ICC_shape1 = prior_ICC_shape1,
@@ -726,29 +760,33 @@ get_power_threshold <- function(N, prevalence = 0.10, ICC = 0.10,
                             post_CrI_on = FALSE,
                             post_thresh_on = TRUE,
                             post_full_on = FALSE,
+                            CrI_type = "HDI",
                             n_intervals = n_intervals)
     
     sim_correct[i] <- (p_est$prob_above_threshold > rejection_threshold)
   }
   
+  # weighted sum
+  n_correct <- sum(sim_correct * l_w)
+  
   # get 95% CIs on power
-  power_CI <- ClopperPearson(n_success = sum(sim_correct), n_total = reps, alpha = 0.05)
-  ret <- data.frame(power = mean(sim_correct),
-                    lower = power_CI["lower"],
-                    upper = power_CI["upper"])
+  power_CI <- ClopperPearson(n_success = n_correct, n_total = reps, alpha = 0.05)
+  ret <- data.frame(power = round(n_correct / reps * 100, round_digits),
+                    lower = round(power_CI$lower * 100, round_digits),
+                    upper = round(power_CI$upper * 100, round_digits))
   rownames(ret) <- NULL
   return(ret)
 }
 
 #------------------------------------------------
-#' @title Get power when testing for presence of deletions
+#' @title Calculate power when testing for presence of deletions
 #'
 #' @description Calculates power directly for the case of a clustered prevalence
 #'   survey where the aim is to detect the presence of *any* deletions over all
 #'   clusters. This design can be useful as a pilot study to identify priority
 #'   regions where deletions are likely. Note that we need to take account of
 #'   intra-cluster correlation here, as a high ICC will make it more likely that
-#'   we see zero deletions even when the prevalence is, in fact, non-zero.
+#'   we see zero deletions even when the prevalence is non-zero.
 #' 
 #' @inheritParams get_power_threshold
 #'
@@ -857,6 +895,6 @@ get_sample_size_presence <- function(n_clust, target_power = 0.8,
 ClopperPearson <- function(n_success, n_total, alpha = 0.05) {
   p_lower <- qbeta(p = alpha / 2, shape1 = n_success, shape2 = n_total - n_success + 1)
   p_upper <- qbeta(p = 1 - alpha / 2, shape1 = n_success + 1, shape2 = n_total - n_success)
-  ret <- c(lower = p_lower, upper = p_upper)
+  ret <- data.frame(lower = p_lower, upper = p_upper)
   return(ret)
 }

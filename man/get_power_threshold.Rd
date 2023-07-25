@@ -7,7 +7,7 @@
 get_power_threshold(
   N,
   prevalence = 0.1,
-  ICC = 0.1,
+  ICC = 0.05,
   prev_thresh = 0.05,
   rejection_threshold = 0.95,
   prior_prev_shape1 = 1,
@@ -15,6 +15,7 @@ get_power_threshold(
   prior_ICC_shape1 = 1,
   prior_ICC_shape2 = 9,
   n_intervals = 20,
+  round_digits = 2,
   reps = 100
 )
 }
@@ -44,6 +45,10 @@ parameters are based on an analysis of historical pfhrp2/3 studies.}
 method. Increasing this value gives a more accurate representation of the
 true posterior, but comes at the cost of reduced speed.}
 
+\item{round_digits}{the number of digits after the decimal point that are
+used when reporting estimates. This is to simplify results and to avoid
+giving the false impression of extreme precision.}
+
 \item{reps}{number of times to repeat simulation per parameter combination.}
 }
 \description{
@@ -66,6 +71,12 @@ Estimates power using the following approach:
  of empirical power, along with upper and lower 95\% binomial CIs on the power
  via the method of Clopper and Pearson (1934).
 }
+Note that this function can be run even when \code{prevalence} is less than
+\code{prev_thresh}, although in this case what is returned is not the power.
+Power is defined as the probability of *correctly* rejecting the null
+hypothesis, whereas here we would be incorrectly rejecting the null.
+Therefore, what we obtain in this case is an estimate of the false positive
+rate.
 }
 \examples{
 get_power_threshold(N = c(120, 90, 150), prevalence = 0.15, ICC = 0.1 , reps = 1e2)

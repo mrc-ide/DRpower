@@ -1,9 +1,9 @@
 ---
 title: "Installation"
-output: rmarkdown::html_vignette
+output: html_document
 vignette: >
-  %\VignetteIndexEntry{installation}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteIndexEntry{Installation}
+  %\VignetteEngine{knitr::knitr}
   %\VignetteEncoding{UTF-8}
 ---
 

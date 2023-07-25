@@ -129,13 +129,29 @@ solve_Simp_area <- function(x0, x1, A, B, C, target_area) {
   
   # solve for the z value at which the area under curve equals the target area
   roots <- polyroot(c(D2 - target_area, C2, B2, A2))
+  real_roots <- Re(roots)
   
-  # there should be exactly one root within the interval
-  w <- which((Re(roots) > x0) & (Re(roots) < x1))
-  if (length(w) != 1) {
-    stop("could not find single root to cubic expression in Simpson's rule within the defined interval")
+  # most often there will be a single root within the interval
+  if (any((real_roots >= x0) & (real_roots <= x1))) {
+    w <- which((real_roots >= x0) & (real_roots <= x1))[1]
+    ret <- real_roots[w]
+    
+  } else { # underflow can cause problems when the root is exactly at the border
+    
+    eq_x0 <- mapply(function(z) isTRUE(all.equal(z, x0)), real_roots)
+    if (any(eq_x0)) {
+      w <- which(eq_x0)[1]
+      ret <- real_roots[w]
+    } else {
+      eq_x1 <- mapply(function(z) isTRUE(all.equal(z, x1)), real_roots)
+      if (any(eq_x1)) {
+        w <- which(eq_x1)[1]
+        ret <- real_roots[w]
+      } else {
+        stop("function solve_Simp_area() unable to find roots to polynomial within defined interval")
+      }
+    }
   }
-  ret <- Re(roots)[w]
   
   return(ret)
 }
@@ -251,8 +267,10 @@ get_total_diff <- function(log_area_diff, grad_diff) {
 #'   midpoint. This value is used as a proportion of the interval, not as an
 #'   absolute value, meaning values can never be proposed outside of the
 #'   quadrature range.
-#'  
-#' @export
+#'
+# do not document to keep package help simple
+# @export
+#' @noRd
 
 adaptive_quadrature <- function(f1, n_intervals, left, right, debug_on = FALSE, delta = 1e-3) {
   
@@ -343,7 +361,10 @@ adaptive_quadrature <- function(f1, n_intervals, left, right, debug_on = FALSE, 
 #'   \code{adaptive_quadrature()}.
 #'  
 #' @importFrom dplyr mutate select arrange
-#' @export
+#'  
+# do not document to keep package help simple
+# @export
+#' @noRd
 
 normalise_quadrature <- function(df_quad) {
   
@@ -387,7 +408,9 @@ normalise_quadrature <- function(df_quad) {
 #' @param df_quad a data.frame output from the function
 #'   \code{adaptive_quadrature()}.
 #'  
-#' @export
+# do not document to keep package help simple
+# @export
+#' @noRd
 
 plot_quadrature <- function(f1, df_quad) {
   
@@ -431,7 +454,9 @@ plot_quadrature <- function(f1, df_quad) {
 #'   \code{normalise_quadrature()}.
 #' @param p the target area.
 #'  
-#' @export
+# do not document to keep package help simple
+# @export
+#' @noRd
 
 pquad <- function(df_norm, p = 0.5) {
   
@@ -467,7 +492,9 @@ pquad <- function(df_norm, p = 0.5) {
 #'   \code{normalise_quadrature()}.
 #' @param q the target quantile.
 #'  
-#' @export
+# do not document to keep package help simple
+# @export
+#' @noRd
 
 qquad <- function(df_norm, q = 0.5) {
   
@@ -500,7 +527,7 @@ qquad <- function(df_norm, q = 0.5) {
                          A = df_norm$A[w],
                          B = df_norm$B[w],
                          C = df_norm$C[w],
-                         area_remaining)
+                         target_area = area_remaining)
   
   return(ret)
 }
@@ -532,7 +559,9 @@ qquad <- function(df_norm, q = 0.5) {
 #' @param n_grid the number of intervals the final curve is broken into when
 #'   computing the HDI on a grid.
 #'  
-#' @export
+# do not document to keep package help simple
+# @export
+#' @noRd
 
 get_HDI <- function(df_norm, alpha = 0.05, n_grid = 1e3) {
   
@@ -568,12 +597,7 @@ get_HDI <- function(df_norm, alpha = 0.05, n_grid = 1e3) {
     dplyr::filter(cum_area <= (1 - alpha)) %>%
     dplyr::select(x0, x1)
   
-  # check that final interval is contiguous
-  if (!all(df_subset$x0[-1] == df_subset$x1[-nrow(df_subset)])) {
-    stop("HDI does not define a single, contiguous interval")
-  }
-  
-  # return final HDI
+  # assume that interval is contiguous when returning interval
   return(c(lower = min(df_subset$x0),
            upper = max(df_subset$x1)))
 }
@@ -587,18 +611,31 @@ get_HDI <- function(df_norm, alpha = 0.05, n_grid = 1e3) {
 #' @param df_norm a normalised quadrature data.frame as produced by
 #'   \code{normalise_quadrature()}.
 #'  
-#' @export
+# do not document to keep package help simple
+# @export
+#' @noRd
 
 get_max_x <- function(df_norm) {
   
   # avoid "no visible binding" note
-  A <- B <- C <- max_x <- max_y <- x0 <- x1 <- NULL
+  A <- B <- C <- max_x <- max_y <- x0 <- x1 <- turn_x <- turn_y <- log_y0 <- log_y1 <- NULL
   
   ret <- df_norm %>%
-    dplyr::mutate(max_x = -0.5*B / A,
-                  max_x = ifelse(max_x > x0, max_x, x0),
-                  max_x = ifelse(max_x < x1, max_x, x1),
-                  max_y = get_Simp_y(max_x, A, B, C)) %>%
+    dplyr::mutate(turn_x = -0.5*B / A,
+                  turn_x = ifelse(turn_x > x0, turn_x, NA),
+                  turn_x = ifelse(turn_x < x1, turn_x, NA),
+                  turn_y = ifelse(is.na(turn_x), NA, get_Simp_y(turn_x, A, B, C)),
+                  max_y = ifelse(is.na(turn_y),
+                                 ifelse(log_y0 > log_y1, exp(log_y0), exp(log_y1)),
+                                 ifelse( (turn_y > exp(log_y0)) & (turn_y > exp(log_y1)),
+                                         turn_y,
+                                         ifelse(log_y0 > log_y1, exp(log_y0), exp(log_y1) ))),
+                  max_x = ifelse(is.na(turn_y),
+                                 ifelse(log_y0 > log_y1, x0, x1),
+                                 ifelse( (turn_y > exp(log_y0)) & (turn_y > exp(log_y1)),
+                                         turn_x,
+                                         ifelse(log_y0 > log_y1, x0, x1 )))
+                  ) %>%
     dplyr::filter(max_y == max(max_y)) %>%
     dplyr::pull(max_x)
   

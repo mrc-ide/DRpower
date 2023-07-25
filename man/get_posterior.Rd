@@ -21,6 +21,7 @@ get_prevalence(
   post_CrI_on = TRUE,
   post_thresh_on = TRUE,
   post_full_on = FALSE,
+  post_full_breaks = seq(0, 1, l = 1001),
   CrI_type = "HDI",
   n_intervals = 20,
   round_digits = 2,
@@ -41,9 +42,10 @@ get_ICC(
   post_median_on = FALSE,
   post_CrI_on = TRUE,
   post_full_on = FALSE,
+  post_full_breaks = seq(0, 1, l = 1001),
   CrI_type = "HDI",
   n_intervals = 20,
-  round_digits = 2,
+  round_digits = 4,
   debug_on = FALSE,
   use_cpp = TRUE
 )
@@ -86,6 +88,9 @@ The following options are available:
   0.1\% intervals from 0\% to 100\%.
 }}
 
+\item{post_full_breaks}{a vector of breaks at which to evaluate the full
+posterior distribution (if \code{post_full_on = TRUE}).}
+
 \item{CrI_type}{which method to use when computing credible intervals, with
 options "ETI" (equal-tailed interval) and "HDI" (high-density interval).
 The ETI searches a distance \code{alpha/2} from either side of the [0,1]
@@ -99,10 +104,7 @@ true posterior, but comes at the cost of reduced speed.}
 
 \item{round_digits}{the number of digits after the decimal point that are
 used when reporting estimates. This is to simplify results and to avoid
-giving the false impression of extreme precision. Note also that prevalence
-is reported as a proportion between 0 and 1. For example, if
-\code{round_digits = 3} (the default) then a prevalence of 12.432% will be
-reported as 0.124.}
+giving the false impression of extreme precision.}
 
 \item{debug_on}{for use in debugging. If \code{TRUE} and if \code{use_cpp =
 FALSE} then produces a plot of the posterior distribution evaluated by

@@ -1,36 +1,62 @@
 title: DRpower
 template:
-  bootstrap: 5
-  bootswatch: sandstone
+  params:
+    bootswatch: flatly
 
 navbar:
-  title: "DRpower"
+  title: DRpower
   left:
-    - text: "How it works"
+    - text: How it works
       menu:
-        - text: "Background"
+        - text: Background
           href: articles/rationale1_background.html
-        - text: "What's the issue?"
+        - text: -------
+        - text: Analysing data
+        - text: CIs and overdispersion
           href: articles/rationale2_issue.html
-        - text: "The design effect"
+        - text: The design effect
           href: articles/rationale3_design_effect.html
-        - text: "Weaknesses with the traditional approach"
+        - text: Weaknesses with the traditional approach
           href: articles/rationale4_weaknesses.html
-        - text: "The DRpower model"
-          href: articles/rationale5_DRpower.html
-    - text: "Installation"
+        - text: A Bayesian approach
+          href: articles/rationale5_bayesian.html
+        - text: -------
+        - text: Designing a study
+        - text: Sample size calculation in the 2020 master protocol
+          href: articles/rationale6_master_protocol.html
+        - text: The one-sample z-test
+          href: articles/rationale7_ztest.html
+        - text: Power and sample size in the DRpower model
+          href: articles/rationale8_power.html
+    - text: Installation
       href: articles/installation.html
-    - text: "Tutorials"
+    - text: Tutorials
       menu:
-        - text: "Designing a study"
+        - text: Designing a study
           href: articles/tutorial_design.html
-        - text: "Analysing data"
+        - text: Analysing data
           href: articles/tutorial_analysis.html
-    - text: "Misc"
+    - text: Misc
       menu:
-        - text: "Power curves and tables"
-          href: TODO
-        - text: "Comparison of central estimates"
-          href: TODO
-    - text: "Functions"
+        - text: Mathematical details
+          href: articles/mathematical_details.html
+        - text: Historical analysis
+          href: articles/historical_analysis.html
+        - text: How to summarise the prevalence
+          href: articles/summarise_prevalence.html
+    - text: Functions
       href: reference/index.html
+
+# here is an example of how sub-menus can be used:
+#    - text: Get started
+#      menu:
+#        - text: Installation
+#          href: articles/installation.html
+#        - text: -------
+#        - text: Working through the pipeline
+#        - text: Simulating malaria transmission
+#          menu:
+#            - text: A simple model
+#              href: 404.html
+#            - text: Population surveys
+#              href: 404.html
