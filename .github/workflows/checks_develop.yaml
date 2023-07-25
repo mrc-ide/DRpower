@@ -35,9 +35,13 @@ jobs:
           r-version: ${{ matrix.config.r }}
 
       - name: Install Dependencies
-        run: |
-          Rscript -e "install.packages(c('devtools', 'roxygen2', 'testthat'))"
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
       
       - name: Build Package
-        run: |
-          R CMD build
+        uses: r-lib/actions/check-r-package@v2
+        with:
+          args: 'c("--ignore-vignettes")'
+          build_args: 'c("--no-build-vignettes")'
