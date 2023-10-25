@@ -6,16 +6,12 @@
 using namespace std;
 
 //------------------------------------------------
-// TODO
-
 double get_trap_area(double x0, double x1, double log_y0, double log_y1) {
   double ret = log_sum(log_y0, log_y1) + log(x1 - x0) - log(2);
   return ret;
 }
 
 //------------------------------------------------
-// TODO
-
 double get_trap_area_double(double x0, double xm, double x1, double log_y0,
                             double log_ym, double log_y1) {
   double a1 = get_trap_area(x0, xm, log_y0, log_ym);
@@ -24,8 +20,6 @@ double get_trap_area_double(double x0, double xm, double x1, double log_y0,
 }
 
 //------------------------------------------------
-// TODO
-
 double get_Simp_area(double x0, double x1, double log_y0, double log_ym,
                      double log_y1) {
   double ret = 0.0;
@@ -69,8 +63,6 @@ double get_total_diff(double log_area_diff, double grad_diff) {
 }
 
 //------------------------------------------------
-// TODO
-
 void adaptive_quadrature(function<double(double)> loglike, int n_intervals,
                          double left, double right, double delta,
                          vector<double> &x0, vector<double> &xm,

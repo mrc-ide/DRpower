@@ -25,12 +25,12 @@ library(kableExtra)
 We start by defining the following terms:
 
 ```{r, echo=FALSE, message=FALSE, warnings=FALSE}
-rbind.data.frame(list(Parameter = "$p$", Definition = "Prevalence at the province level. This is usually the main thing we are interested in estimating")) %>%
+rbind.data.frame(list(Parameter = "$p$", Definition = "Prevalence at the province level. This is usually the main thing we want to estimate")) %>%
   rbind.data.frame(list(Parameter = "$r$", Definition = "Intra-cluster correlation coefficient (between 0 and 1)")) %>%
   rbind.data.frame(list(Parameter = "$\\alpha$, $\\beta$", Definition = "Shape parameters of beta prior on cluster-level prevalence. Defined based on other model parameters as follows:<br>$\\alpha = p(1/r - 1)$<br>$\\beta = (1 - p)(1/r - 1)$")) %>%
-  rbind.data.frame(list(Parameter = "$c$", Definition = "Number of clusters (sites)")) %>%
+  rbind.data.frame(list(Parameter = "$c$", Definition = "Number of clusters")) %>%
   rbind.data.frame(list(Parameter = "$x_i$", Definition = "Prevalence in cluster $i$")) %>%
-  rbind.data.frame(list(Parameter = "$n_i$", Definition = "Total sample size in cluster $i$")) %>%
+  rbind.data.frame(list(Parameter = "$n_i$", Definition = "Sample size in cluster $i$")) %>%
   rbind.data.frame(list(Parameter = "$k_i$", Definition = "Observed pfhrp2/3 deletions in cluster $i$")) %>%
   kable(format = "html", escape = F) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
@@ -41,7 +41,7 @@ rbind.data.frame(list(Parameter = "$p$", Definition = "Prevalence at the provinc
 
 We assume a multilevel model in which $p$ is the overall prevalence at the province level, but the individual cluster-level prevalence varies around this value according to a beta distribution. The parameters of this beta distribution are chosen such that $r$ represents the level of intra-cluster correlation.
 
-Data, in the form of counts of observed *pfhrp2/3* deletions, are then assumed to be binomial within each cluster, drawn from the cluster-level prevalence. This results in counts following a beta-binomial distribution, with the following probability distribution:
+Data, in the form of counts of observed *pfhrp2/3* deletions, are assumed to be binomial within each cluster, drawn from the cluster-level prevalence. This results in counts following a beta-binomial distribution, with the following probability distribution:
 
 $Pr(k_i | n_i, p, r) = {n_i \choose k_i}\frac{B(k_i + \alpha, n_i - k_i + \beta)}{B(\alpha, \beta)}$
 
@@ -61,4 +61,4 @@ $Pr(p | \mathbf{k}, \mathbf{n}) \propto \int_0^1 Pr(p, r | \mathbf{k}, \mathbf{n
 
 $Pr(r | \mathbf{k}, \mathbf{n}) \propto \int_0^1 Pr(p, r | \mathbf{k}, \mathbf{n}) dp$
 
-This integration is performed by a numerical quadrature-based method. The marginal posterior distributions can be returned in full, or can be summarised using various measures of central tendency and/or credible intervals (CrI). There are multiple methods of calculating CrIs - we use the high density region (HDI) by default as this avoids the possibility of the maximum a posteriori (MAP) estimate being outside the CrI, which is possible by the more commonly used equal-tailed interval (ETI).
+This integration is performed using an adaptive quadrature-based method. The marginal posterior distributions can be returned in full, or can be summarised using various measures of central tendency and/or credible intervals (CrI). There are multiple methods of calculating CrIs - we use the high density region (HDI) by default as this avoids the possibility of the maximum a posteriori (MAP) estimate being outside the CrI, which is possible by the more commonly used equal-tailed interval (ETI).

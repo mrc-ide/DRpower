@@ -23,7 +23,7 @@ library(tidyverse)
 
 ## 1. Is our Bayesian method biased?
 
-The `get_prevalence()` function calculates the full posterior distribution of the prevalence, but then it usually returns just a summary of this distribution. There are many summaries that we could choose, for example, we might be tempted to take the posterior mean. But how good a summary is this? The plot below shows the posterior mean for the 6-cluster case compared with the true prevalence used in simulation, averaged over 1000 simulations. If the method is unbiased then the coloured lines should match the 1:1 line (dashed):
+The `get_prevalence()` function calculates the full posterior distribution of the prevalence, but then it usually returns just a summary of this distribution (unless `post_full_on = TRUE`). There are many summaries that we could choose, for example, we might choose the posterior mean. But how good a summary is this? The plot below shows the posterior mean for the 6-cluster case compared with the true prevalence used in simulation, averaged over 1000 simulations. If the method is unbiased then the coloured lines should match the 1:1 line (dashed):
 
 ```{r, echo=FALSE}
 df_sim %>%
@@ -129,4 +129,4 @@ df_sim %>%
   ggtitle("Number of clusters = 6")
 ```
 
-Some bias remains for 5 samples per cluster, but for larger sample sizes the bias is very small.
+Some bias remains for 5 samples per cluster, but for larger sample sizes the bias is very small. This is why the MAP is the default method returned by `get_prevalence()`.

@@ -24,20 +24,20 @@ library(tidyverse)
 
 ## 1. Available data on *pfhrp2/3* deletions
 
-Our objective here is to learn from historical *pfhrp2/3* studies and to use this information to increase the power and validity of our approach. In particular, we are interested in coming up with sensible values for the intra-cluster correlation coefficient (ICC). Estimates of the ICC from historical data are vastly better than using simple rules of thumb, e.g. using 1.5 for the design effect, and thankfully the Bayesian framework gives us an excellent way of incorporating this information into our analys.
+Our objective here is to learn from historical *pfhrp2/3* studies and to use this information to increase the power and validity of our approach. In particular, we are interested in coming up with sensible values for the intra-cluster correlation coefficient (ICC). Estimates of the ICC from historical data are vastly better than using simple rules of thumb (e.g. using 1.5 for the design effect) and thankfully the Bayesian framework gives us an excellent way of incorporating this information into our analys.
 
 A large number of *pfhrp2/3* studies can be explored through the [WHO malaria threats map](https://apps.who.int/malaria/maps/threats/). Although the data are not available for direct download from this site, they can be manually extracted, or in our case they were made available by request from the WHO. A data.frame giving all downloaded studies is available in the DRpower package through the `studies_inclusion` object (loaded by default). The raw data.frame consists of 94 studies. Our first step was to apply the following filters:
 
 1. **Must have at least 10 samples total**. Less than this and there is very little information in the data, meaning our conclusions are driven by our priors.
 2. **Must have at least 5 deletions total**. Although technically there is some information present on the ICC even when prevalence is zero, again we risk being strongly influenced by the prior.
-3. **Must have data available at sub-ADMIN1 level**. We are interested in estimating the ICC at the province (ADMIN1) level, meaning we need data at this level of spatial resolution.
-4. **Data must be from symptomatic individuals**. We are interested in *clinically relevant* *pfhrp2/3* deletions, and so we exclude studies on asymptomatic individuals.
+3. **Must have data available at sub-ADMIN1 level**. We are interested in estimating the ICC at the province (ADMIN1) level, meaning we need data at this level of geographic resolution.
+4. **Data must be from symptomatic individuals**. We are only interested in *clinically relevant* *pfhrp2/3* deletions, and so we exclude studies on asymptomatic individuals.
 
-This filtered us down to 12 studies. Granular data from these 12 studies is available within the package through the `historical_data` object. At this point, a further filter was applied:
+This filtered the original data.frame down to 12 studies. Granular data from these 12 studies is available within the package through the `historical_data` object. At this point, a further filter was applied:
 
-1. **ADMIN1 units must contain data from 3 or more sites within the same sampling year**. Multiple sites are needed to provide information on the ICC, and 3 sites was chosen as a minimum as this is more informative than e.g. 2 sites while still providing adequate data.
+1. **ADMIN1 units must contain data from 3 or more sites within the same sampling period**. Multiple sites are needed to provide information on the ICC, and 3 sites was chosen as a minimum. Prevalence may fluctuate over time, hence the restriction to be in the sampling period.
 
-After applying this filter, data remained from 5 studies covering 4 countries and 6 ADMIN1 regions:
+After applying this second filter, data remained from 5 studies covering 4 countries and 6 ADMIN1 regions:
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # subset to ADMIN1 regions that have data for 3 or more lower geographical units
@@ -176,5 +176,5 @@ df1 %>%
 
 This distribution allows for ICC values anywhere in the plausible range from 0 to 0.3, while at the same time putting very low probability on values greater than this. This prior is adopted as the default in all DRpower functions, and can be overwritten by setting  `prior_ICC_shape1` and `prior_ICC_shape2` manually.
 
-The other place we need ICC estimates is when estimating power, as we are forced to simulate under an assumed ICC. For the reasons above, we focus on the case of ICC = 0.05 as this is a realistic value that is likely to hold true for most studies. However, if we want to be cautious about the ICC then we can instead opt for a larger value, which will in turn lead to larger sample sizes.
+When estimating power, we are forced to simulate under an assumed ICC. For the reasons above, we focus on the case of ICC = 0.05 as a realistic value that is likely to hold true for most studies. However, if the aim is to be cautious about the ICC then one can opt for a larger value, which will in turn lead to larger sample sizes.
 
