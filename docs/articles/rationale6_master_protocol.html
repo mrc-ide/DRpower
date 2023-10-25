@@ -142,7 +142,7 @@
 Protocol</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 25 Jul
+            <h4 data-toc-skip class="date">Last updated: 25 Oct
 2023</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/rationale6_master_protocol.Rmd" class="external-link"><code>vignettes/rationale6_master_protocol.Rmd</code></a></small>
@@ -164,7 +164,7 @@ analysis, and provided templates such as informed consent forms for
 participants. This document was a major step forward in specifying what
 a well designed <em>pfhrp2/3</em> study might look like. However, it
 also contained some arguments around appropriate sample size that
-contained mistakes, and that we will explore here.</p>
+contained mistakes that we will explore here.</p>
 <p>The original version of the master protocol recommended a sample size
 of 370 per domain (e.g. province), split into 10 clusters of 37 each. It
 was later found that there were some numerical errors in this
@@ -227,18 +227,15 @@ treat the <span class="math inline">\(\pm\)</span> symbol as a plus
 (upper CI) or a minus (lower CI), meaning we can use the same sample
 size formula whether the prevalence is above or below the threshold. The
 reason for highlighting this connection is to emphasize that the sample
-size formula is intrinsicly linked to method for calculating confidence
-intervals. More generally, the power of a study is <strong>intrinsically
-linked to the statistical analysis plan</strong>. This is true no matter
-what our analysis plan is - the concept of power only makes sense if we
-have a clear plan how we will analyse our data.</p>
+size formula above is intrinsically linked to method for calculating
+confidence intervals.</p>
 <p>There is one subtle point worth mentioning; the sample size formula
 from the master protocol is in terms of <span class="math inline">\(p\)</span>, but the CI formula is in terms of
 <span class="math inline">\(\hat{p}\)</span>. The value <span class="math inline">\(p\)</span> is our assumed <em>true</em> prevalence
 of deletions, whereas <span class="math inline">\(\hat{p}\)</span> is
 our <em>estimate</em> of the prevalence of deletions. So <span class="math inline">\(p\)</span> is a fixed value but <span class="math inline">\(\hat{p}\)</span> will vary around the true value,
-sometimes being slightly higher and sometimes slightly lower. We will
-come back to this point later.</p>
+sometimes being slightly higher and sometimes slightly lower. This point
+will become important later.</p>
 </div>
 <div class="section level3">
 <h3 id="working-through-the-updated-protocol-numbers">6.2. Working through the updated protocol numbers<a class="anchor" aria-label="anchor" href="#working-through-the-updated-protocol-numbers"></a>
@@ -291,8 +288,8 @@ design a study to achieve a particular margin of error around our
 prevalence estimate then it makes sense to work from the CI formula
 above. However, in the case of the master protocol we will use the CI to
 make a categorical decision as to whether prevalence is above or below a
-threshold or inconclusive, meaning this is more akin to a hypothesis
-test. We can therefore ask - what is the power of this test?</p>
+threshold, meaning this is more akin to a hypothesis test. We can
+therefore ask - what is the power of this test?</p>
 <p>Statistical power is defined as the probability of correctly
 rejecting the null hypothesis. In other words, it is the probably of
 detecting an effect if it is really there. We want power to be high -
@@ -312,14 +309,15 @@ vary around the true value, sometimes being higher and sometimes lower.
 When it is lower, we will find that the CI crosses the 5% threshold and
 we will get an inconclusive result. When it is higher, we will find that
 it does not cross the 5% threshold and we will (correctly) conclude that
-prevalence is above 5%. There is roughly equal chance that <span class="math inline">\(\hat{p}\)</span> will be be above or below <span class="math inline">\(p\)</span>, meaning we expect power to be around
+prevalence is above 5%. There is roughly equal chance that <span class="math inline">\(\hat{p}\)</span> is above or below <span class="math inline">\(p\)</span>, meaning we expect power to be around
 50%. This is far below the usual level of 80% that is used when
 designing a study.</p>
 <p>We can explore this in various ways in code. First, let us completely
-remove the design effect just to simplify the problem. In this case we
-can calculate the power of the approach exactly by brute force. The
-sample size formula above would give <span class="math inline">\(N=315\)</span> when <span class="math inline">\(D_{eff}=1\)</span>, so we will use this value
-here.</p>
+remove the design effect just to simplify the problem. This means we can
+calculate the power of the approach exactly by brute force. The sample
+size formula above would give <span class="math inline">\(N=315\)</span>
+when <span class="math inline">\(D_{eff}=1\)</span>, so we will use this
+value here.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># specify assumed values</span></span>
 <span><span class="va">N</span> <span class="op">&lt;-</span> <span class="fl">315</span></span>
@@ -344,10 +342,10 @@ it should be around 50%. The slight discrepancy comes from the fact that
 be below <span class="math inline">\(p\)</span> than above it for these
 assumed values.</p>
 <p>But what about if we include the design effect of <span class="math inline">\(D_{eff}=1.5\)</span>? Here, the formula gave <span class="math inline">\(N=472\)</span> for the same assumptions. It is
-slightly more tricky to evaluate the true power here, but one way is
-through simulation. We repeatedly simulate data with a knwon level of
-intra-cluster correlation corresponding to our chosen design effect,
-then we calculate CIs and proceed as normal.</p>
+slightly more tricky to evaluate the true power here - we have to use
+simulation rather than brute force. We repeatedly simulate data with a
+knwon level of intra-cluster correlation corresponding to our chosen
+design effect, then we calculate CIs and proceed as normal.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">N</span> <span class="op">&lt;-</span> <span class="fl">472</span>  <span class="co"># we will assume 8 clusters of 59 so we can hit this value exactly</span></span>
 <span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fl">0.08</span></span>

@@ -141,7 +141,7 @@
       <h1 data-toc-skip>Background</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 25 Jul
+            <h4 data-toc-skip class="date">Last updated: 25 Oct
 2023</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/rationale1_background.Rmd" class="external-link"><code>vignettes/rationale1_background.Rmd</code></a></small>
@@ -158,29 +158,29 @@
 diagnostic tests (RDTs). A large proportion of these tests work by
 detecting the presence of the HPR2 protein in the blood of an infected
 individual, which reacts to give a positive result. However,
-<em>Plasmodium</em> parasites have been found around the world that
-carry a deletion of the <em>pfhrp2</em> gene. No <em>pfhrp2</em> gene
-means no HPR2 protein, rendering these parasites invisible to testing by
-HRP2-based RDTs. This can present a major clinical problem if these gene
-deletions are at high prevalence in the population, as patients
-presenting with signs of malaria may be misdiagnosed, resulting in
-treatment delays and poor health outcomes.</p>
+<em>Plasmodium</em> parasites have been found that carry a deletion of
+the <em>pfhrp2</em> gene. Without the <em>pfhrp2</em> gene these
+parasites do not express the HPR2 protein, rendering them invisible to
+testing by HRP2-based RDTs. This can present a major clinical problem if
+these gene deletions are at high prevalence in the population as
+patients presenting with signs of malaria may be misdiagnosed resulting
+in treatment delays or missed cases.</p>
 </div>
 <div class="section level2">
-<h2 id="what-does-drpower-do">2. What does DRpower do?<a class="anchor" aria-label="anchor" href="#what-does-drpower-do"></a>
+<h2 id="assumptions-of-drpower">2. Assumptions of DRpower<a class="anchor" aria-label="anchor" href="#assumptions-of-drpower"></a>
 </h2>
-<p>For the purposes of DRpower, we assume that our aim is to design a
-survey to estimate the prevalence of <em>pfhrp2/3</em> deletions within
-a given region. More specifically, our aim is to determine whether the
-prevalence of deletions is above a given threshold (a 5% threshold is
-used by default, although this can be changed).</p>
+<p>We assume that our aim is to design a survey to estimate the
+prevalence of <em>pfhrp2/3</em> deletions within a given region. More
+specifically, our aim is to determine whether the prevalence of
+deletions is above a given threshold (5% by default, although this can
+be changed).</p>
 <p>We assume that this is a “province” level study. The exact meaning of
 this term will vary in geographical size from one province to the next,
 but what really matters here is that we are aiming to form conclusions
-about the prevalence of <em>pfhrp2/3</em> deletions at a higher level
-than just the sites used in the study. In other words, there is some
-degree of extrapolation from our handful of sites to a wider geographic
-area.</p>
+about the prevalence of <em>pfhrp2/3</em> deletions at a level that is
+higher than just the sites used in the study. In other words, there is
+some degree of extrapolation from our handful of sites to a wider
+geographic area.</p>
 <p>We will refer to the sites at which people are tested as “clusters”,
 which in reality are usually health facilities. The methods in DRpower
 can be used for a single cluster design, but <strong>we strongly advise

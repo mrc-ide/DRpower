@@ -141,7 +141,7 @@
       <h1 data-toc-skip>The Design Effect</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 25 Jul
+            <h4 data-toc-skip class="date">Last updated: 25 Oct
 2023</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/rationale3_design_effect.Rmd" class="external-link"><code>vignettes/rationale3_design_effect.Rmd</code></a></small>
@@ -152,24 +152,27 @@
     
     
 <div class="section level2">
-<h2 id="defining-the-design-effect">3. Defining the design effect<a class="anchor" aria-label="anchor" href="#defining-the-design-effect"></a>
+<h2 id="what-is-the-design-effect">3. What is the design effect?<a class="anchor" aria-label="anchor" href="#what-is-the-design-effect"></a>
 </h2>
 <p>The design effect (<span class="math inline">\(D_{eff}\)</span>) is a
 measure of the statistical <em>inefficiency</em> of a study design. It
 is calculated relative to the efficiency under simple random sampling
-(SRS), where we sample individuals at random from the target population
-as a whole. SRS is a highly efficient design statistically even though
-it tends to be a horrible design here from a practical viewpoint! Higher
-values of <span class="math inline">\(D_{eff}\)</span> indicate that
-there is some statistical inefficiency introduced by our study design,
-although this should not necessarily be seen as a bad thing. A study
-design that is 5 times less efficient may be 100 times cheaper to run,
-meaning we can recruit more people and overall get a higher power. As
-with all things related to study design, statistical efficiency is just
-one aspect that must be balanced against other considerations when
-coming up with an optimal design.</p>
+(SRS), which is where we sample individuals at random from the target
+population as a whole. SRS is a highly efficient design statistically
+even though it tends to be a horrible design here from a practical
+viewpoint! SRS for a nationwide study would mean sampling single
+individuals from the country as a whole, which would be a logistical
+nightmare.</p>
+<p>Higher values of <span class="math inline">\(D_{eff}\)</span>
+indicate that there is some statistical inefficiency introduced by our
+study design, although this should not necessarily be seen as a bad
+thing. A study design that is 5 times less efficient may be 100 times
+cheaper to run, meaning we can recruit more people and overall get a
+higher power. As with all things related to study design, statistical
+efficiency is just one aspect that must be balanced against other
+considerations when coming up with an optimal design.</p>
 <p>The design effect is mathematically defined as the variance of our
-estimator of interest under the current study design, divided by the
+estimator of interest under the current study design divided by the
 variance under SRS. Let <span class="math inline">\(\hat{p}_c\)</span>
 be our estimator of the prevalence under the clustered survey design,
 and let <span class="math inline">\(\hat{p}_s\)</span> be our estimator
@@ -195,49 +198,52 @@ find that <span class="math inline">\(n_E =\)</span> 250 <span class="math inlin
 to be conservative. Some people (myself included) find this to be a very
 useful way of thinking about statistical efficiency. Even though we went
 to all the trouble of sampling 250 individuals, the fact that people are
-so similar within clusters means that, effectively, we only sampled 44
+so similar within a cluster means that, effectively, we only sampled 44
 distinct individuals in total. This is a very “real world” way of
 thinking about something that can otherwise feel quite abstract.</p>
 <p>Now that we have an estimate of the sample size that takes account of
-correlations we could use it within our original CI formula in place of
-the true sample size. Using <span class="math inline">\(n_E\)</span> in
-place of <span class="math inline">\(nc\)</span> we obtain the interval
-<span class="math inline">\(\hat{p} \pm z\sqrt{\frac{\hat{p}(1 -
+correlations we could use this value within our original CI formula in
+place of the true sample size. Using <span class="math inline">\(n_E\)</span> in place of <span class="math inline">\(nc\)</span> we obtain the interval <span class="math inline">\(\hat{p} \pm z\sqrt{\frac{\hat{p}(1 -
 \hat{p})}{n_E}}\)</span>. At first glance this appears to give us
 <em>yet another</em> way of constructing CIs, but don’t be fooled. Once
 you substitute in the formula for <span class="math inline">\(n_E\)</span> and trace it back to the variance
 you’ll find that this simplifies to <span class="math inline">\(\hat{p}
-\pm z\sqrt{\frac{s^2}{c}}\)</span>, which was our formula from the
-second CI method. So, the design effect doesn’t give us a magic way of
-dealing with the issue of ICC, it just gives us a different way of
-thinking about it. Rather than taking a whole new statistical approach
-it’s like we use the original approach but we “punish” the method for
-the inefficient design by stretching out the CIs to be wider. Either way
-you choose to look at it you get the same result.</p>
+\pm z\sqrt{\frac{\hat{p}(1 - \hat{p})}{nc}D_{eff}}\)</span> and
+eventually to <span class="math inline">\(\hat{p} \pm
+z\sqrt{\frac{s^2}{c}}\)</span>, which was our formula from the second CI
+method. So, the design effect doesn’t give us a magic way of dealing
+with the issue of ICC, it just gives us a different way of thinking
+about it. Rather than taking a whole new statistical approach it’s like
+we use the original approach but we “punish” the method for the
+inefficient design by stretching out the CIs to be wider. Either way you
+choose to look at it you get the same result.</p>
 </div>
 <div class="section level3">
 <h3 id="relating-d_eff-to-the-icc">3.2 Relating <span class="math inline">\(D_{eff}\)</span> to the
 ICC<a class="anchor" aria-label="anchor" href="#relating-d_eff-to-the-icc"></a>
 </h3>
-<p><span class="math inline">\(D_{eff}\)</span> can be related to the
-ICC (denoted <span class="math inline">\(r\)</span>) through the
+<p>The design effect can be related to the intra-cluster correlation
+coefficient (denoted <span class="math inline">\(r\)</span>) through the
 formula:</p>
 <p><span class="math inline">\(D_{eff} = 1 + (n - 1)r\)</span></p>
 <p>Notice that when <span class="math inline">\(r = 1\)</span> (perfect
 correlation within clusters) we find that <span class="math inline">\(D_{eff}\)</span> reaches its maximum value of
 <span class="math inline">\(n\)</span>, and the effective sample size
-crashes down to <span class="math inline">\(n_E = \frac{nc}{n} =
-c\)</span>. This should make some intuitive sense - when there is
-perfect correlation we effectively have one observation per cluster
-because all subsequent observations will be dictated by the first.</p>
-<p>But this formula also reveals one of the tricky things about <span class="math inline">\(D_{eff}\)</span>; it only applies for a particular
-sample size. From the formula above we can see that a clustered
-prevalence survey with twice the sample size (i.e., twice the <span class="math inline">\(n\)</span>) will have roughly twice the <span class="math inline">\(D_{eff}\)</span>, making it difficult to compare
-values between studies. A design effect of 2 can mean a lot or a little,
-depending on the sample size of the study. On the other hand, the
-parameter <span class="math inline">\(r\)</span> does not change with
-sample size, and so is more of an <em>intrinsic</em> property of the
-population. For this reason, we prefer to talk in terms of the ICC
+reaches its minimum value of <span class="math inline">\(n_E =
+\frac{nc}{n} = c\)</span>. This should make some intuitive sense - when
+there is perfect correlation we effectively have one observation per
+cluster because all subsequent observations will be dictated by the
+first.</p>
+<p>But this formula also reveals one of the tricky things about <span class="math inline">\(D_{eff}\)</span>; that it only applies for a
+particular sample size. From the formula above we can see that a
+clustered prevalence survey with twice the sample size (i.e., twice the
+<span class="math inline">\(n\)</span>) will have roughly twice the
+<span class="math inline">\(D_{eff}\)</span>. This makes it difficult to
+compare values between studies. A design effect of 2 can mean a lot or a
+little, depending on the sample size of the study. On the other hand,
+the parameter <span class="math inline">\(r\)</span> does not change
+with sample size, and so is more of an <em>intrinsic</em> property of
+the population. For this reason, we prefer to talk in terms of the ICC
 inside the DRpower package.</p>
 <p align="center">
 <button class="btn btn-primary" onclick="window.location.href='https://mrc-ide.github.io/DRpower/articles/rationale4_weaknesses.html';">

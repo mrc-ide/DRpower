@@ -141,7 +141,7 @@
       <h1 data-toc-skip>How to Summarise the Prevalence</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 25 Jul
+            <h4 data-toc-skip class="date">Last updated: 25 Oct
 2023</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/summarise_prevalence.Rmd" class="external-link"><code>vignettes/summarise_prevalence.Rmd</code></a></small>
@@ -156,12 +156,13 @@
 </h2>
 <p>The <code><a href="../reference/get_posterior.html">get_prevalence()</a></code> function calculates the full
 posterior distribution of the prevalence, but then it usually returns
-just a summary of this distribution. There are many summaries that we
-could choose, for example, we might be tempted to take the posterior
-mean. But how good a summary is this? The plot below shows the posterior
-mean for the 6-cluster case compared with the true prevalence used in
-simulation, averaged over 1000 simulations. If the method is unbiased
-then the coloured lines should match the 1:1 line (dashed):</p>
+just a summary of this distribution (unless
+<code>post_full_on = TRUE</code>). There are many summaries that we
+could choose, for example, we might choose the posterior mean. But how
+good a summary is this? The plot below shows the posterior mean for the
+6-cluster case compared with the true prevalence used in simulation,
+averaged over 1000 simulations. If the method is unbiased then the
+coloured lines should match the 1:1 line (dashed):</p>
 <p><img src="summarise_prevalence_files/figure-html/unnamed-chunk-3-1.png" width="700"></p>
 <p>We can see from this plot that the posterior mean doesn’t match the
 1:1 line very well, rather it tends to overestimate the prevalence. This
@@ -191,7 +192,8 @@ estimate</strong>. The plot below explores the bias of the MAP
 estimate:</p>
 <p><img src="summarise_prevalence_files/figure-html/unnamed-chunk-5-1.png" width="700"></p>
 <p>Some bias remains for 5 samples per cluster, but for larger sample
-sizes the bias is very small.</p>
+sizes the bias is very small. This is why the MAP is the default method
+returned by <code><a href="../reference/get_posterior.html">get_prevalence()</a></code>.</p>
 </div>
   </div>
 
