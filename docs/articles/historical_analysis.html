@@ -142,7 +142,7 @@
       <h1 data-toc-skip>Historical analysis</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 25 Jul
+            <h4 data-toc-skip class="date">Last updated: 25 Oct
 2023</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/historical_analysis.Rmd" class="external-link"><code>vignettes/historical_analysis.Rmd</code></a></small>
@@ -160,7 +160,7 @@ studies and to use this information to increase the power and validity
 of our approach. In particular, we are interested in coming up with
 sensible values for the intra-cluster correlation coefficient (ICC).
 Estimates of the ICC from historical data are vastly better than using
-simple rules of thumb, e.g. using 1.5 for the design effect, and
+simple rules of thumb (e.g. using 1.5 for the design effect) and
 thankfully the Bayesian framework gives us an excellent way of
 incorporating this information into our analys.</p>
 <p>A large number of <em>pfhrp2/3</em> studies can be explored through
@@ -185,26 +185,26 @@ prior.</li>
 <li>
 <strong>Must have data available at sub-ADMIN1 level</strong>. We
 are interested in estimating the ICC at the province (ADMIN1) level,
-meaning we need data at this level of spatial resolution.</li>
+meaning we need data at this level of geographic resolution.</li>
 <li>
 <strong>Data must be from symptomatic individuals</strong>. We are
-interested in <em>clinically relevant</em> <em>pfhrp2/3</em> deletions,
-and so we exclude studies on asymptomatic individuals.</li>
+only interested in <em>clinically relevant</em> <em>pfhrp2/3</em>
+deletions, and so we exclude studies on asymptomatic individuals.</li>
 </ol>
-<p>This filtered us down to 12 studies. Granular data from these 12
-studies is available within the package through the
+<p>This filtered the original data.frame down to 12 studies. Granular
+data from these 12 studies is available within the package through the
 <code>historical_data</code> object. At this point, a further filter was
 applied:</p>
 <ol style="list-style-type: decimal">
 <li>
 <strong>ADMIN1 units must contain data from 3 or more sites within
-the same sampling year</strong>. Multiple sites are needed to provide
-information on the ICC, and 3 sites was chosen as a minimum as this is
-more informative than e.g. 2 sites while still providing adequate
-data.</li>
+the same sampling period</strong>. Multiple sites are needed to provide
+information on the ICC, and 3 sites was chosen as a minimum. Prevalence
+may fluctuate over time, hence the restriction to be in the sampling
+period.</li>
 </ol>
-<p>After applying this filter, data remained from 5 studies covering 4
-countries and 6 ADMIN1 regions:</p>
+<p>After applying this second filter, data remained from 5 studies
+covering 4 countries and 6 ADMIN1 regions:</p>
 <div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:300px; overflow-x: scroll; width:700px; ">
 <table class="table table table-striped table-hover table-condensed" style="margin-left: auto; margin-right: auto;">
 <thead><tr>
@@ -1146,12 +1146,11 @@ on values greater than this. This prior is adopted as the default in all
 DRpower functions, and can be overwritten by setting
 <code>prior_ICC_shape1</code> and <code>prior_ICC_shape2</code>
 manually.</p>
-<p>The other place we need ICC estimates is when estimating power, as we
-are forced to simulate under an assumed ICC. For the reasons above, we
-focus on the case of ICC = 0.05 as this is a realistic value that is
-likely to hold true for most studies. However, if we want to be cautious
-about the ICC then we can instead opt for a larger value, which will in
-turn lead to larger sample sizes.</p>
+<p>When estimating power, we are forced to simulate under an assumed
+ICC. For the reasons above, we focus on the case of ICC = 0.05 as a
+realistic value that is likely to hold true for most studies. However,
+if the aim is to be cautious about the ICC then one can opt for a larger
+value, which will in turn lead to larger sample sizes.</p>
 </div>
   </div>
 

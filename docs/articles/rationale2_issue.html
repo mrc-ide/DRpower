@@ -142,7 +142,7 @@
       <h1 data-toc-skip>CIs and Overdispersion</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 25 Jul
+            <h4 data-toc-skip class="date">Last updated: 25 Oct
 2023</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/rationale2_issue.Rmd" class="external-link"><code>vignettes/rationale2_issue.Rmd</code></a></small>
@@ -247,10 +247,10 @@ cluster_prevalence
 </tr>
 </tbody>
 </table>
-<p>In fact, this is even simpler than most real world datasets as here
-the number of people tested is identical over all clusters. So why is
-this a tricky dataset to analyse? How can we possibly get our analysis
-wrong here!?</p>
+<p>This example is even simpler than most real world datasets, as here
+the number of people tested is identical over all clusters when it
+reality it often varies. So why is this a tricky dataset to analyse? How
+can we possibly get our analysis wrong here!?</p>
 <p>Recall that our aim is to estimate prevalence of deletions at the
 province level, meaning we will need to pool results over clusters. One
 way to do this is to sum the number of deletions over clusters, then sum
@@ -279,8 +279,8 @@ cluster. Notice that some clusters are quite a bit higher than this 14%
 average level, while some are much lower. Could this be explained by
 random chance? We can explore this statistically by looking at the
 spread between clusters. If individuals are completely independent then
-we would expect the variance in cluster-level prevalence to
-approximately equal <span class="math inline">\(\frac{\hat{p}(1 -
+we would expect the variance in cluster-level prevalence to be
+approximately <span class="math inline">\(\frac{\hat{p}(1 -
 \hat{p})}{n}\)</span>. Hence, we would expect values to fall within the
 shaded region in the plot below around 95% of the time:</p>
 <p><img src="rationale2_issue_files/figure-html/unnamed-chunk-4-1.png" width="480"></p>
@@ -313,7 +313,7 @@ observations, ignoring the fact that we know the sample size per
 cluster. In this case, we would calculate the province-level prevalence
 as the mean of the 5 cluster-level values. This calculation gives <span class="math inline">\(\hat{p} =\)</span> 14%, exactly the same as
 before. The reason for getting the same value here is that sample sizes
-are equal over all clusters, although in general the two methods may
+are the same over all clusters, although in general the two methods may
 give different results.</p>
 <p>But how should we construct a CI in this case? We are no longer
 treating our observations as binomial counts, meaning we should use a
@@ -328,13 +328,13 @@ rather than the normal distribution). For our example data this gives
 interval (3.85% to 24.15%). This is a <em>much</em> wider CI than
 before, and this time it even spans 5% meaning we would not switch RDTs
 based on this result. We can see how the simple choice of how to
-construct CIs has a major effect on the study, and in this case would
-result in a different nationwide strategy with respect to switching
-RDTs. Hence, it is very important that we get this right!</p>
-<p>This second way of constructing CIs is better than the previous
-approach in that it takes into account overdispersion, but even this
-approach suffers from some weaknesses. Before getting into these issues
-we should talk about the design effect.</p>
+construct CIs has a major effect on the study conclusions, and in this
+case would result in a different nationwide strategy with respect to
+switching RDTs. Hence, it is very important that we get this right!</p>
+<p>This second way of constructing CIs is better than the first in that
+it takes into account overdispersion, but even this approach suffers
+from some weaknesses. Before getting into these issues we should talk
+about the design effect.</p>
 <p align="center">
 <button class="btn btn-primary" onclick="window.location.href='https://mrc-ide.github.io/DRpower/articles/rationale3_design_effect.html';">
 Next topic

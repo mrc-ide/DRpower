@@ -141,7 +141,7 @@
       <h1 data-toc-skip>The One-sample Z-test</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 25 Jul
+            <h4 data-toc-skip class="date">Last updated: 25 Oct
 2023</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/rationale7_ztest.Rmd" class="external-link"><code>vignettes/rationale7_ztest.Rmd</code></a></small>
@@ -165,9 +165,10 @@ one-sample proportion test. We start by calculating the <span class="math inline
 <p><span class="math inline">\(Z = \frac{\displaystyle |\hat{p} -
 \mu|}{\displaystyle
 \sqrt{\frac{\hat{p}(1-\hat{p})}{N}D_{eff}}}\)</span></p>
-<p>Under the null hypothesis, this statistic follows the z-distribution
-(i.e. the normal distribution). We can control how often we come to a
-false-positive conclusion by setting a significance level <span class="math inline">\(\alpha\)</span>. We will reject the null
+<p>This statistic follows the z-distribution (i.e. the normal
+distribution) under the null hypothesis. We can control how often we
+come to a false-positive conclusion by setting a significance level
+<span class="math inline">\(\alpha\)</span>. We will reject the null
 hypothesis whenever our <span class="math inline">\(Z\)</span> statistic
 is greater in magnitude (either positive or negative) than the critical
 value <span class="math inline">\(z_{\tiny 1 - \alpha/2}\)</span>.</p>
@@ -178,23 +179,11 @@ formula:</p>
 \mu|}{\sqrt{\frac{p(1-p)}{N}D_{eff} }} - z_{\tiny 1 - \alpha/2}
 \Bigg)\)</span></p>
 <p>where <span class="math inline">\(\Phi()\)</span> is the cumulative
-density function of the normal distribution. For example, we can use
-this formula to calculate the power under the assumed sample size of 600
-from the updated master protocol:</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">N</span> <span class="op">&lt;-</span> <span class="fl">600</span></span>
-<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fl">0.08</span></span>
-<span><span class="va">mu</span> <span class="op">&lt;-</span> <span class="fl">0.05</span></span>
-<span><span class="va">Deff</span> <span class="op">&lt;-</span> <span class="fl">1.5</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">pnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">p</span> <span class="op">-</span> <span class="va">mu</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">Deff</span> <span class="op">*</span> <span class="va">p</span><span class="op">*</span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">p</span><span class="op">)</span> <span class="op">/</span> <span class="va">N</span><span class="op">)</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">qnorm</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fl">0.05</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.5993501</span></span></code></pre></div>
-<p>We find that power is approximately 60%, which is very close to what
-we found by simulation.</p>
-<p>What would happen if we used the value of <span class="math inline">\(N\)</span> taken from the mistaken approach
-described in the 2020 master protocol? We can explore this very neatly
-by substituting the value <span class="math inline">\(N = z_{\tiny 1 -
-\alpha/2}^2 \frac{\displaystyle p(1-p)}{\displaystyle
+density function of the normal distribution. What would happen if we
+used the value of <span class="math inline">\(N\)</span> taken from the
+mistaken approach described in the 2020 master protocol? We can explore
+this very neatly by substituting the value <span class="math inline">\(N
+= z_{\tiny 1 - \alpha/2}^2 \frac{\displaystyle p(1-p)}{\displaystyle
 (p-\mu)^2}D_{eff}\)</span> from the master protocol into the formula
 above. Interestingly, we find that <strong>every term inside the
 brackets cancels out</strong>! We are left with <span class="math inline">\(\text{Power} = \Phi(0)\)</span>, which is equal to
@@ -202,7 +191,7 @@ brackets cancels out</strong>! We are left with <span class="math inline">\(\tex
 the previous section - that power is forced to equal 50% when using the
 formula from the master protocol.</p>
 <p>Hopefully by this point I have convinced you of the issues with the
-CI-based approach. So, what should the correct sample size formula be?
+CI-based approach. So, what should be the correct sample size formula?
 We can find this by rearranging the power formula above to give us the
 exact <span class="math inline">\(N\)</span> needed to achieve any given
 power. We will use the symbol <span class="math inline">\(\beta\)</span>

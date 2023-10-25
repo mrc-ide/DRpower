@@ -141,7 +141,7 @@
       <h1 data-toc-skip>The DRpower model</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 25 Jul
+            <h4 data-toc-skip class="date">Last updated: 25 Oct
 2023</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/rationale5_bayesian.Rmd" class="external-link"><code>vignettes/rationale5_bayesian.Rmd</code></a></small>
@@ -155,10 +155,9 @@
 <h2 id="a-bayesian-approach">5. A Bayesian approach<a class="anchor" aria-label="anchor" href="#a-bayesian-approach"></a>
 </h2>
 <p>In DRpower we take a different approach to analysis that deals with
-all of the issues listed in the previous section. We describe the
-approach at a high level here, for those wanting more mathematical
-details please <a href="articles/mathematical_details.html">see this
-page</a>.</p>
+all of the issues listed in section 4. We describe the approach at a
+high level here, and for those wanting more mathematical details please
+<a href="articles/mathematical_details.html">see this page</a>.</p>
 <p>We start by assuming a <a href="https://en.wikipedia.org/wiki/Random_effects_model" class="external-link">random
 effects</a> framework. Instead of assuming that all individuals have the
 same probability of carrying the <em>pfhrp2/3</em> deleted strain, we
@@ -182,9 +181,8 @@ we:</p>
 <li>Write down the probability of the data under the model, which can be
 done exactly in this case without making any approximations.</li>
 <li>Come up with suitable <a href="https://en.wikipedia.org/wiki/Prior_probability" class="external-link">priors</a> on our
-two unknown parameters; <span class="math inline">\(p\)</span> and <span class="math inline">\(r\)</span>. We could use historical data to help
-us here, or we could try to keep our priors “diffuse” so we are guided
-primarily by the new data.</li>
+two unknown parameters; <span class="math inline">\(p\)</span> and <span class="math inline">\(r\)</span>. A good approach here is to use <a href="articles/historical_analysis.html">historical data</a> to guide
+us.</li>
 <li>Calculate the posterior distribution of <span class="math inline">\(p\)</span>, integrated over our uncertainty in
 <span class="math inline">\(r\)</span>. Crucially, this method
 <strong>takes into account everything the data tells us about
@@ -195,11 +193,11 @@ estimate of the prevalence</strong>.</li>
 plausible range of values that <span class="math inline">\(p\)</span>
 could take. We can use this in many different ways, for example we can
 calculate a credible interval (CrI). CrIs have a slightly different and
-more direct interpretation than confidence intervals (CIs) - a 95% CrI
+more direct interpretation than confidence intervals (CIs). A 95% CrI
 means there is a 95% probability that the true value lies inside this
-interval (compare this with <a href="https://thestatsgeek.com/2020/11/21/interpretation-of-frequentist-confidence-intervals-and-bayesian-credible-intervals/" class="external-link">the
-definition of a CI</a>). This immediately deals with the first 4 out of
-5 issues listed in the previous section.</p>
+interval - compare this with <a href="https://thestatsgeek.com/2020/11/21/interpretation-of-frequentist-confidence-intervals-and-bayesian-credible-intervals/" class="external-link">the
+definition of a CI</a>! This immediately deals with the first 4 out of 5
+issues listed in the previous section.</p>
 <p>We can also output from the model the posterior probability that
 prevalence is above the 5% threshold. We can turn this into a hypothesis
 test by rejecting the null hypothesis whenever this probability is above
@@ -214,14 +212,14 @@ method.</p>
 <p>The first output is the <em>maximum a posteriori</em> (MAP) estimate,
 which gives us a point estimate of 13.98% prevalence - very close to our
 original estimate of 14% from the raw data. There are other summaries
-that we might be interested in, but see <a href="articles/summarise_prevalence.html">here</a> when deciding between
-them.</p>
+that we might be interested in, discussed <a href="articles/summarise_prevalence.html">here</a>.</p>
 <p>Based on the output above, we also estimate that there is a 0.9969
 probability that the prevalence is above 5%. By default we recommend
 using a cutoff of 0.95 when turning this into a hypothesis test, so in
-this case we can reject the null hypothesis. Based on this analysis,
-therefore, we have sufficient evidence to conclude that prevalence is
-above our target threshold, and so a switch of RDTs is justified.</p>
+this case we can reject the hypothesis that prevalence is below 5%.
+Based on this analysis, therefore, we have sufficient evidence to
+conclude that prevalence is above our target threshold, and so a switch
+of RDTs is justified.</p>
 <p>In summary, the DRpower model provides an alternative way of
 analysing clustered prevalence data that has some advantages over
 traditional methods. It can be used to calculate CrIs, and/or it can be

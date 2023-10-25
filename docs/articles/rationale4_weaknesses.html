@@ -141,7 +141,7 @@
       <h1 data-toc-skip>Weaknesses with the CI-based Approach</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 25 Jul
+            <h4 data-toc-skip class="date">Last updated: 25 Oct
 2023</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/rationale4_weaknesses.Rmd" class="external-link"><code>vignettes/rationale4_weaknesses.Rmd</code></a></small>
@@ -162,13 +162,13 @@ that motivate the need for something better:</p>
 <li><p><strong>CIs are symmetric</strong>. The CI formula in section 2.1
 is based on the central limit theorem, which argues that the sampling
 distribution of the statistic is approximately normal when the number of
-clusters is large and when the true prevalence is somewhere near 50%. In
-our case, both of these assumptions tend to be violated - the number of
-clusters can be <em>very</em> small and prevalence tends to be close to
-5%. One consequence is that CIs are forced to be symmetric when in fact
-they should often be asymmetric and typically thinner on the side of
-small values. This makes us more likely that we will fail to reject the
-5% threshold when in fact there is strong enough evidence in the data to
+clusters is large and when the true prevalence is somewhere near 50%.
+Unfortunately, in our case both of these assumptions tend to be violated
+- the number of clusters can be <em>very</em> small and prevalence tends
+to be close to 5%. One consequence is that CIs are forced to be
+symmetric when in fact they should be asymmetric and typically thinner
+on the side of small values. This makes us more likely to fail to reject
+the 5% threshold when in fact there is strong evidence in the data to
 reject it.</p></li>
 <li><p><strong>Error is not propagated</strong>. The CI formula in
 section 2.1 uses the sample variance as a fixed value, but this
@@ -200,13 +200,14 @@ off at 0%, but this is really just a quick fix that ignores the
 underlying issue.</p></li>
 <li><p><strong>Shouldn’t this be a hypothesis test?</strong> So far, we
 have assumed that our plan is to construct CIs and then accept or reject
-the 5% threshold based on this CI. But this confuses estimation with
-hypothesis testing, when in fact there may be some advantages to keeping
-them separate. For example, one could argue that we need a one-tailed
-hypothesis test as we only really care if prevalence is <em>above</em>
-this threshold, while at the same time we want a two-sided CI for
-estimating the prevalence. Mixing these concepts means we may have lower
-statistical power than we could ideally achieve.</p></li>
+the 5% threshold based on this CI. But this confuses prevalence
+estimation with hypothesis testing, when in fact there may be some
+advantages to keeping them separate. For example, one could argue that
+we need a one-tailed hypothesis test as we only really care if
+prevalence is <em>above</em> this threshold, while at the same time we
+want a two-sided CI for estimating the prevalence. Mixing these concepts
+means we may have lower statistical power than we could ideally
+achieve.</p></li>
 </ul>
 <p>Sometimes these issues will be very minor, and sometimes they may
 even cancel each other out, but <em>sometimes they won’t</em>! We need

@@ -141,7 +141,7 @@
       <h1 data-toc-skip>Designing a study</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 25 Jul
+            <h4 data-toc-skip class="date">Last updated: 25 Oct
 2023</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/tutorial_design.Rmd" class="external-link"><code>vignettes/tutorial_design.Rmd</code></a></small>
@@ -229,12 +229,12 @@ getting a biased view of <em>pfhrp2/3</em> deletion prevalence.</p>
 <p>Although sample size tables are a good starting point, they do not
 tell us how power is changing with <span class="math inline">\(N\)</span>. It could be that the curve is very
 steep, in which case dropping even just a few samples would really hurt
-our power. On the other hand, it could be that it is very shallow, in
-which case we have some more wiggle room.</p>
+our power. On the other hand, it could be that the curve is very
+shallow, in which case we have some more wiggle room.</p>
 <p>All of the power curves that were used to produce the sample size
-table above are distributed with the DRpower package and accessible via
-the <code>df_sim</code> object. As before, we need to filter this very
-large data.frame to get the curve we are interested in:</p>
+tables are distributed with the DRpower package and accessible via the
+<code>df_sim</code> object. As before, we need to filter this very large
+data.frame to get the curve we are interested in:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># filter data</span></span>
 <span><span class="va">df_sim_filter</span> <span class="op">&lt;-</span> <span class="va">df_sim</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -258,11 +258,12 @@ dogmatically to the target value of 80% power without thinking about
 what it means. We should remember that power is defined as the
 probability of finding an interesting result if it is there, so a study
 with 75% power has alsmost as good a chance of success as a study with
-80% power, i.e. it’s not the case that if we fail to hit 80% then the
-study is completely invalid. This is important because a drop in sample
-size from 113 per cluster to 70 may be the difference between a study
-that is feasible to conduct and one that is not. We need to balance
-these factors against each other when coming up with a study design.</p>
+80% power. It is certainly not the case that if we fail to hit 80% then
+the study is completely invalid. This is important because a drop in
+sample size from 113 per cluster to 70 may be the difference between a
+study that is feasible to conduct and one that is not. We need to
+balance these factors against each other when coming up with a study
+design.</p>
 <p>That being said, we should not allow power to drop too low or the
 study may not be worth doing. In our case we will stick to the target
 value of 113 samples per cluster, as we believe we can raise funds to
@@ -278,12 +279,12 @@ malaria cases tend to be seen throughout the transmission season.</p>
 <p>In our case, let’s assume that two sites are in low transmission
 areas, meaning they can only recruit 60 samples during the study
 timeframe. Another two sites are very small, and only have the capacity
-to enrol 40 samples.</p>
-<p>The question is - how much do these smaller clusters hurt our power?
-We cannot work this out from sample size tables or power curves because
-it is very unlikely that we have results for this exact situation. But
-we can explore power directly using the
-<code><a href="../reference/get_power_threshold.html">get_power_threshold()</a></code> function:</p>
+to enrol 40 samples due to staffing issues.</p>
+<p>The question is - do these smaller clusters hurt our power? We cannot
+work this out from sample size tables or power curves because it is very
+unlikely that we have results for this exact situation. But we can
+explore power directly using the <code><a href="../reference/get_power_threshold.html">get_power_threshold()</a></code>
+function:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/get_power_threshold.html">get_power_threshold</a></span><span class="op">(</span>N <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">113</span>, <span class="fl">113</span>, <span class="fl">60</span>, <span class="fl">60</span>, <span class="fl">40</span>, <span class="fl">40</span><span class="op">)</span>,   <span class="co"># new cluster sizes</span></span>
 <span>                    prevalence <span class="op">=</span> <span class="fl">0.1</span>,</span>
@@ -347,30 +348,29 @@ come back positive then we would do the following:</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">N_suspected</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 625 625 150 150 100 100</span></span></code></pre></div>
-<p>The <code><a href="https://rdrr.io/r/base/Round.html" class="external-link">ceiling()</a></code> function round values up to the nearest
+<p>The <code><a href="https://rdrr.io/r/base/Round.html" class="external-link">ceiling()</a></code> function rounds values up to the nearest
 whole number. Here, we have assumed the same positive fraction over all
 sites, but if you have data from individual sites that can be used then
 that is even better. We might also expect the positive fraction to have
 a relationship with transmission intensity, so it’s a good idea to
-tailor these values where possible.</p>
+tailor these values to the setting where possible.</p>
 <p>We also need to account for dropout, meaning samples that - for one
 reason or another - do not make it all the way to the final analysis.
 Reasons can include people withdrawing consent from the study, RDTs
 getting lost, samples getting contaminated or failing the molecular
 laboritory methods. It is always a good idea to assume <em>some</em>
-level of dropout, and a local technician is often the best person to
-give informed advice. In our case we will assume dropout of 10%, meaning
-we need to divide through again by 0.9:</p>
+level of dropout. A local technician is often the best person to give
+informed advice on the expected dropout. In our case we will assume
+dropout of 10%, meaning we need to divide through by 0.9:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">N_final</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">ceiling</a></span><span class="op">(</span><span class="va">N_suspected</span> <span class="op">/</span> <span class="fl">0.9</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">N_final</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 695 695 167 167 112 112</span></span></code></pre></div>
 <p>This are the final numbers that we want to enrol. At this stage, it
-is worth doing a sanity check with the staff at the local facilities
-that they expect to be able to enrol these numbers within the study
-period. This is also the point at which we can do full budget
-calculations.</p>
+is worth doing a sanity check with the staff at the local facilities to
+ensure they will be able to enrol these numbers within the study period.
+This is also the point at which we can do full budget calculations.</p>
 </div>
 <div class="section level2">
 <h2 id="iterate-and-improve">5. Iterate and improve<a class="anchor" aria-label="anchor" href="#iterate-and-improve"></a>
@@ -378,15 +378,14 @@ calculations.</p>
 <p>Although we have completed a full statistical analysis of the number
 of clusters and samples, we should not think of these values as set in
 stone. Rather, they give a first sketch of a study design that may be
-workable, and that has nice statistical properties. But if this turns
+workable, and that has good statistical properties. But if this turns
 out to be impractical, either from logistical or budgetary perspectives,
-then we are free to explore variations in the hope of getting something
-that will work. What we should <em>not</em> do is 1) continue doggedly
-with a plan that we believe will fail in practice, or 2) throw all
-statistical arguments out the window and just collect whatever samples
-we can get our hands on. It is normally possible to balance statistical
-arguments against real world constraints to get something that satisfies
-both.</p>
+then we are free to explore variations until we find something that will
+work. What we should <em>not</em> do is 1) continue doggedly with a plan
+that we believe will fail in practice, or 2) throw all statistical
+arguments out the window and just collect whatever samples we can get
+our hands on. It is normally possible to balance statistical arguments
+against real world constraints to get something that satisfies both.</p>
 <p align="center">
 <button class="btn btn-primary" onclick="window.location.href='https://mrc-ide.github.io/DRpower/articles/tutorial_analysis.html';">
 Next topic

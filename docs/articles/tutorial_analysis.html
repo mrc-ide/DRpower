@@ -141,7 +141,7 @@
       <h1 data-toc-skip>Analysing data</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 25 Jul
+            <h4 data-toc-skip class="date">Last updated: 25 Oct
 2023</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/tutorial_analysis.Rmd" class="external-link"><code>vignettes/tutorial_analysis.Rmd</code></a></small>
@@ -159,7 +159,7 @@ Bayesian model.</p>
 <p>The main thing we want to estimate is usually the prevalence of
 <em>pfhrp2/3</em> deletions. This is extremely simple, and is carried
 out through the <code><a href="../reference/get_posterior.html">get_prevalence()</a></code> function. We pass into
-this function two vectors of numbers; 1) the number of <em>pfhrp2/3</em>
+this function two sets of values; 1) the number of <em>pfhrp2/3</em>
 deletions observed in each cluster (numerator), and 2) the total sample
 size in each cluster (denominator):</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
@@ -172,10 +172,10 @@ size in each cluster (denominator):</p>
 <span>               N <span class="op">=</span> <span class="va">sample_size</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    MAP CrI_lower CrI_upper prob_above_threshold</span></span>
 <span><span class="co">#&gt; 1 6.81       2.3     19.52               0.8791</span></span></code></pre></div>
-<p>We obtain an estimate of 6.81% with a 95% CrI in the range [2.30%,
-19.52%]. When presenting our estimates we should always report the full
-credible interval and not just the central estimate of 6.81%, as this
-may give a misleading impression of our confidence.</p>
+<p>Here, we obtain an estimate of 6.81% with a 95% CrI in the range
+[2.3% to 19.52%]. When presenting our estimates we should always report
+the full credible interval and not just the central estimate of 6.81%,
+as this may give a misleading impression of our confidence.</p>
 </div>
 <div class="section level2">
 <h2 id="compare-prevalence-against-threshold">2. Compare prevalence against threshold<a class="anchor" aria-label="anchor" href="#compare-prevalence-against-threshold"></a>
@@ -196,20 +196,21 @@ sided.</p>
 <div class="section level2">
 <h2 id="estimate-the-icc">3. Estimate the ICC<a class="anchor" aria-label="anchor" href="#estimate-the-icc"></a>
 </h2>
-<p>The prevalence estimates above have all uncertainty in the
-intra-cluster correlation (ICC) already taken into account. That being
-said, it can be useful to present our estimate of the ICC to help
-contextualise results, and to guide future studies. This can be achieved
-through the <code><a href="../reference/get_posterior.html">get_ICC()</a></code> function:</p>
+<p>The prevalence estimates above have already taken into account
+uncertainty in the intra-cluster correlation (ICC). That being said, it
+can be useful to present our estimate of the ICC to help contextualise
+results, and to guide future studies. This can be achieved through the
+<code><a href="../reference/get_posterior.html">get_ICC()</a></code> function, which takes the same two inputs:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># estimate ICC</span></span>
 <span><span class="fu"><a href="../reference/get_posterior.html">get_ICC</a></span><span class="op">(</span>n <span class="op">=</span> <span class="va">num_deletions</span>,</span>
 <span>        N <span class="op">=</span> <span class="va">sample_size</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      MAP CrI_lower CrI_upper</span></span>
 <span><span class="co">#&gt; 1 0.0074         0    0.1912</span></span></code></pre></div>
-<p>In this we estimate that the ICC is around 0.0074, and in the range
-[0, 0.1912]. This is a fairly low value of the ICC, which could be
-useful to know when conducting followup studies.</p>
+<p>We estimate that the ICC is around 0.0074, and in the range [0,
+0.1912]. This is a fairly low value of the ICC, and so when we conduct
+follow-up studies or studies in nearby regions we should take this
+information into account.</p>
 </div>
   </div>
 

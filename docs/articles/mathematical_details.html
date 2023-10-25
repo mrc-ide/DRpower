@@ -142,7 +142,7 @@
       <h1 data-toc-skip>Mathematical Details</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 25 Jul
+            <h4 data-toc-skip class="date">Last updated: 25 Oct
 2023</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/mathematical_details.Rmd" class="external-link"><code>vignettes/mathematical_details.Rmd</code></a></small>
@@ -172,8 +172,8 @@ Definition
 <span class="math inline">\(p\)</span>
 </td>
 <td style="text-align:left;">
-Prevalence at the province level. This is usually the main thing we are
-interested in estimating
+Prevalence at the province level. This is usually the main thing we want
+to estimate
 </td>
 </tr>
 <tr>
@@ -198,7 +198,7 @@ based on other model parameters as follows:<br><span class="math inline">\(\alph
 <span class="math inline">\(c\)</span>
 </td>
 <td style="text-align:left;">
-Number of clusters (sites)
+Number of clusters
 </td>
 </tr>
 <tr>
@@ -214,7 +214,7 @@ Prevalence in cluster <span class="math inline">\(i\)</span>
 <span class="math inline">\(n_i\)</span>
 </td>
 <td style="text-align:left;">
-Total sample size in cluster <span class="math inline">\(i\)</span>
+Sample size in cluster <span class="math inline">\(i\)</span>
 </td>
 </tr>
 <tr>
@@ -234,7 +234,7 @@ around this value according to a beta distribution. The parameters of
 this beta distribution are chosen such that <span class="math inline">\(r\)</span> represents the level of intra-cluster
 correlation.</p>
 <p>Data, in the form of counts of observed <em>pfhrp2/3</em> deletions,
-are then assumed to be binomial within each cluster, drawn from the
+are assumed to be binomial within each cluster, drawn from the
 cluster-level prevalence. This results in counts following a
 beta-binomial distribution, with the following probability
 distribution:</p>
@@ -262,13 +262,14 @@ other free parameter:</p>
 \int_0^1 Pr(p, r | \mathbf{k}, \mathbf{n}) dr\)</span></p>
 <p><span class="math inline">\(Pr(r | \mathbf{k}, \mathbf{n}) \propto
 \int_0^1 Pr(p, r | \mathbf{k}, \mathbf{n}) dp\)</span></p>
-<p>This integration is performed by a numerical quadrature-based method.
-The marginal posterior distributions can be returned in full, or can be
-summarised using various measures of central tendency and/or credible
-intervals (CrI). There are multiple methods of calculating CrIs - we use
-the high density region (HDI) by default as this avoids the possibility
-of the maximum a posteriori (MAP) estimate being outside the CrI, which
-is possible by the more commonly used equal-tailed interval (ETI).</p>
+<p>This integration is performed using an adaptive quadrature-based
+method. The marginal posterior distributions can be returned in full, or
+can be summarised using various measures of central tendency and/or
+credible intervals (CrI). There are multiple methods of calculating CrIs
+- we use the high density region (HDI) by default as this avoids the
+possibility of the maximum a posteriori (MAP) estimate being outside the
+CrI, which is possible by the more commonly used equal-tailed interval
+(ETI).</p>
 </div>
   </div>
 
