@@ -29,28 +29,15 @@ The standard test here is the one-sample z-test, also called the one-sample prop
 
 $Z = \frac{\displaystyle |\hat{p} - \mu|}{\displaystyle \sqrt{\frac{\hat{p}(1-\hat{p})}{N}D_{eff}}}$
 
-Under the null hypothesis, this statistic follows the z-distribution (i.e. the normal distribution). We can control how often we come to a false-positive conclusion by setting a significance level $\alpha$. We will reject the null hypothesis whenever our $Z$ statistic is greater in magnitude (either positive or negative) than the critical value $z_{\tiny 1 - \alpha/2}$.
+This statistic follows the z-distribution (i.e. the normal distribution) under the null hypothesis. We can control how often we come to a false-positive conclusion by setting a significance level $\alpha$. We will reject the null hypothesis whenever our $Z$ statistic is greater in magnitude (either positive or negative) than the critical value $z_{\tiny 1 - \alpha/2}$.
 
 We can calculate power under the z-test as the probability of being more extreme than this critical value. This is given by the following formula:
 
 $\text{Power} = \Phi\Bigg( \frac{|p - \mu|}{\sqrt{\frac{p(1-p)}{N}D_{eff} }} - z_{\tiny 1 - \alpha/2} \Bigg)$
 
-where $\Phi()$ is the cumulative density function of the normal distribution. For example, we can use this formula to calculate the power under the assumed sample size of 600 from the updated master protocol:
+where $\Phi()$ is the cumulative density function of the normal distribution. What would happen if we used the value of $N$ taken from the mistaken approach described in the 2020 master protocol? We can explore this very neatly by substituting the value $N = z_{\tiny 1 - \alpha/2}^2 \frac{\displaystyle p(1-p)}{\displaystyle (p-\mu)^2}D_{eff}$ from the master protocol into the formula above. Interestingly, we find that **every term inside the brackets cancels out**! We are left with $\text{Power} = \Phi(0)$, which is equal to 0.5. This is essentially a mathematical proof of what we described in the previous section - that power is forced to equal 50% when using the formula from the master protocol.
 
-```{r}
-N <- 600
-p <- 0.08
-mu <- 0.05
-Deff <- 1.5
-
-pnorm(abs(p - mu) / sqrt(Deff * p*(1 - p) / N) - qnorm(1 - 0.05/2))
-```
-
-We find that power is approximately 60%, which is very close to what we found by simulation.
-
-What would happen if we used the value of $N$ taken from the mistaken approach described in the 2020 master protocol? We can explore this very neatly by substituting the value $N = z_{\tiny 1 - \alpha/2}^2 \frac{\displaystyle p(1-p)}{\displaystyle (p-\mu)^2}D_{eff}$ from the master protocol into the formula above. Interestingly, we find that **every term inside the brackets cancels out**! We are left with $\text{Power} = \Phi(0)$, which is equal to 0.5. This is essentially a mathematical proof of what we described in the previous section - that power is forced to equal 50% when using the formula from the master protocol.
-
-Hopefully by this point I have convinced you of the issues with the CI-based approach. So, what should the correct sample size formula be? We can find this by rearranging the power formula above to give us the exact $N$ needed to achieve any given power. We will use the symbol $\beta$ to represent the false-negative rate, meaning $\text{Power} = 1 - \beta$. We will also define $z_{\tiny 1 - \beta}$ to be the critical value of the normal distribution at the value $1 - \beta$. This results in the following formula:
+Hopefully by this point I have convinced you of the issues with the CI-based approach. So, what should be the correct sample size formula? We can find this by rearranging the power formula above to give us the exact $N$ needed to achieve any given power. We will use the symbol $\beta$ to represent the false-negative rate, meaning $\text{Power} = 1 - \beta$. We will also define $z_{\tiny 1 - \beta}$ to be the critical value of the normal distribution at the value $1 - \beta$. This results in the following formula:
 
 $N \geq (z_{\tiny 1 - \beta} + z_{\tiny 1 - \alpha/2})^2 \frac{\displaystyle p(1-p)}{\displaystyle (p-\mu)^2}D_{eff}$
 

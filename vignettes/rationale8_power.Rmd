@@ -25,13 +25,13 @@ library(tidyverse)
 
 The power of a hypothesis test is intrinsically linked to the method we plan to use in our statistical analysis. We have found that if we plan to conduct a z-test on our data then, for the parameter values described in the 2020 master protocol, we will need 1126 samples. But what if we change our analysis plan to the [Bayesian model](articles/rationale5_bayesian.html) in DRpower? Can we calculate power under this new approach?
 
-The answer is both yes and no. We cannot produce a neat formula for the power as we could for the z-test, as this Bayesian model is simply too involved. We can, however, *estimate* the power by simulation. The approach is:
+The answer is both yes and no. We cannot produce a neat formula for the power as we could for the z-test as this Bayesian model is simply too involved. We can, however, *estimate* the power by simulation. The approach is:
 
 1. Choose true values of parameters like the prevalence ($p$) and the intra-cluster correlation ($r$). These values represent the alternative hypothesis that we are interested in. This is similar to assuming a high prevalence value of 8% in the master protocol.
 2. For a particular number of clusters ($c$) and sample size per cluster ($n$), simulate data from the beta-binomial model. Analyse this simulated data using the DRpower method, and establish whether we conclude that prevalence is above 5% or not.
 3. Repeat this simulation-analysis step many times (hundreds or thousands). Count the proportion of times that we come to the correct conclusion. This proportion is our estimate of the *empirical power*.
 
-One major advantage of the empirical power is that it uses the exact analysis approach directly, meaning there are no approximations or fudging over uncertainty. The main downsides of this approach are; 1) it is based on a random sample, meaning power is only *estimated* and not calculated exactly, 2) it can take a long time to run if the analysis step itself is slow. I mitigated these issues to some extent by running a wide range of parameter values on my departmental cluster; the results are made available with the DRpower package. One such set of results is shown below:
+One major advantage of the empirical power method is that it uses the exact analysis approach that we will use on our real data, meaning there are no approximations or fudging over uncertainty. The main downsides of this approach are; 1) it is based on a random sample, meaning power is only *estimated* and not calculated exactly, 2) it can take a long time to estimate if the analysis step itself is slow. These issues are mitigated to some extent in DRpower by running a wide range of parameter values on the Imperial College London Department of Infectious Disease Epidemiology computer cluster. The results are made available with the DRpower package, one such set of results is shown below:
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # filter to a single parameter combination
@@ -65,17 +65,17 @@ df_filtered %>%
   ggtitle("Assumptions:\nclusters = 5, prevalence = 10%, ICC = 0.05")
 ```
 
-There is some random noise in this plot, but the overall trend is clear. Power increases quickly at first, and then plateaus out for larger sample sizes. Power reaches 80% for the DRpower method at around 110 samples per cluster. In contrast, the z-test method never reaches the 80% power level.
+There is some random noise in this plot, but the overall trend is clear. Power increases quickly at first and then plateaus out for larger sample sizes. Power reaches 80% for the DRpower method at around 110 samples per cluster. In contrast, the z-test method never reaches the 80% power level.
 
-Why does the DRpower model have power so much higher than the z-test? This is not straightforward to answer, as the two approaches come from completely different statistical philosophies, but one very important difference is in the specific hypotheses that we are testing. In the z-test approach we are trying to disprove a single hypothesis; that the prevalence is *exactly* equal to the threshold. On the other hand, in the Bayesian approach we are comparing two hypotheses; 1) that prevalence is above the threshold, 2) that prevalence is below the threshold. By below the threshold we don't mean exactly *on* the threshold, but rather anywhere below it. This is sometimes referred to as a *composite hypothesis test* because we are assuming a range of values rather than a single value. This composite hypothesis is easier to disprove because we are being less pessimistic about the prevalence of *pfhrp2/3* deletions. So, this boils down to a difference in assumptions under the "null" hypothesis. We feel that the Bayesian perspective is justified here because a "low" prevalence of *pfhrp2/3* deletions will often mean values below the threshold rather than exactly on it.
+Why does the DRpower model have power so much higher than the z-test? This is not straightforward to answer, as the two approaches come from completely different statistical philosophies, but one very important difference is in the specific hypotheses that we are testing. In the z-test approach we are trying to disprove a single hypothesis; that the prevalence is *exactly* equal to the threshold. On the other hand, in the Bayesian approach we are comparing two hypotheses; 1) the prevalence is above the threshold, vs. 2) the prevalence is below the threshold. By "below the threshold" we don't mean exactly *on* the threshold, but rather anywhere below it. This is sometimes referred to as a *composite hypothesis test* because we are assuming a range of values rather than a single value. This composite hypothesis is easier to disprove because we are being less pessimistic about the prevalence of *pfhrp2/3* deletions. So, this boils down to a difference in assumptions under the null hypothesis. We feel that the Bayesian perspective is justified here because a "low" prevalence of *pfhrp2/3* deletions will often mean values below the threshold rather than exactly on it.
 
 ## 8.1. Sample size calculation
 
-Once we have a power curve like the one above, we can work out what sample size we would need to achieve any given power. For the simulation-based approach this will be approximate only because of noise in the power curve. We take a two-step approach:
+Once we have a power curve like the one above, we can work out what sample size we would need to achieve any given power. For the simulation-based approach this will be approximate because of noise in the power curve. We take a two-step approach:
 
 1. Use linear interpolation between a fixed set of simulations, as shown in the plot above. Find the first value of the sample size for which the power exceeds 80%.
-2. Intuitively, we would expect per-cluster sample sizes to decrease as the number of clusters increases. In some rare cases this method can give the opposite result due to random fluctuations in our estimation method. We remove this effect by manually modifying results so that sample size can never decrease with more clusters.
-3. Sample sizes greater than 2000 are coded as `NA`, because these are prohibitively large. Sample sizes less than 5 are fixed at 5, because it would not be worth enrolling a cluster and collecting fewer than this many samples.
+2. Intuitively, we would expect per-cluster sample sizes to decrease as the number of clusters increases. In some rare cases this method can give the opposite result due to random fluctuations in our estimation method. We therefore remove this effect by modifying results so that sample size can never decrease with more clusters.
+3. Sample sizes greater than 2000 are coded as `NA` because these are prohibitively large. Sample sizes less than 5 are fixed at 5 because it would not be worth enrolling a cluster and collecting fewer than this many samples.
 
 For an assumed ICC of 0.05 based on [historical data](articles/historical_analysis.html), this leads to the sample size table shown below:
 
@@ -134,4 +134,4 @@ Using the DRpower table above (not the z-test table!) we can come up with reason
 5. Examine whether it will be possible to recruit this many samples in each of your sites. This may depend on things like catchment population size, staff numbers, and malaria transmission intensity throughout the season. It may be that in some cases it is not possible to reach these numbers.
 6. For your newly refined sample size estimates, estimate power directly using the `get_power_threshold()` function.
 
-The best way to get a feel for this process is through a tutorial, so at this point we recomment you [jump into the code](articles/tutorial_design.html)!
+The best way to perform all of these steps is through the [interactive web app](https://shiny.dide.ic.ac.uk/DRpower-app/). But for those wanting to perform the same analysis in the R package, see [this tutorial](articles/tutorial_design.html).

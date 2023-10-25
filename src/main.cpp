@@ -223,7 +223,7 @@ double loglike_marginal_rho(const vector<int> &n,
 }
 
 //------------------------------------------------
-// TODO
+// get prevalence
 
 Rcpp::List get_prevalence_cpp(Rcpp::List args_params) {
   
@@ -300,7 +300,7 @@ Rcpp::List get_prevalence_cpp(Rcpp::List args_params) {
 }
 
 //------------------------------------------------
-// TODO
+// get ICC
 
 Rcpp::List get_ICC_cpp(Rcpp::List args_params) {
   
