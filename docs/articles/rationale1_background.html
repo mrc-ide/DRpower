@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">DRpower</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
       </span>
     </div>
 
@@ -141,7 +141,7 @@
       <h1 data-toc-skip>Background</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 25 Oct
+            <h4 data-toc-skip class="date">Last updated: 30 Nov
 2023</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/rationale1_background.Rmd" class="external-link"><code>vignettes/rationale1_background.Rmd</code></a></small>
@@ -151,50 +151,130 @@
 
     
     
-<div class="section level2">
-<h2 id="what-are-pfhrp2-deletions">1. What are <em>pfhrp2</em> deletions?<a class="anchor" aria-label="anchor" href="#what-are-pfhrp2-deletions"></a>
-</h2>
+<div class="section level3">
+<h3 id="what-are-pfhrp23-deletions">What are <em>pfhrp2/3</em> deletions?<a class="anchor" aria-label="anchor" href="#what-are-pfhrp23-deletions"></a>
+</h3>
 <p>The majority of malaria diagnosis worldwide relies on rapid
 diagnostic tests (RDTs). A large proportion of these tests work by
 detecting the presence of the HPR2 protein in the blood of an infected
 individual, which reacts to give a positive result. However,
-<em>Plasmodium</em> parasites have been found that carry a deletion of
-the <em>pfhrp2</em> gene. Without the <em>pfhrp2</em> gene these
+<em>Plasmodium</em> parasites have been found in many countries that
+carry a deletion of the <em>pfhrp2</em> gene. Without this gene the
 parasites do not express the HPR2 protein, rendering them invisible to
-testing by HRP2-based RDTs. This can present a major clinical problem if
-these gene deletions are at high prevalence in the population as
-patients presenting with signs of malaria may be misdiagnosed resulting
-in treatment delays or missed cases.</p>
+testing by HRP2-based RDTs. This presents a major clinical problem if
+these gene deletions rise to high frequencies in the population, as
+patients presenting with symptoms of malaria may be misdiagnosed,
+resulting in treatment delays or missed cases.</p>
 </div>
-<div class="section level2">
-<h2 id="assumptions-of-drpower">2. Assumptions of DRpower<a class="anchor" aria-label="anchor" href="#assumptions-of-drpower"></a>
-</h2>
-<p>We assume that our aim is to design a survey to estimate the
-prevalence of <em>pfhrp2/3</em> deletions within a given region. More
-specifically, our aim is to determine whether the prevalence of
-deletions is above a given threshold (5% by default, although this can
-be changed).</p>
-<p>We assume that this is a “province” level study. The exact meaning of
-this term will vary in geographical size from one province to the next,
-but what really matters here is that we are aiming to form conclusions
-about the prevalence of <em>pfhrp2/3</em> deletions at a level that is
-higher than just the sites used in the study. In other words, there is
-some degree of extrapolation from our handful of sites to a wider
-geographic area.</p>
-<p>We will refer to the sites at which people are tested as “clusters”,
-which in reality are usually health facilities. The methods in DRpower
-can be used for a single cluster design, but <strong>we strongly advise
-against this</strong> if the objective is to estimate the prevalence of
-deletions at the province level. The reason for advocating against a
-single cluster design is that a single cluster may vary significantly
-from the province-level average, for example due to spatial
-heterogeneity or local outbreaks. By using multiple clusters we not only
-average over this variation, but we also get an estimate of the amount
-of variation between clusters, meaning we can account for it in our
-analysis.</p>
-<p>Finally, we refer to “<em>pfhrp2/3</em>” deletions to capture the
-fact that researchers may be interested in either the <em>pfhrp2</em> or
-<em>pfhrp3</em> locus, but DRpower does not consider joint analysis of
+<div class="section level3">
+<h3 id="what-are-we-doing-about-it">What are we doing about it?<a class="anchor" aria-label="anchor" href="#what-are-we-doing-about-it"></a>
+</h3>
+<p>Many ongoing malaria molecular surveillance (MMS) efforts are trying
+to establish where <em>pfhrp2/3</em> deletions are in the world, where
+they have already reached high frequencies, and how patterns are
+changing in space and time. The spread of <em>pfhrp2/3</em> deletions is
+recognised as a global threat to malaria control by the World Health
+Organization (WHO). The <a href="https://apps.who.int/malaria/maps/threats/" class="external-link">WHO malaria threats
+map</a> contains a page on <em>pfhrp2/3</em> deletions where one can
+browse current patterns or download raw data.</p>
+<p>The WHO have also periodically released guidance on how to run a
+study looking for <em>pfhrp2/3</em> deletions and how to respond
+appropriately given the results. One such document that is highly
+relevant here is the <a href="https://iris.who.int/handle/10665/331197" class="external-link">Master protocol for
+surveillance of <em>pfhrp2/3</em> deletions and biobanking to support
+future research</a>, published in 2020. This document gives guidance on
+a wide range of issues related to <em>pfhrp2/3</em> studies, including
+data collection and fieldwork, data storage and laboratory analysis, and
+providing templates such as informed consent forms for participants.</p>
+</div>
+<div class="section level3">
+<h3 id="what-does-the-2020-master-protocol-recommend">What does the 2020 Master Protocol recommend?<a class="anchor" aria-label="anchor" href="#what-does-the-2020-master-protocol-recommend"></a>
+</h3>
+<p>The recommended approach in the 2020 Master Protocol begins with
+estimating the prevalence of deletions and constructing a 95% confidence
+interval (CI) around this estimate. There are three possible
+outcomes:</p>
+<ul>
+<li>Outcome 1: The upper limit of the 95% CI is below the 5% threshold
+(<em>conclusion = low prevalence</em>).</li>
+<li>Outcome 2: The lower limit of the 95% CI is above the 5% threshold
+(<em>conclusion = high prevalence</em>).</li>
+<li>Outcome 3: The 95% CI spans the 5% threshold
+(<em>inconclusive</em>).</li>
+</ul>
+<p>Examples of these three outcomes are shown in the plot below:</p>
+<p><img src="rationale1_background_files/figure-html/unnamed-chunk-3-1.png" width="480"></p>
+<p>If outcome 2 is found in any domain within a country then the country
+as a whole is recommended to switch RDTs to a brand that does not rely
+exclusively on the HRP2 protein. If outcomes 1 or 3 are detected in all
+domains then some form of periodic monitoring is still advised, but the
+urgency is lower.</p>
+</div>
+<div class="section level3">
+<h3 id="how-does-the-drpower-method-fit-in">How does the <em>DRpower</em> method fit in?<a class="anchor" aria-label="anchor" href="#how-does-the-drpower-method-fit-in"></a>
+</h3>
+<p>Publication of the Master Protocol was a major step forward in
+specifying what a well designed <em>pfhrp2/3</em> study might look like.
+However, there were also some issues around power and sample size
+calculations in this document. Some of these issues were corrected in a
+later <a href="https://cdn.who.int/media/docs/default-source/malaria/diagnosis/9789240002050-corrigenda.pdf?sfvrsn=d67857_3" class="external-link">corrigenda
+to the original protocol</a>, but other statistical issues remain
+(described in detail later).</p>
+<p>The <em>DRpower</em> tool was developed to take a fresh approach to
+power and sample size calculation for <em>pfhrp2/3</em> deletion
+studies, thereby solving some of the issues left by the 2020 Master
+Protocol. In some aspects we tried to align closely with the original
+study design - for example assuming a multi-centre study that attempts
+to draw inference about the prevalence of <em>pfhrp2/3</em> deletions at
+a higher geographic level than any single health facility. We also use
+the same “threshold analysis” approach, in which we want to determine if
+the prevalence of deletions is above 5%. But in other ways we redesigned
+the statistics from the bottom up. For example, we took a Bayesian
+statistical approach, and also changed the way we think about
+intra-cluster correlation. The hypothesis that we are testing is also
+subtly different from that presented in the 2020 Master protocol.</p>
+<p>Finally, one of our objectives in developing <em>DRpower</em> was to
+provide greater flexibility at the design stage, while also making the
+process as simple as possible. This motivated the development of the <a href="https://shiny.dide.ic.ac.uk/DRpower-app/" class="external-link">pfhrp2/3 Planner</a>,
+which runs the <em>DRpower</em> model in a simple web-based
+interface.</p>
+</div>
+<div class="section level3">
+<h3 id="defining-our-terms">Defining our terms<a class="anchor" aria-label="anchor" href="#defining-our-terms"></a>
+</h3>
+<p>The next pages go into detail about the issues with the original 2020
+Master Protocol, the rationale behind the <em>DRpower</em> Bayesian
+model, how we estimate power under this model, and what we obtain in
+terms of minimum sample sizes. However, before jumping into this we
+should define some terminology.</p>
+<p>First, we assume that the study is run at multiple distinct
+locations, not just a single location. There are many possible terms
+used for these locations, for example centre, site, cluster, or health
+facility. We opt for the name <em>site</em>, as it is general enough to
+allow for different types of facility while also not being a purely
+statistical term like “cluster”. However, we may occasionally move
+between terms, for example we refer frequently to the “intra-cluster
+correlation coefficient”.</p>
+<p>We assume that our intention is to pool results over sites in order
+to estimate the prevalence at a higher geographic level. We refer to
+this higher geographic level as a <em>domain</em>. This term was chosen
+to be deliberately vague. The actual meaning of a “domain” may vary from
+one study to the next, and one country to the next. For example, it may
+be a “region” in one country, a “province” in the next, or an “ADMIN1
+unit” in another. We do not talk explicitly about the ways that choice
+of domain may impact a study, although it almost certainly will,
+particularly with reference to the level of intra-cluster
+correlation.</p>
+<p>Finally, we refer to <em>pfhrp2/3</em> deletions to capture the fact
+that researchers may be interested in either the <em>pfhrp2</em> or
+<em>pfhrp3</em> locus. The <em>pfhrp3</em> gene expresses the HRP3
+protein, which is structurally similar enough to HRP2 that it
+occasionally recovers the ability of the test to detect malaria.
+Therefore, if you are infected with a parasite strain that has the gene
+deletion for <em>pfhrp2</em> but not the gene deletion for
+<em>pfhrp3</em> then you <em>may</em> still be positive by HRP2-based
+RDT, although the probability of detection is lower. However,
+<em>DRpower</em> does not explicitly account for joint analysis of
 multiple loci and so we assume you are powering for just one set of
 deletion counts.</p>
 <p align="center">
@@ -207,9 +287,7 @@ Next topic
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
 
-        <nav id="toc" data-toggle="toc"><h2 data-toc-skip>Contents</h2>
-    </nav>
-</div>
+      </div>
 
 </div>
 
@@ -217,7 +295,7 @@ Next topic
 
       <footer><div class="copyright">
   <p></p>
-<p>Developed by Bob Verity.</p>
+<p>Developed by Bob Verity, Shazia Ruybal.</p>
 </div>
 
 <div class="pkgdown">

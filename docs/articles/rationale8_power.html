@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">DRpower</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
       </span>
     </div>
 
@@ -142,7 +142,7 @@
       <h1 data-toc-skip>Power and Sample Size in the DRpower Model</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 25 Oct
+            <h4 data-toc-skip class="date">Last updated: 30 Nov
 2023</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/rationale8_power.Rmd" class="external-link"><code>vignettes/rationale8_power.Rmd</code></a></small>
@@ -158,21 +158,22 @@
 <p>The power of a hypothesis test is intrinsically linked to the method
 we plan to use in our statistical analysis. We have found that if we
 plan to conduct a z-test on our data then, for the parameter values
-described in the 2020 master protocol, we will need 1126 samples. But
-what if we change our analysis plan to the <a href="articles/rationale5_bayesian.html">Bayesian model</a> in DRpower?
-Can we calculate power under this new approach?</p>
+described in the 2020 Master Protocol, we will need 1126 samples. But
+what if we change our analysis plan to the <a href="articles/rationale5_bayesian.html">Bayesian model</a> in
+<em>DRpower</em>? Can we calculate power under this new approach?</p>
 <p>The answer is both yes and no. We cannot produce a neat formula for
 the power as we could for the z-test as this Bayesian model is simply
 too involved. We can, however, <em>estimate</em> the power by
-simulation. The approach is:</p>
+simulation. We can follow these steps:</p>
 <ol style="list-style-type: decimal">
 <li>Choose true values of parameters like the prevalence (<span class="math inline">\(p\)</span>) and the intra-cluster correlation
 (<span class="math inline">\(r\)</span>). These values represent the
 alternative hypothesis that we are interested in. This is similar to
-assuming a high prevalence value of 8% in the master protocol.</li>
-<li>For a particular number of clusters (<span class="math inline">\(c\)</span>) and sample size per cluster (<span class="math inline">\(n\)</span>), simulate data from the beta-binomial
-model. Analyse this simulated data using the DRpower method, and
-establish whether we conclude that prevalence is above 5% or not.</li>
+assuming a prevalence value of 8% or 3.2% in the Master Protocol.</li>
+<li>For a particular number of sites (<span class="math inline">\(c\)</span>) and sample size per site (<span class="math inline">\(n\)</span>), simulate data from the beta-binomial
+model. Analyse this simulated data using the <em>DRpower</em> method,
+and establish whether we conclude that prevalence is above 5% or
+not.</li>
 <li>Repeat this simulation-analysis step many times (hundreds or
 thousands). Count the proportion of times that we come to the correct
 conclusion. This proportion is our estimate of the <em>empirical
@@ -183,64 +184,79 @@ exact analysis approach that we will use on our real data, meaning there
 are no approximations or fudging over uncertainty. The main downsides of
 this approach are; 1) it is based on a random sample, meaning power is
 only <em>estimated</em> and not calculated exactly, 2) it can take a
-long time to estimate if the analysis step itself is slow. These issues
-are mitigated to some extent in DRpower by running a wide range of
-parameter values on the Imperial College London Department of Infectious
-Disease Epidemiology computer cluster. The results are made available
-with the DRpower package, one such set of results is shown below:</p>
+long time to estimate if the analysis step is slow. These issues are
+mitigated to some extent in <em>DRpower</em> by pre-computing power for
+a wide range of parameter values. The results are made available with
+the <em>DRpower</em> package, one such set of results is shown
+below:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># calculate power by z-test for same parameters</span></span>
+<span><span class="va">df_ztest</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">5</span><span class="op">:</span><span class="fl">200</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu">mutate</span><span class="op">(</span>n_clust <span class="op">=</span> <span class="fl">6</span>,</span>
+<span>         N <span class="op">=</span> <span class="va">n</span><span class="op">*</span><span class="va">n_clust</span>,</span>
+<span>         p <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>         mu <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>         ICC <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>         Deff <span class="op">=</span> <span class="fl">1</span> <span class="op">+</span> <span class="op">(</span><span class="va">n</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span><span class="op">*</span><span class="va">ICC</span>,</span>
+<span>         power <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">pnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">p</span> <span class="op">-</span> <span class="va">mu</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">Deff</span> <span class="op">*</span> <span class="va">p</span><span class="op">*</span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">p</span><span class="op">)</span> <span class="op">/</span> <span class="va">N</span><span class="op">)</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">qnorm</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fl">0.05</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/plot_power.html">plot_power</a></span><span class="op">(</span>n_clust <span class="op">=</span> <span class="fl">6</span>, prevalence <span class="op">=</span> <span class="fl">0.1</span>, ICC <span class="op">=</span> <span class="fl">0.05</span>, prev_thresh <span class="op">=</span> <span class="fl">0.05</span>, N_max <span class="op">=</span> <span class="fl">200</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">geom_line</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">n</span>, y <span class="op">=</span> <span class="fl">1e2</span><span class="op">*</span><span class="va">power</span>, colour <span class="op">=</span> <span class="st">"z-test"</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">df_ztest</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggtitle</span><span class="op">(</span><span class="st">"Assumptions:\nclusters = 6, prevalence = 10%, ICC = 0.05"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="rationale8_power_files/figure-html/unnamed-chunk-3-1.png" width="700"></p>
 <p>There is some random noise in this plot, but the overall trend is
 clear. Power increases quickly at first and then plateaus out for larger
-sample sizes. Power reaches 80% for the DRpower method at around 110
-samples per cluster. In contrast, the z-test method never reaches the
-80% power level.</p>
-<p>Why does the DRpower model have power so much higher than the z-test?
-This is not straightforward to answer, as the two approaches come from
-completely different statistical philosophies, but one very important
-difference is in the specific hypotheses that we are testing. In the
-z-test approach we are trying to disprove a single hypothesis; that the
-prevalence is <em>exactly</em> equal to the threshold. On the other
-hand, in the Bayesian approach we are comparing two hypotheses; 1) the
-prevalence is above the threshold, vs. 2) the prevalence is below the
-threshold. By “below the threshold” we don’t mean exactly <em>on</em>
-the threshold, but rather anywhere below it. This is sometimes referred
-to as a <em>composite hypothesis test</em> because we are assuming a
-range of values rather than a single value. This composite hypothesis is
-easier to disprove because we are being less pessimistic about the
-prevalence of <em>pfhrp2/3</em> deletions. So, this boils down to a
-difference in assumptions under the null hypothesis. We feel that the
-Bayesian perspective is justified here because a “low” prevalence of
-<em>pfhrp2/3</em> deletions will often mean values below the threshold
-rather than exactly on it.</p>
+sample sizes. Power reaches 80% for the <em>DRpower</em> method at
+around 113 samples per site In contrast, the z-test method never reaches
+the 80% power level, and in fact would never make it over 50% even for
+an infinitely large sample size.</p>
+<p>Why does the <em>DRpower</em> model have so much higher power than
+the z-test? This is not straightforward to answer, as the two approaches
+come from completely different statistical philosophies, but one very
+important difference is in the specific hypotheses that we are testing.
+In the z-test approach we are trying to disprove a single hypothesis;
+that the prevalence is <em>exactly</em> equal to the threshold. On the
+other hand, in the Bayesian approach we are comparing two hypotheses; 1)
+the prevalence is above the threshold, vs. 2) the prevalence is below
+the threshold. By “below the threshold” we don’t mean exactly
+<em>on</em> the threshold, but rather anywhere below it. This is
+sometimes referred to as a <em>composite hypothesis test</em> because we
+are assuming a range of values rather than a single value. This
+composite hypothesis is easier to disprove because we are being less
+pessimistic about the prevalence of <em>pfhrp2/3</em> deletions. So,
+this boils down to a difference in assumptions under the null
+hypothesis. We feel that the Bayesian perspective is justified here
+because a “low” prevalence of <em>pfhrp2/3</em> deletions will often
+mean values below the threshold rather than exactly on it.</p>
 </div>
 <div class="section level2">
 <h2 id="sample-size-calculation">8.1. Sample size calculation<a class="anchor" aria-label="anchor" href="#sample-size-calculation"></a>
 </h2>
 <p>Once we have a power curve like the one above, we can work out what
 sample size we would need to achieve any given power. For the
-simulation-based approach this will be approximate because of noise in
-the power curve. We take a two-step approach:</p>
+simulation-based approach this will only be approximate because of noise
+in the power curve. We take a three-step approach:</p>
 <ol style="list-style-type: decimal">
-<li>Use linear interpolation between a fixed set of simulations, as
-shown in the plot above. Find the first value of the sample size for
-which the power exceeds 80%.</li>
-<li>Intuitively, we would expect per-cluster sample sizes to decrease as
-the number of clusters increases. In some rare cases this method can
-give the opposite result due to random fluctuations in our estimation
-method. We therefore remove this effect by modifying results so that
-sample size can never decrease with more clusters.</li>
+<li>Use linear interpolation between a fixed set of simulations (i.e.,
+join the dots in the plot above). Find the first value of the sample
+size for which the power exceeds 80%.</li>
+<li>Intuitively, we would expect per-site sample sizes to decrease as
+the number of sites increases. In some rare cases this method can give
+the opposite result due to random fluctuations. We remove this effect by
+manually modifying results so that sample size can never decrease with
+more sites.</li>
 <li>Sample sizes greater than 2000 are coded as <code>NA</code> because
 these are prohibitively large. Sample sizes less than 5 are fixed at 5
-because it would not be worth enrolling a cluster and collecting fewer
-than this many samples.</li>
+because it would not be worth enrolling a site and collecting fewer than
+this many samples.</li>
 </ol>
 <p>For an assumed ICC of 0.05 based on <a href="articles/historical_analysis.html">historical data</a>, this leads
 to the sample size table shown below:</p>
 <table style="width:100%; margin-left: auto; margin-right: auto;" class="table table table-striped table-hover table-condensed">
 <caption>
-Table of minimum sample size required per cluster in order to achieve
-80% power. Columns give the assumed true prevalence of deletions (as %),
-rows give the number of clusters (n_clust).
+Table of minimum sample size required per site in order to achieve 80%
+power. Columns give the assumed true prevalence of deletions (as %),
+rows give the number of sites.
 </caption>
 <thead><tr>
 <th style="text-align:right;border-bottom: 1px solid; border-top: 1px solid">
@@ -1126,8 +1142,8 @@ NA
 </tbody>
 </table>
 <p>For example, if we assume the prevalence of <em>pfhrp2/3</em>
-deletions is 10% in the population, and we will survey 10 clusters, then
-we need a sample size of 30 per cluster (300 total).</p>
+deletions is 10% in the population, and we will survey 10 sites, then we
+need a sample size of 30 per site (300 total).</p>
 <p>Compare this with the sample size table we would get if we were using
 the z-test:</p>
 <table style="width:100%; margin-left: auto; margin-right: auto;" class="table table table-striped table-hover table-condensed">
@@ -2018,15 +2034,15 @@ NA
 </tr>
 </tbody>
 </table>
-<p>For the same assumption of 10% prevalence we would need 15 clusters
-of 308 individuals (4620 total)!</p>
+<p>For the same assumption of 10% prevalence we would need 15 sites of
+308 individuals (4620 total)!</p>
 </div>
 <div class="section level2">
 <h2 id="how-to-choose-final-sample-sizes">8.2. How to choose final sample sizes<a class="anchor" aria-label="anchor" href="#how-to-choose-final-sample-sizes"></a>
 </h2>
-<p>Using the DRpower table above (not the z-test table!) we can come up
-with reasonable values for the sample size per cluster. But these values
-assume <em>the same</em> sample size per cluster, which is often not
+<p>Using the <em>DRpower</em> table above (not the z-test table!) we can
+come up with reasonable values for the sample size per site. But these
+values assume <em>the same</em> sample size per site, which is often not
 true in practice. At this point, we need to switch away from simple
 tables and perform a power analysis that is more bespoke to our problem.
 The steps are roughly as follows:</p>
@@ -2051,11 +2067,10 @@ size, staff numbers, and malaria transmission intensity throughout the
 season. It may be that in some cases it is not possible to reach these
 numbers.</li>
 <li>For your newly refined sample size estimates, estimate power
-directly using the <code><a href="../reference/get_power_threshold.html">get_power_threshold()</a></code> function.</li>
+directly using the <code><a href="../reference/get_power.html">get_power()</a></code> function.</li>
 </ol>
-<p>The best way to perform all of these steps is through the <a href="https://shiny.dide.ic.ac.uk/DRpower-app/" class="external-link">interactive web app</a>.
-But for those wanting to perform the same analysis in the R package, see
-<a href="articles/tutorial_design.html">this tutorial</a>.</p>
+<p>The <a href="articles/tutorial_design.html">design tutorial</a> goes
+through all of these steps in detail.</p>
 </div>
   </div>
 
@@ -2071,7 +2086,7 @@ But for those wanting to perform the same analysis in the R package, see
 
       <footer><div class="copyright">
   <p></p>
-<p>Developed by Bob Verity.</p>
+<p>Developed by Bob Verity, Shazia Ruybal.</p>
 </div>
 
 <div class="pkgdown">

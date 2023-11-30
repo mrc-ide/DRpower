@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">DRpower</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
       </span>
     </div>
 
@@ -141,7 +141,7 @@
       <h1 data-toc-skip>The DRpower model</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 25 Oct
+            <h4 data-toc-skip class="date">Last updated: 30 Nov
 2023</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/rationale5_bayesian.Rmd" class="external-link"><code>vignettes/rationale5_bayesian.Rmd</code></a></small>
@@ -154,19 +154,19 @@
 <div class="section level2">
 <h2 id="a-bayesian-approach">5. A Bayesian approach<a class="anchor" aria-label="anchor" href="#a-bayesian-approach"></a>
 </h2>
-<p>In DRpower we take a different approach to analysis that deals with
-all of the issues listed in section 4. We describe the approach at a
-high level here, and for those wanting more mathematical details please
-<a href="articles/mathematical_details.html">see this page</a>.</p>
+<p>In the <em>DRpower</em> software we take a different approach to
+analysis that deals with all of the issues listed in section 4. We
+describe the approach at a high level here - for those wanting more
+mathematical details please <a href="articles/mathematical_details.html">see this page</a>.</p>
 <p>We start by assuming a <a href="https://en.wikipedia.org/wiki/Random_effects_model" class="external-link">random
 effects</a> framework. Instead of assuming that all individuals have the
 same probability of carrying the <em>pfhrp2/3</em> deleted strain, we
-allow each cluster to have its own cluster-level prevalence. We model
-the mean and the spread of this cluster-level variation using a random
-effects distribution - in our case a <a href="https://en.wikipedia.org/wiki/Beta_distribution" class="external-link">beta
+allow each site to have its own site-level prevalence. We model the mean
+and the spread of this site-level variation using a random effects
+distribution - in our case a <a href="https://en.wikipedia.org/wiki/Beta_distribution" class="external-link">beta
 distribution</a> like the one shown below:</p>
 <p><img src="rationale5_bayesian_files/figure-html/unnamed-chunk-6-1.png" width="700"></p>
-<p>This distribution has a mean value <span class="math inline">\(p\)</span> that represents the province-level
+<p>This distribution has a mean value <span class="math inline">\(p\)</span> that represents the domain-level
 prevalence of deletions (i.e. the main thing we are trying to estimate).
 It also has a parameter <span class="math inline">\(r\)</span> that
 represents the level of intra-cluster correlation and hence
@@ -193,35 +193,36 @@ estimate of the prevalence</strong>.</li>
 plausible range of values that <span class="math inline">\(p\)</span>
 could take. We can use this in many different ways, for example we can
 calculate a credible interval (CrI). CrIs have a slightly different and
-more direct interpretation than confidence intervals (CIs). A 95% CrI
-means there is a 95% probability that the true value lies inside this
-interval - compare this with <a href="https://thestatsgeek.com/2020/11/21/interpretation-of-frequentist-confidence-intervals-and-bayesian-credible-intervals/" class="external-link">the
-definition of a CI</a>! This immediately deals with the first 4 out of 5
-issues listed in the previous section.</p>
+more direct interpretation than confidence intervals. A 95% CrI means
+there is a 95% probability that the true value lies inside this interval
+(compare this with <a href="https://thestatsgeek.com/2020/11/21/interpretation-of-frequentist-confidence-intervals-and-bayesian-credible-intervals/" class="external-link">the
+definition of a CI</a>)! This immediately deals with the first 4 out of
+5 issues listed in the previous section.</p>
 <p>We can also output from the model the posterior probability that
 prevalence is above the 5% threshold. We can turn this into a hypothesis
 test by rejecting the null hypothesis whenever this probability is above
 a certain level. This gives us a binary decision tool just like the
 traditional approach, but now with all the advantages of the Bayesian
 method.</p>
-<p>We can run the DRpower model on our example data as follows:</p>
+<p>We can run the <em>DRpower</em> model on our example data as
+follows:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/get_posterior.html">get_prevalence</a></span><span class="op">(</span>n <span class="op">=</span> <span class="va">n_deletions</span>, N <span class="op">=</span> <span class="va">n_tested</span><span class="op">)</span></span>
 <span><span class="co">#&gt;     MAP CrI_lower CrI_upper prob_above_threshold</span></span>
 <span><span class="co">#&gt; 1 13.98      6.11     28.13               0.9969</span></span></code></pre></div>
 <p>The first output is the <em>maximum a posteriori</em> (MAP) estimate,
 which gives us a point estimate of 13.98% prevalence - very close to our
-original estimate of 14% from the raw data. There are other summaries
-that we might be interested in, discussed <a href="articles/summarise_prevalence.html">here</a>.</p>
+original estimate of 14% from the raw data. There are also <a href="articles/summarise_prevalence.html">other summaries</a> that we
+might be interested in.</p>
 <p>Based on the output above, we also estimate that there is a 0.9969
-probability that the prevalence is above 5%. By default we recommend
-using a cutoff of 0.95 when turning this into a hypothesis test, so in
-this case we can reject the hypothesis that prevalence is below 5%.
-Based on this analysis, therefore, we have sufficient evidence to
-conclude that prevalence is above our target threshold, and so a switch
-of RDTs is justified.</p>
+probability that the prevalence of <em>pfhrp2/3</em> deletions is above
+5%. By default we recommend using a cutoff of 0.95 when turning this
+into a hypothesis test, so in this case we can reject the hypothesis
+that prevalence is below 5%. Based on this analysis, therefore, we have
+sufficient evidence to conclude that prevalence is above our target
+threshold, and so a switch of RDTs is justified.</p>
 <p>In summary, the DRpower model provides an alternative way of
-analysing clustered prevalence data that has some advantages over
+analysing multi-site prevalence data that has some advantages over
 traditional methods. It can be used to calculate CrIs, and/or it can be
 used in a hypothesis testing framework. The next section describes how
 this framework can be used in study design.</p>
@@ -245,7 +246,7 @@ Next topic
 
       <footer><div class="copyright">
   <p></p>
-<p>Developed by Bob Verity.</p>
+<p>Developed by Bob Verity, Shazia Ruybal.</p>
 </div>
 
 <div class="pkgdown">

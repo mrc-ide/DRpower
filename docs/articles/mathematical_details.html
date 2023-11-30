@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">DRpower</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
       </span>
     </div>
 
@@ -142,7 +142,7 @@
       <h1 data-toc-skip>Mathematical Details</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 25 Oct
+            <h4 data-toc-skip class="date">Last updated: 30 Nov
 2023</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/mathematical_details.Rmd" class="external-link"><code>vignettes/mathematical_details.Rmd</code></a></small>
@@ -172,7 +172,7 @@ Definition
 <span class="math inline">\(p\)</span>
 </td>
 <td style="text-align:left;">
-Prevalence at the province level. This is usually the main thing we want
+Prevalence at the domain level. This is usually the main thing we want
 to estimate
 </td>
 </tr>
@@ -189,8 +189,8 @@ Intra-cluster correlation coefficient (between 0 and 1)
 <span class="math inline">\(\alpha\)</span>, <span class="math inline">\(\beta\)</span>
 </td>
 <td style="text-align:left;">
-Shape parameters of beta prior on cluster-level prevalence. Defined
-based on other model parameters as follows:<br><span class="math inline">\(\alpha = p(1/r - 1)\)</span><br><span class="math inline">\(\beta = (1 - p)(1/r - 1)\)</span>
+Shape parameters of beta prior on site-level prevalence. Defined based
+on other model parameters as follows:<br><span class="math inline">\(\alpha = p(1/r - 1)\)</span><br><span class="math inline">\(\beta = (1 - p)(1/r - 1)\)</span>
 </td>
 </tr>
 <tr>
@@ -198,7 +198,7 @@ based on other model parameters as follows:<br><span class="math inline">\(\alph
 <span class="math inline">\(c\)</span>
 </td>
 <td style="text-align:left;">
-Number of clusters
+Number of sites
 </td>
 </tr>
 <tr>
@@ -206,7 +206,7 @@ Number of clusters
 <span class="math inline">\(x_i\)</span>
 </td>
 <td style="text-align:left;">
-Prevalence in cluster <span class="math inline">\(i\)</span>
+Prevalence in site <span class="math inline">\(i\)</span>
 </td>
 </tr>
 <tr>
@@ -214,7 +214,7 @@ Prevalence in cluster <span class="math inline">\(i\)</span>
 <span class="math inline">\(n_i\)</span>
 </td>
 <td style="text-align:left;">
-Sample size in cluster <span class="math inline">\(i\)</span>
+Sample size in site <span class="math inline">\(i\)</span>
 </td>
 </tr>
 <tr>
@@ -222,28 +222,28 @@ Sample size in cluster <span class="math inline">\(i\)</span>
 <span class="math inline">\(k_i\)</span>
 </td>
 <td style="text-align:left;">
-Observed pfhrp2/3 deletions in cluster <span class="math inline">\(i\)</span>
+Observed pfhrp2/3 deletions in site <span class="math inline">\(i\)</span>
 </td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>We assume a multilevel model in which <span class="math inline">\(p\)</span> is the overall prevalence at the
-province level, but the individual cluster-level prevalence varies
-around this value according to a beta distribution. The parameters of
-this beta distribution are chosen such that <span class="math inline">\(r\)</span> represents the level of intra-cluster
-correlation.</p>
+<p>We assume a multilevel model in which <span class="math inline">\(p\)</span> is the overall prevalence at the domain
+level, but the individual site-level prevalence varies around this value
+according to a beta distribution. The parameters of this beta
+distribution are chosen such that <span class="math inline">\(r\)</span>
+represents the level of intra-cluster correlation.</p>
 <p>Data, in the form of counts of observed <em>pfhrp2/3</em> deletions,
-are assumed to be binomial within each cluster, drawn from the
-cluster-level prevalence. This results in counts following a
-beta-binomial distribution, with the following probability
+are assumed to be binomial within each site. The expected value of this
+distribution is the site-level prevalence. This results in counts
+following a beta-binomial distribution, with the following probability
 distribution:</p>
 <p><span class="math inline">\(Pr(k_i | n_i, p, r) = {n_i \choose
 k_i}\frac{B(k_i + \alpha, n_i - k_i + \beta)}{B(\alpha,
 \beta)}\)</span></p>
 <p>where <span class="math inline">\(B(x, y)\)</span> is the beta
 function. The overall likelihood is the product of this distribution
-over all clusters:</p>
+over all sites:</p>
 <p><span class="math inline">\(Pr(\mathbf{k} | \mathbf{n}, p, r) =
 \prod_{i=1}^c Pr(k_i | n_i, p, r)\)</span></p>
 <p>We assume beta priors on the two free parameters, <span class="math inline">\(p\)</span> and <span class="math inline">\(r\)</span>. By default, the shape parameters of
@@ -262,14 +262,14 @@ other free parameter:</p>
 \int_0^1 Pr(p, r | \mathbf{k}, \mathbf{n}) dr\)</span></p>
 <p><span class="math inline">\(Pr(r | \mathbf{k}, \mathbf{n}) \propto
 \int_0^1 Pr(p, r | \mathbf{k}, \mathbf{n}) dp\)</span></p>
-<p>This integration is performed using an adaptive quadrature-based
-method. The marginal posterior distributions can be returned in full, or
-can be summarised using various measures of central tendency and/or
-credible intervals (CrI). There are multiple methods of calculating CrIs
-- we use the high density region (HDI) by default as this avoids the
-possibility of the maximum a posteriori (MAP) estimate being outside the
-CrI, which is possible by the more commonly used equal-tailed interval
-(ETI).</p>
+<p>This integration is performed inside <em>DRpower</em> using an
+adaptive quadrature-based method. The marginal posterior distributions
+can be returned in full, or can be summarised using various <a href="articles/summarise_prevalence.html">measures of central
+tendency</a> and/or credible intervals (CrI). There are multiple methods
+of calculating CrIs - we use the high density region (HDI) by default as
+this avoids the possibility of the maximum a posteriori (MAP) estimate
+being outside the CrI, which is possible by the more commonly used
+equal-tailed interval (ETI).</p>
 </div>
   </div>
 
@@ -285,7 +285,7 @@ CrI, which is possible by the more commonly used equal-tailed interval
 
       <footer><div class="copyright">
   <p></p>
-<p>Developed by Bob Verity.</p>
+<p>Developed by Bob Verity, Shazia Ruybal.</p>
 </div>
 
 <div class="pkgdown">

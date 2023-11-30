@@ -1,7 +1,7 @@
 Package: DRpower
 Type: Package
 Title: Study design and analysis for pfhrp2/3 deletion prevalence studies
-Version: 0.1.0
+Version: 1.0.0
 Authors@R: as.person(c(
     "Bob Verity <r.verity@imperial.ac.uk> [aut, cre]",
     "Shazia Ruybal <s.ruybal@imperial.ac.uk> [aut]"
@@ -21,20 +21,22 @@ Description: This package can be used in the design and/or analysis stages of
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-LazyDataCompression:xz
+LazyDataCompression: xz
 RoxygenNote: 7.2.3
 BugReports: https://github.com/mrc-ide/DRpower/issues
 Imports: 
     dplyr,
     extraDistr,
     magrittr,
-    Rcpp
+    Rcpp,
+    knitrProgressBar,
+    ggplot2,
+    tidyr
 Suggests: 
     knitr,
-    ggplot2,
+    cowplot,
     kableExtra,
     testthat (>= 3.0.0),
-    ggridges,
     tidyverse
 Config/testthat/edition: 3
 LinkingTo: 

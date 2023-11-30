@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">DRpower</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
       </span>
     </div>
 
@@ -132,33 +132,56 @@ pfhrp2/3 data</p></td>
         </td>
         <td><p>Minimum sample sizes for the threshold analysis</p></td>
       </tr><tr><td>
-          <p><code><a href="get_joint_grid.html">get_joint_grid()</a></code> </p>
+          <p><code><a href="get_joint.html">get_joint()</a></code> </p>
         </td>
         <td><p>Get posterior distribution of both prevalence and the ICC on a grid</p></td>
+      </tr><tr><td>
+          <p><code><a href="get_margin_Bayesian.html">get_margin_Bayesian()</a></code> </p>
+        </td>
+        <td><p>Margin of error calculations using the Bayesian DRpower model when
+  estimating prevalence from a clustered survey</p></td>
+      </tr><tr><td>
+          <p><code><a href="get_margins.html">get_margin()</a></code> <code><a href="get_margins.html">get_sample_size_margin()</a></code> <code><a href="get_margins.html">get_margin_CP()</a></code> <code><a href="get_margins.html">get_sample_size_margin_CP()</a></code> </p>
+        </td>
+        <td><p>Margin of error calculations when estimating prevalence from a
+  clustered survey</p></td>
       </tr><tr><td>
           <p><code><a href="get_posterior.html">get_prevalence()</a></code> <code><a href="get_posterior.html">get_ICC()</a></code> </p>
         </td>
         <td><p>Estimate prevalence and intra-cluster correlation from raw counts</p></td>
       </tr><tr><td>
+          <p><code><a href="get_power.html">get_power()</a></code> </p>
+        </td>
+        <td><p>Estimate power when testing prevalence against a threshold</p></td>
+      </tr><tr><td>
           <p><code><a href="get_power_presence.html">get_power_presence()</a></code> </p>
         </td>
         <td><p>Calculate power when testing for presence of deletions</p></td>
-      </tr><tr><td>
-          <p><code><a href="get_power_threshold.html">get_power_threshold()</a></code> </p>
-        </td>
-        <td><p>Estimate power when testing prevalence against a threshold</p></td>
       </tr><tr><td>
           <p><code><a href="get_sample_size_presence.html">get_sample_size_presence()</a></code> </p>
         </td>
         <td><p>Get minimum sample size when testing for presence of deletions</p></td>
       </tr><tr><td>
+          <p><code><a href="get_sample_size_table.html">get_sample_size_table()</a></code> </p>
+        </td>
+        <td><p>Get pre-computed sample size tables</p></td>
+      </tr><tr><td>
           <p><code><a href="historical_data.html">historical_data</a></code> </p>
         </td>
-        <td><p>TODO</p></td>
+        <td><p>Data from historical pfhrp2 studies that passed filters for inclusion into an
+ICC analysis.</p></td>
       </tr><tr><td>
-          <p><code><a href="studies_inclusion.html">studies_inclusion</a></code> </p>
+          <p><code><a href="plot_joint.html">plot_joint()</a></code> </p>
         </td>
-        <td><p>TODO</p></td>
+        <td><p>Contour plot of joint posterior distribution of prevalence and ICC</p></td>
+      </tr><tr><td>
+          <p><code><a href="plot_posterior.html">plot_prevalence()</a></code> <code><a href="plot_posterior.html">plot_ICC()</a></code> </p>
+        </td>
+        <td><p>Plot posterior distribution of prevalence and ICC</p></td>
+      </tr><tr><td>
+          <p><code><a href="plot_power.html">plot_power()</a></code> </p>
+        </td>
+        <td><p>Plot a power curve using pre-computed values</p></td>
       </tr></tbody></table></div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -168,7 +191,7 @@ pfhrp2/3 data</p></td>
 
 
       <footer><div class="copyright">
-  <p></p><p>Developed by Bob Verity.</p>
+  <p></p><p>Developed by Bob Verity, Shazia Ruybal.</p>
 </div>
 
 <div class="pkgdown">

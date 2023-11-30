@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">DRpower</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
       </span>
     </div>
 
@@ -142,7 +142,7 @@
 Protocol</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 25 Oct
+            <h4 data-toc-skip class="date">Last updated: 30 Nov
 2023</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/rationale6_master_protocol.Rmd" class="external-link"><code>vignettes/rationale6_master_protocol.Rmd</code></a></small>
@@ -153,33 +153,25 @@ Protocol</h1>
     
     
 <div class="section level2">
-<h2 id="the-2020-who-master-protocol">6. The 2020 WHO master protocol<a class="anchor" aria-label="anchor" href="#the-2020-who-master-protocol"></a>
+<h2 id="the-2020-who-master-protocol">6. The 2020 WHO Master Protocol<a class="anchor" aria-label="anchor" href="#the-2020-who-master-protocol"></a>
 </h2>
-<p>In 2020, the WHO released the <a href="https://apps.who.int/iris/handle/10665/331197" class="external-link">master protocol for
+<p>In 2020, the WHO released the <a href="https://apps.who.int/iris/handle/10665/331197" class="external-link">Master Protocol for
 surveillance of pfhrp2/3 deletions and biobanking to support future
-research</a><span class="citation">(2020)</span>. This document gave
-guidance on a wide range of issues related to <em>pfhrp2/3</em> studies,
-including data collection and fieldwork, data storage and laboratory
-analysis, and provided templates such as informed consent forms for
-participants. This document was a major step forward in specifying what
-a well designed <em>pfhrp2/3</em> study might look like. However, it
-also contained some arguments around appropriate sample size that
-contained mistakes that we will explore here.</p>
-<p>The original version of the master protocol recommended a sample size
-of 370 per domain (e.g. province), split into 10 clusters of 37 each. It
-was later found that there were some numerical errors in this
-calculation, and the protocol was updated to 600 samples per domain.
-This larger sample size has increased power and leads to more precise
-estimates of the prevalence of <em>pfhrp2/3</em> deletions. However,
-there are some lingering issues with the sample size argument that are
-deeper than simple numerical errors, and that motivate the need for an
-alternative approach.</p>
+research</a><span class="citation">(2020)</span>. The original version
+of the Master Protocol recommended a sample size of 370 per domain,
+split into 10 sites of 37 samples each. It was later found that there
+were some numerical errors in this calculation, and the protocol was <a href="https://cdn.who.int/media/docs/default-source/malaria/diagnosis/9789240002050-corrigenda.pdf?sfvrsn=d67857_3" class="external-link">updated</a>
+to 600 samples per domain. This larger sample size has increased power
+and leads to more precise estimates of the prevalence of
+<em>pfhrp2/3</em> deletions. However, there are some lingering issues
+with the sample size argument that go deeper than simple numerical
+errors, and that motivate the need for an alternative approach.</p>
 <div class="section level3">
 <h3 id="the-logic-behind-the-sample-size-calculation">6.1. The logic behind the sample size calculation<a class="anchor" aria-label="anchor" href="#the-logic-behind-the-sample-size-calculation"></a>
 </h3>
-<p>The recommended approach in the 2020 master protocol begins with
+<p>The recommended approach in the 2020 Master Protocol begins with
 estimating the prevalence of deletions and constructing a 95% CI around
-this estimate. There are three possible outcomes per province:</p>
+this estimate. There are three possible outcomes:</p>
 <ul>
 <li>Outcome 1: The upper limit of the 95% CI is below the 5% threshold
 (<em>conclusion = low prevalence</em>).</li>
@@ -190,26 +182,24 @@ this estimate. There are three possible outcomes per province:</p>
 </ul>
 <p>Examples of these three outcomes are shown in the plot below:</p>
 <p><img src="rationale6_master_protocol_files/figure-html/unnamed-chunk-3-1.png" width="480"></p>
-<p>If outcome 2 is found in any province then the country is recommended
+<p>If outcome 2 is found in any domain then the country is recommended
 to switch RDTs to a brand that does not rely exclusively on the HRP2
 protein for detecting <em>P. falciparum</em>. If outcomes 1 or 3 are
-detected in all provinces then some form of periodic monitoring is still
+detected in all domains then some form of periodic monitoring is still
 advised, but the urgency is lower.</p>
 <p>Let <span class="math inline">\(N\)</span> be the <em>total</em>
-sample size over all clusters (in our earlier notation we would say
-<span class="math inline">\(N=nc\)</span>, where <span class="math inline">\(n\)</span> is the per-cluster sample size and
-<span class="math inline">\(c\)</span> is the number of clusters). The
-sample size argument in the 2020 master protocol works by choosing a
-value of <span class="math inline">\(N\)</span> such that the 95% CI
-exactly touches the 5% threshold, but does not cross it. This leads to
-the following formula:</p>
+sample size over all sites (in our earlier notation we would say <span class="math inline">\(N=nc\)</span>, where <span class="math inline">\(n\)</span> is the per-site sample size and <span class="math inline">\(c\)</span> is the number of sites). The sample
+size argument in the 2020 Master Protocol works by choosing a value of
+<span class="math inline">\(N\)</span> such that the 95% CI exactly
+touches the 5% threshold, but does not cross it. This leads to the
+following formula:</p>
 <p><span class="math inline">\(N \geq z_{\tiny 1 - \alpha/2}^2
 \frac{\displaystyle p(1-p)}{\displaystyle (p-\mu)^2}D_{eff}\)</span></p>
 <p>where <span class="math inline">\(p\)</span> is the true prevalence
 of <em>pfhrp2/3</em> deletions, <span class="math inline">\(\mu\)</span>
 is the threshold that we are comparing against (normally 5%), <span class="math inline">\(D_{eff}\)</span> is the design effect, and <span class="math inline">\(z_{\tiny 1 - \alpha/2}\)</span> is the two-tailed
 critical value of the normal distribution at significance level <span class="math inline">\(\alpha\)</span> (for example, <span class="math inline">\(z_{\tiny 1 - \alpha/2}=1.96\)</span> for <span class="math inline">\(\alpha=0.05\)</span>). This formula can be found
-on page 4 of the 2020 master protocol in slightly different
+on page 4 of the 2020 Master Protocol in slightly different
 notation.</p>
 <p>The sample size formula above has a direct connection to how we
 calculate CIs. Recall from <a href="articles/rationale3_design_effect.html">previous sections</a> that
@@ -226,11 +216,11 @@ to give this a go). Interestingly, we get the same formula whether we
 treat the <span class="math inline">\(\pm\)</span> symbol as a plus
 (upper CI) or a minus (lower CI), meaning we can use the same sample
 size formula whether the prevalence is above or below the threshold. The
-reason for highlighting this connection is to emphasize that the sample
-size formula above is intrinsically linked to method for calculating
-confidence intervals.</p>
+reason for highlighting this connection is to emphasize that <strong>the
+sample size formula above is intrinsically linked to method for
+calculating confidence intervals</strong>.</p>
 <p>There is one subtle point worth mentioning; the sample size formula
-from the master protocol is in terms of <span class="math inline">\(p\)</span>, but the CI formula is in terms of
+from the Master Protocol is in terms of <span class="math inline">\(p\)</span>, but the CI formula is in terms of
 <span class="math inline">\(\hat{p}\)</span>. The value <span class="math inline">\(p\)</span> is our assumed <em>true</em> prevalence
 of deletions, whereas <span class="math inline">\(\hat{p}\)</span> is
 our <em>estimate</em> of the prevalence of deletions. So <span class="math inline">\(p\)</span> is a fixed value but <span class="math inline">\(\hat{p}\)</span> will vary around the true value,
@@ -241,7 +231,7 @@ will become important later.</p>
 <h3 id="working-through-the-updated-protocol-numbers">6.2. Working through the updated protocol numbers<a class="anchor" aria-label="anchor" href="#working-through-the-updated-protocol-numbers"></a>
 </h3>
 <p>As mentioned in the introduction to this section, there were some
-numerical mistakes in the original version of the master protocol that
+numerical mistakes in the original version of the Master Protocol that
 meant the value <span class="math inline">\(N=370\)</span> had to be
 revised. Let’s work through the revised protocol to update this value
 ourselves.</p>
@@ -270,12 +260,12 @@ below.</p>
 <span><span class="va">Deff</span> <span class="op">*</span> <span class="va">z</span><span class="op">^</span><span class="fl">2</span> <span class="op">*</span> <span class="va">p</span> <span class="op">*</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">p</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="va">p</span> <span class="op">-</span> <span class="fl">0.05</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span></span>
 <span><span class="co">#&gt; [1] 550.8937</span></span></code></pre></div>
 <p>We would round these values to 472 and 551. These numbers are
-slightly at odds with those in the updated protocol (500 and 584,
+slightly different to those in the updated protocol (500 and 584,
 respectively), indicating there is still some discrepancy between the
 formula in the protocol and how these values are calculated. Note that
 we cannot fix this by using a one-sided assumption (<span class="math inline">\(z_{\tiny 1 - \alpha}=1.64\)</span>), as this leads
-to different values again. The good news is that the updated master
-protocol is conservative, rounding up to 600. The bad news is that even
+to different values again. The good news is that the updated Master
+Protocol is conservative, rounding up to 600. The bad news is that even
 this value is not sufficient to achieve good power due to deeper issues
 with the approach.</p>
 </div>
@@ -286,10 +276,12 @@ with the approach.</p>
 precision-based arguments with hypothesis testing. If we are trying to
 design a study to achieve a particular margin of error around our
 prevalence estimate then it makes sense to work from the CI formula
-above. However, in the case of the master protocol we will use the CI to
-make a categorical decision as to whether prevalence is above or below a
-threshold, meaning this is more akin to a hypothesis test. We can
-therefore ask - what is the power of this test?</p>
+above - for example, we might want to estimate the prevalence of
+<em>pfhrp2/3</em> deletions to within <span class="math inline">\(\pm\)</span> 10%. However, in the case of the
+Master Protocol we will use the CI to make a categorical decision as to
+whether prevalence is above or below a threshold, meaning this is more
+akin to a hypothesis test. We can therefore ask - what is the power of
+this test?</p>
 <p>Statistical power is defined as the probability of correctly
 rejecting the null hypothesis. In other words, it is the probably of
 detecting an effect if it is really there. We want power to be high -
@@ -342,7 +334,7 @@ it should be around 50%. The slight discrepancy comes from the fact that
 be below <span class="math inline">\(p\)</span> than above it for these
 assumed values.</p>
 <p>But what about if we include the design effect of <span class="math inline">\(D_{eff}=1.5\)</span>? Here, the formula gave <span class="math inline">\(N=472\)</span> for the same assumptions. It is
-slightly more tricky to evaluate the true power here - we have to use
+slightly tricky to evaluate the true power here - we have to use
 simulation rather than brute force. We repeatedly simulate data with a
 knwon level of intra-cluster correlation corresponding to our chosen
 design effect, then we calculate CIs and proceed as normal.</p>
@@ -372,16 +364,17 @@ design effect, then we calculate CIs and proceed as normal.</p>
 <span><span class="va">sim_power</span></span>
 <span><span class="co">#&gt; [1] 0.49871</span></span></code></pre></div>
 <p>Again, we find that power is around 50%. In other words, including
-the design effect does not fix this issue as the increased sample size
+the design effect does not fix this issue, as the increased sample size
 is matched by wider CIs. This would be true for any design effect.</p>
-<p>Finally, what happens if we use the actual recommended value of <span class="math inline">\(N=600\)</span> from the updated protocol? Running
-the same simulation-based analysis but with 10 clusters of size 60 we
-obtain the following result:</p>
+<p>Finally, what happens if we use the actual recommended value of <span class="math inline">\(N=600\)</span> from the updated Master Protocol?
+Running the same simulation-based analysis but with 10 clusters of size
+60 we obtain the following result:</p>
 <pre><code><span><span class="co">#&gt; empirical power:</span></span>
 <span><span class="co">#&gt; [1] 0.60766</span></span></code></pre>
 <p>So power is still far below 80% even for the updated values. This is
 not due to a numerical mistake, but rather is a fundamental issue with
-the logic of the approach. The best way to deal with issue is to go back
+the logic of the approach. We should not use the sample size formula
+presented in section 6.1. The best way to deal with issue is to go back
 to the drawing board and approach this from a different statistical
 angle.</p>
 <p align="center">
@@ -415,7 +408,7 @@ of Pfhrp2 Deletions and Biobanking to Support Future Research.”</span>
 
       <footer><div class="copyright">
   <p></p>
-<p>Developed by Bob Verity.</p>
+<p>Developed by Bob Verity, Shazia Ruybal.</p>
 </div>
 
 <div class="pkgdown">

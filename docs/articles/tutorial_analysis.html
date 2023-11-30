@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">DRpower</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
       </span>
     </div>
 
@@ -141,7 +141,7 @@
       <h1 data-toc-skip>Analysing data</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 25 Oct
+            <h4 data-toc-skip class="date">Last updated: 30 Nov
 2023</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/tutorial_analysis.Rmd" class="external-link"><code>vignettes/tutorial_analysis.Rmd</code></a></small>
@@ -152,16 +152,18 @@
     
     
 <p>Here, we outline the main steps in analysing data using the DRpower
-Bayesian model.</p>
+Bayesian model. Although we focus on the <em>pfhrp2/3</em> use-case
+here, the same steps can be used to analyse the prevalence of drug
+resistance markers.</p>
 <div class="section level2">
 <h2 id="estimate-prevalence">1. Estimate prevalence<a class="anchor" aria-label="anchor" href="#estimate-prevalence"></a>
 </h2>
 <p>The main thing we want to estimate is usually the prevalence of
-<em>pfhrp2/3</em> deletions. This is extremely simple, and is carried
-out through the <code><a href="../reference/get_posterior.html">get_prevalence()</a></code> function. We pass into
+<em>pfhrp2/3</em> deletions. This is extremely simple to do, and is
+carried out through the <code><a href="../reference/get_posterior.html">get_prevalence()</a></code> function. We pass
 this function two sets of values; 1) the number of <em>pfhrp2/3</em>
-deletions observed in each cluster (numerator), and 2) the total sample
-size in each cluster (denominator):</p>
+deletions observed in each site (numerator), and 2) the total sample
+size in each site (denominator):</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># define observed data</span></span>
 <span><span class="va">num_deletions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">12</span>, <span class="fl">4</span><span class="op">)</span></span>
@@ -172,22 +174,24 @@ size in each cluster (denominator):</p>
 <span>               N <span class="op">=</span> <span class="va">sample_size</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    MAP CrI_lower CrI_upper prob_above_threshold</span></span>
 <span><span class="co">#&gt; 1 6.81       2.3     19.52               0.8791</span></span></code></pre></div>
-<p>Here, we obtain an estimate of 6.81% with a 95% CrI in the range
-[2.3% to 19.52%]. When presenting our estimates we should always report
-the full credible interval and not just the central estimate of 6.81%,
-as this may give a misleading impression of our confidence.</p>
+<p>We obtain a point estimate of 6.81% prevalence, with a 95% CrI in the
+range [2.3% to 19.52%]. When presenting our estimates we should always
+report the full credible interval and not just the central estimate of
+6.81%, as this may give a misleading impression of how confident we are
+in this value.</p>
 </div>
 <div class="section level2">
-<h2 id="compare-prevalence-against-threshold">2. Compare prevalence against threshold<a class="anchor" aria-label="anchor" href="#compare-prevalence-against-threshold"></a>
+<h2 id="compare-prevalence-against-a-threshold">2. Compare prevalence against a threshold<a class="anchor" aria-label="anchor" href="#compare-prevalence-against-a-threshold"></a>
 </h2>
 <p>The second thing we may want to do is to establish whether the
-prevalence is above the 5% threshold. The probability of being above
-this threshold is given in the <code>prob_above_threshold</code> output,
-in this case 0.8791. Before conducting this analysis, we should have
-decided what level of confidence we need in order to accept this
-hypothesis - we advise using 0.95 by default. In this case, 0.8791 is
-below 0.95 so we do not have sufficient evidence to conclude that
-prevalence is above 5%.</p>
+prevalence is above the 5% threshold at the domain level. The
+probability of being above this threshold is given in the
+<code>prob_above_threshold</code> output above, in this case 0.8791.
+Before conducting this analysis, we should have decided what level of
+confidence we need in order to accept this hypothesis - we advise using
+0.95 by default. In this case, 0.8791 is below 0.95 so we do not have
+sufficient evidence to conclude that prevalence is above 5% at the
+domain level.</p>
 <p>Note that it is possible for the CrI to span the 5% threshold, but
 for the <code>prob_above_threshold</code> to still be greater than 0.95.
 This is because the CrI is two-sided, whereas the hypothesis test is one
@@ -226,7 +230,7 @@ information into account.</p>
 
       <footer><div class="copyright">
   <p></p>
-<p>Developed by Bob Verity.</p>
+<p>Developed by Bob Verity, Shazia Ruybal.</p>
 </div>
 
 <div class="pkgdown">

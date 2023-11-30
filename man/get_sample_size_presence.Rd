@@ -8,7 +8,7 @@ get_sample_size_presence(
   n_clust,
   target_power = 0.8,
   prevalence = 0.01,
-  ICC = 0.1,
+  ICC = 0.05,
   N_max = 2000
 )
 }
@@ -17,17 +17,18 @@ get_sample_size_presence(
 
 \item{target_power}{the power we are aiming to achieve.}
 
-\item{prevalence}{assumed true prevalence of pfhrp2 deletions. Input as
+\item{prevalence}{assumed true prevalence of pfhrp2/3 deletions as a
 proportion between 0 and 1.}
 
-\item{ICC}{assumed true intra-cluster correlation (ICC), between 0 and 1.}
+\item{ICC}{assumed true intra-cluster correlation (ICC) between 0 and 1.}
 
-\item{N_max}{the maximum allowed sample size.}
+\item{N_max}{the maximum allowed sample size. Sample sizes are only explored
+up to this value, after which point an error is returned.}
 }
 \description{
 Calculates the minimum sample size required per cluster to
   achieve a certain power for the case of a clustered prevalence survey where
-  the aim is to detect the presence of *any* deletions over all clusters (see
+  the aim is to detect the presence of \emph{any} deletions over all clusters (see
   \code{?get_power_presence()}). Assumes the same sample size per cluster.
 }
 \examples{

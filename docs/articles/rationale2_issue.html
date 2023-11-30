@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">DRpower</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
       </span>
     </div>
 
@@ -142,7 +142,7 @@
       <h1 data-toc-skip>CIs and Overdispersion</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 25 Oct
+            <h4 data-toc-skip class="date">Last updated: 30 Nov
 2023</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/rationale2_issue.Rmd" class="external-link"><code>vignettes/rationale2_issue.Rmd</code></a></small>
@@ -157,12 +157,12 @@
 </h2>
 <p>The type of data that we will work with is shown below. This is a
 very simple dataset consisting of a numerator and denominator for each
-cluster. The cluster-level prevalence is calculated as one over the
-other, expressed as a percentage.</p>
+site. The site-level prevalence is calculated as numerator over
+denominator, expressed as a percentage.</p>
 <table class="table table table-striped table-hover table-condensed" style="margin-left: auto; margin-right: auto;">
 <thead><tr>
 <th style="text-align:right;border-bottom: 1px solid; border-top: 1px solid">
-cluster
+site
 </th>
 <th style="text-align:right;border-bottom: 1px solid; border-top: 1px solid">
 n_tested
@@ -171,7 +171,7 @@ n_tested
 n_deletions
 </th>
 <th style="text-align:right;border-bottom: 1px solid; border-top: 1px solid">
-cluster_prevalence
+site_prevalence
 </th>
 </tr></thead>
 <tbody>
@@ -248,81 +248,80 @@ cluster_prevalence
 </tbody>
 </table>
 <p>This example is even simpler than most real world datasets, as here
-the number of people tested is identical over all clusters when it
-reality it often varies. So why is this a tricky dataset to analyse? How
-can we possibly get our analysis wrong here!?</p>
+the number of people tested is identical over all sites when in reality
+it often varies. So why is this a tricky dataset to analyse? How can we
+possibly get our analysis wrong here!?</p>
 <p>Recall that our aim is to estimate prevalence of deletions at the
-province level, meaning we will need to pool results over clusters. One
-way to do this is to sum the number of deletions over clusters, then sum
-the number tested over clusters, then divide one by the other to get the
+domain level, meaning we will need to pool results over sites. One way
+to do this is to sum the number of deletions over sites, then sum the
+number tested over sites, then divide one by the other to get the
 prevalence. This gives 35 / 250 = 14%. This analysis assumes that all
 individuals are independent, i.e., they have the same probability of
-carrying the <em>pfhrp2/3</em> deleted strain irrespective of what
-cluster they belong to.</p>
+carrying the <em>pfhrp2/3</em> deleted strain irrespective of what site
+they belong to.</p>
 <p>We also typically want to construct a confidence interval (CI) on
 this result. A common approach for binomial data like this would be to
 use the <a href="https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval#Normal_approximation_interval_or_Wald_interval" class="external-link">Wald
 interval</a>, defined as <span class="math inline">\(\hat{p} \pm
 z\sqrt{\frac{\hat{p}(1 - \hat{p})}{nc}}\)</span>, where <span class="math inline">\(\hat{p}\)</span> is our estimate of the
 prevalence, <span class="math inline">\(n\)</span> is the sample size
-per cluster, <span class="math inline">\(c\)</span> is the number of
-clusters and <span class="math inline">\(z\)</span> is the critical
-value of the normal distribution (for a 95% CI we can use <span class="math inline">\(z = 1.96\)</span>). For the data above we get 14%
+per site, <span class="math inline">\(c\)</span> is the number of sites
+and <span class="math inline">\(z\)</span> is the critical value of the
+normal distribution (for a 95% CI we can use <span class="math inline">\(z = 1.96\)</span>). For the data above we get 14%
 <span class="math inline">\(\pm\)</span> 4.3%, which gives the interval
 (9.7% to 18.3%). Based on this interval we would confidently conclude
-that the prevalence of deletions is above 5% at the province level.</p>
+that the prevalence of deletions is above 5% at the domain level.</p>
 <div class="section level3">
 <h3 id="dealing-with-overdispersion">2.1 Dealing with overdispersion<a class="anchor" aria-label="anchor" href="#dealing-with-overdispersion"></a>
 </h3>
-<p>But now look at the data again, focusing on the prevalence in each
-cluster. Notice that some clusters are quite a bit higher than this 14%
-average level, while some are much lower. Could this be explained by
+<p>But now look at the data again, this time focusing on the prevalence
+in each site. Notice that some sites are quite a bit higher than this
+14% average level, while some are much lower. Could this be explained by
 random chance? We can explore this statistically by looking at the
-spread between clusters. If individuals are completely independent then
-we would expect the variance in cluster-level prevalence to be
-approximately <span class="math inline">\(\frac{\hat{p}(1 -
-\hat{p})}{n}\)</span>. Hence, we would expect values to fall within the
-shaded region in the plot below around 95% of the time:</p>
+spread between sites. If individuals are completely independent then we
+would expect the variance in site-level prevalence to be approximately
+<span class="math inline">\(\frac{\hat{p}(1 - \hat{p})}{n}\)</span>.
+Hence, we would expect values to fall within the shaded region in the
+plot below around 95% of the time:</p>
 <p><img src="rationale2_issue_files/figure-html/unnamed-chunk-4-1.png" width="480"></p>
-<p>We can see that only 2 out of 5 clusters fall inside this region,
-which is very unlikely by chance. Clusters are therefore
+<p>We can see that only 2 out of 5 sites fall inside this region, which
+is very unlikely by chance. Sites are therefore
 <strong>overdispersed</strong>, meaning there is a greater spread in
-values than we would expect. Another way of looking at this is to say
-that individuals <em>within</em> a cluster are more similar to each
+values than we would expect by chance. Another way of looking at this is
+to say that individuals <em>within</em> a site are more similar to each
 other than we would expect by chance, i.e., there is
 <strong>intra-cluster correlation</strong> (ICC). These sound like two
 very different ideas, but in fact they are two sides of the same coin -
-if there is overdispersion between clusters then there must be ICC
-within clusters, and if there is ICC then there must be
+if there is overdispersion between sites (clusters) then there must be
+ICC within sites, and if there is ICC then there must be
 overdispersion.</p>
 <p>There are a range of factors that can cause intra-cluster
-correlation. Individuals in the same cluster may have similar
-behaviours, similar economic levels and access to care, similar risk
-factors or even similar phenotypes. The cluster itself (i.e., health
-facility) may also introduce correlations, for example the same hospital
-practices may affect the entire community. Finally, the actual process
-of disease transmission can introduce correlations, for example if there
-has been a local outbreak then we are more likely to see a second
-<em>pfhrp2/3</em> deleted sample having seen a first.</p>
+correlation. Individuals in the same site may have similar behaviours,
+similar economic levels and access to care, similar risk factors or even
+similar phenotypes. The site itself (i.e., health facility) may also
+introduce correlations, for example the same hospital practices may
+affect the entire community. Finally, the actual process of disease
+transmission can introduce correlations, for example if there has been a
+local outbreak then we are more likely to see a second <em>pfhrp2/3</em>
+deleted sample having seen a first.</p>
 <p>If our data our overdispersed then there will be more uncertainty
-around our province-level estimate than we originally expected. This
-means the CIs above will be too narrow and we are at risk of incorrectly
-concluding that prevalence is above 5%. One simple way to deal with this
-issue is to treat our 5 clusters as 5 observations rather than 250
-observations, ignoring the fact that we know the sample size per
-cluster. In this case, we would calculate the province-level prevalence
-as the mean of the 5 cluster-level values. This calculation gives <span class="math inline">\(\hat{p} =\)</span> 14%, exactly the same as
+around our domain-level estimate than we originally expected. This means
+the CIs above will be too narrow and we risk of incorrectly concluding
+that prevalence is above 5%. One simple way to deal with this issue is
+to treat our 5 sites as 5 observations rather than 250 observations,
+ignoring the fact that we know the sample size per site. In this case,
+we would calculate the domain-level prevalence as the mean of the 5
+site-level values. This calculation gives <span class="math inline">\(\hat{p} =\)</span> 14%, exactly the same as
 before. The reason for getting the same value here is that sample sizes
-are the same over all clusters, although in general the two methods may
+are the same over all sites, although in general the two methods may
 give different results.</p>
 <p>But how should we construct a CI in this case? We are no longer
-treating our observations as binomial counts, meaning we should use a
-different approach. First, we calculate the sample variance, <span class="math inline">\(s^2 = \frac{\sum_{i=1}^c (\hat{p}_i -
+treating our observations as binomial counts, meaning we should not use
+the Wald interval. First, we calculate the sample variance, <span class="math inline">\(s^2 = \frac{\sum_{i=1}^c (\hat{p}_i -
 \hat{p})^2}{c - 1}\)</span>, where <span class="math inline">\(\hat{p}_i\)</span> is the observed prevalence in
-cluster <span class="math inline">\(i\)</span>. Then we calculate the CI
-as <span class="math inline">\(\hat{p} \pm
-z\sqrt{\frac{s^2}{c}}\)</span> (to be even more exact we could take
-<span class="math inline">\(z\)</span> from the Student’s t-distribution
+site <span class="math inline">\(i\)</span>. Then we calculate the CI as
+<span class="math inline">\(\hat{p} \pm z\sqrt{\frac{s^2}{c}}\)</span>
+(to be even more exact we could take <span class="math inline">\(z\)</span> from the Student’s t-distribution
 rather than the normal distribution). For our example data this gives
 14% <span class="math inline">\(\pm\)</span> 10.15%, which gives the
 interval (3.85% to 24.15%). This is a <em>much</em> wider CI than
@@ -356,7 +355,7 @@ Next topic
 
       <footer><div class="copyright">
   <p></p>
-<p>Developed by Bob Verity.</p>
+<p>Developed by Bob Verity, Shazia Ruybal.</p>
 </div>
 
 <div class="pkgdown">

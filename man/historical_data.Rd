@@ -3,15 +3,60 @@
 \docType{data}
 \name{historical_data}
 \alias{historical_data}
-\title{TODO}
+\title{Data from historical pfhrp2 studies that passed filters for inclusion into an
+ICC analysis.}
 \format{
-TODO
+A data.frame of 30 rows and 11 columns. Each row gives a different
+  site that made it through filtering steps in the ICC analysis from
+  historical data. Coluns give geographic properties, sampling times, the
+  number of samples tested and positive for pfhrp2 deletions, and the
+  citation from which the data originates.
 }
 \usage{
 data(historical_data)
 }
 \description{
-TODO
+A data.frame of sites that were used to estimate the ICC based
+  on previously published data. These sites passed strict inclusion criteria
+  to ensure they are maximally informative (see details).
+}
+\details{
+The raw dataset of historical pfhrp2/3 studies was downloaded from
+  the WHO malaria threats map on 27 Nov 2023. This spreadsheet can be found
+  in this package in the R_ignore/data folder (see the
+  \href{https://github.com/mrc-ide/DRpower/}{Github repos}) under the name
+  "MTM_PFHRP23_GENE_DELETIONS_20231127_edited.xlss". Note that this
+  spreadsheet has the term "_edited" added to the name because two extra
+  columns were added to the original data: "discard" and "discard_reason".
+  These columns specify certain rows that should be discarded in the original
+  data due to data entry mistakes. The following steps were then taken. All
+  scripts to perform these steps can be found in the same R_ignore folder:
+  \enumerate{
+    \item Rows were dropped that were identified to discard based on problems
+    in the original data.
+    \item Filtered to Africa, Asia or South America.
+    \item Filtered to Symptomatic patients.
+    \item Filtered to convenience surveys or cross-sectional prospective
+    surveys only.
+    \item Combined counts (tested and positive) of studies conducted in the
+    same exact location (based on lat/lon) in the same year and from the same
+    source publication. These are considered a single site.
+    \item Filtered to have 10 or more samples per site. Avoids very small
+    sample sizes which would have very little information from the data and
+    therefore would be driven by our prior assumptions.
+    \item All sites were mapped to ADMIN1 level by comparing the lat/lon
+    coordinates against a shapefile from \href{https://gadm.org/}{GADM}
+    version 4.1.0, first administrative unit.
+    \item Results were combined with studies that contain additional
+    information not reflected in the WHO malaria threats map data. For
+    example, some studies have site-level resolution despite not being
+    apparent in the original data download. These additional studies can be
+    found in the \href{https://github.com/mrc-ide/DRpower/}{R_ignore/data
+    folder} under the name "additional_data.csv".
+    \item Filter to ADMIN1 regions that contain at least 3 distinct sites
+    within the same year and from the same source publication.
+  }
+  This final filtered dataset is what is available here.
 }
 \examples{
 data(historical_data)

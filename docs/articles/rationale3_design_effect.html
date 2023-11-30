@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">DRpower</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
       </span>
     </div>
 
@@ -141,7 +141,7 @@
       <h1 data-toc-skip>The Design Effect</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 25 Oct
+            <h4 data-toc-skip class="date">Last updated: 30 Nov
 2023</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/rationale3_design_effect.Rmd" class="external-link"><code>vignettes/rationale3_design_effect.Rmd</code></a></small>
@@ -158,11 +158,11 @@
 measure of the statistical <em>inefficiency</em> of a study design. It
 is calculated relative to the efficiency under simple random sampling
 (SRS), which is where we sample individuals at random from the target
-population as a whole. SRS is a highly efficient design statistically
-even though it tends to be a horrible design here from a practical
-viewpoint! SRS for a nationwide study would mean sampling single
-individuals from the country as a whole, which would be a logistical
-nightmare.</p>
+population. SRS is a highly efficient design statistically even though
+it tends to be a horrible design here from a practical viewpoint! SRS
+for a nationwide study would mean sampling single individuals from the
+country as a whole, driving from village to village each time, which
+would be a logistical nightmare.</p>
 <p>Higher values of <span class="math inline">\(D_{eff}\)</span>
 indicate that there is some statistical inefficiency introduced by our
 study design, although this should not necessarily be seen as a bad
@@ -174,18 +174,18 @@ considerations when coming up with an optimal design.</p>
 <p>The design effect is mathematically defined as the variance of our
 estimator of interest under the current study design divided by the
 variance under SRS. Let <span class="math inline">\(\hat{p}_c\)</span>
-be our estimator of the prevalence under the clustered survey design,
-and let <span class="math inline">\(\hat{p}_s\)</span> be our estimator
-under SRS. Then we can say:</p>
+be our estimator of the prevalence under the multi-site design, and let
+<span class="math inline">\(\hat{p}_s\)</span> be our estimator under
+SRS. Then we can say:</p>
 <p><span class="math inline">\(D_{eff} =
 \frac{var(\hat{p}_c)}{var(\hat{p}_s)}\)</span></p>
 <p>We have mentioned both of these variances in previous sections when
-talking about CIs. The variance under the cluster-level analyis is given
+talking about CIs. The variance under the multi-site analysis is given
 by <span class="math inline">\(var(\hat{p}_c) = \frac{s^2}{c}\)</span>,
 and the variance under SRS is given by <span class="math inline">\(var(\hat{p}_s) = \frac{\hat{p}(1 -
 \hat{p})}{nc}\)</span>. For our example data this gives <span class="math inline">\(D_{eff} =\)</span> 5.56. This is a fairly large
 design effect, meaning there is a large impact of overdispersion between
-clusters that is creating a high degree of statistical inefficiency.</p>
+sites that is creating a high degree of statistical inefficiency.</p>
 <div class="section level3">
 <h3 id="the-effective-sample-size">3.1 The effective sample size<a class="anchor" aria-label="anchor" href="#the-effective-sample-size"></a>
 </h3>
@@ -198,7 +198,7 @@ find that <span class="math inline">\(n_E =\)</span> 250 <span class="math inlin
 to be conservative. Some people (myself included) find this to be a very
 useful way of thinking about statistical efficiency. Even though we went
 to all the trouble of sampling 250 individuals, the fact that people are
-so similar within a cluster means that, effectively, we only sampled 44
+so similar within a site means that, effectively, we only sampled 44
 distinct individuals in total. This is a very “real world” way of
 thinking about something that can otherwise feel quite abstract.</p>
 <p>Now that we have an estimate of the sample size that takes account of
@@ -227,18 +227,16 @@ coefficient (denoted <span class="math inline">\(r\)</span>) through the
 formula:</p>
 <p><span class="math inline">\(D_{eff} = 1 + (n - 1)r\)</span></p>
 <p>Notice that when <span class="math inline">\(r = 1\)</span> (perfect
-correlation within clusters) we find that <span class="math inline">\(D_{eff}\)</span> reaches its maximum value of
+correlation within sites) we find that <span class="math inline">\(D_{eff}\)</span> reaches its maximum value of
 <span class="math inline">\(n\)</span>, and the effective sample size
 reaches its minimum value of <span class="math inline">\(n_E =
 \frac{nc}{n} = c\)</span>. This should make some intuitive sense - when
-there is perfect correlation we effectively have one observation per
-cluster because all subsequent observations will be dictated by the
-first.</p>
+there is perfect correlation within sites we effectively have one
+observation per site because all subsequent observations will be
+dictated by the first.</p>
 <p>But this formula also reveals one of the tricky things about <span class="math inline">\(D_{eff}\)</span>; that it only applies for a
-particular sample size. From the formula above we can see that a
-clustered prevalence survey with twice the sample size (i.e., twice the
-<span class="math inline">\(n\)</span>) will have roughly twice the
-<span class="math inline">\(D_{eff}\)</span>. This makes it difficult to
+particular sample size. From the formula above we can see that a survey
+with twice the sample size (i.e., twice the <span class="math inline">\(n\)</span>) will have roughly twice the <span class="math inline">\(D_{eff}\)</span>. This makes it difficult to
 compare values between studies. A design effect of 2 can mean a lot or a
 little, depending on the sample size of the study. On the other hand,
 the parameter <span class="math inline">\(r\)</span> does not change
@@ -266,7 +264,7 @@ Next topic
 
       <footer><div class="copyright">
   <p></p>
-<p>Developed by Bob Verity.</p>
+<p>Developed by Bob Verity, Shazia Ruybal.</p>
 </div>
 
 <div class="pkgdown">

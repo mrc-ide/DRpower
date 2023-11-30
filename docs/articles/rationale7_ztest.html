@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">DRpower</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
       </span>
     </div>
 
@@ -141,7 +141,7 @@
       <h1 data-toc-skip>The One-sample Z-test</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 25 Oct
+            <h4 data-toc-skip class="date">Last updated: 30 Nov
 2023</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/rationale7_ztest.Rmd" class="external-link"><code>vignettes/rationale7_ztest.Rmd</code></a></small>
@@ -181,15 +181,15 @@ formula:</p>
 <p>where <span class="math inline">\(\Phi()\)</span> is the cumulative
 density function of the normal distribution. What would happen if we
 used the value of <span class="math inline">\(N\)</span> taken from the
-mistaken approach described in the 2020 master protocol? We can explore
+mistaken approach described in the 2020 Master Protocol? We can explore
 this very neatly by substituting the value <span class="math inline">\(N
 = z_{\tiny 1 - \alpha/2}^2 \frac{\displaystyle p(1-p)}{\displaystyle
-(p-\mu)^2}D_{eff}\)</span> from the master protocol into the formula
+(p-\mu)^2}D_{eff}\)</span> from the Master Protocol into the formula
 above. Interestingly, we find that <strong>every term inside the
 brackets cancels out</strong>! We are left with <span class="math inline">\(\text{Power} = \Phi(0)\)</span>, which is equal to
 0.5. This is essentially a mathematical proof of what we described in
 the previous section - that power is forced to equal 50% when using the
-formula from the master protocol.</p>
+formula from the Master Protocol.</p>
 <p>Hopefully by this point I have convinced you of the issues with the
 CI-based approach. So, what should be the correct sample size formula?
 We can find this by rearranging the power formula above to give us the
@@ -203,16 +203,16 @@ formula:</p>
 - \alpha/2})^2 \frac{\displaystyle p(1-p)}{\displaystyle
 (p-\mu)^2}D_{eff}\)</span></p>
 <p>It is interesting to see how similar this is to the formula in the
-master protocol - the only difference is the addition of the extra <span class="math inline">\(z_{\tiny 1 - \beta}\)</span> term. This extra term
+Master Protocol - the only difference is the addition of the extra <span class="math inline">\(z_{\tiny 1 - \beta}\)</span> term. This extra term
 means that we will always be underestimating sample sizes if we use the
-master protocol formula.</p>
+Master Protocol formula.</p>
 <p>But just how wrong was the original formula? Dividing one by the
-other, we find that z-test sample sizes are greater than master protocol
-sizes by a factor <span class="math inline">\((1 + z_{\tiny 1 -
+other, we find that z-test sample sizes are greater than Master Protocol
+sample sizes by a factor <span class="math inline">\((1 + z_{\tiny 1 -
 \beta}/z_{\tiny 1 - \alpha/2})^2\)</span>. If we are aiming for a power
 of 80% then this factor equals 2.043. So, the actual sample size
-required is almost exactly double what we would get from the formula in
-the master protocol.</p>
+required is almost exactly double what we would get from the Master
+Protocol formula.</p>
 <p>To put this in context, if previously we found that 551 samples are
 needed, then with this new (corrected) formula we find that 1126 samples
 are needed. This is obviously significantly higher even than the updated
@@ -240,7 +240,7 @@ Next topic
 
       <footer><div class="copyright">
   <p></p>
-<p>Developed by Bob Verity.</p>
+<p>Developed by Bob Verity, Shazia Ruybal.</p>
 </div>
 
 <div class="pkgdown">

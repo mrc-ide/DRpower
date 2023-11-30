@@ -44,7 +44,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">DRpower</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
       </span>
     </div>
 
@@ -151,15 +151,18 @@
 <div class="section level1">
 <div class="page-header"><h1 id="drpower">DRpower<a class="anchor" aria-label="anchor" href="#drpower"></a>
 </h1></div>
-<p>The DRpower package is designed to assist with the development of <em>Plasmodium falciparum</em> <em>pfhrp2/3</em> gene deletion studies. It can be used in the following ways:</p>
+<p>The <em>DRpower</em> package is designed to assist with the development of <em>Plasmodium falciparum</em> <em>pfhrp2/3</em> gene deletion studies. It can be used in the following ways:</p>
 <ul>
 <li>
-<strong>In the design phase</strong> to choose a number of clusters and sample size per cluster to achieve a desired level of power. This is a critical step that ensures the conclusions of a study are statistically valid</li>
+<strong>In the design phase</strong> to choose a number of sites and sample size per site to achieve a desired level of power. This is a critical step that ensures the conclusions of a study are statistically valid</li>
 <li>
-<strong>In the analysis phase</strong> to perform calculations to estimate the prevalence of <em>pfhrp2/3</em> deletions and to test whether the prevalence is over a set threshold (5% by default)</li>
+<strong>In the analysis phase</strong> to perform calculations to estimate the prevalence of <em>pfhrp2/3</em> deletions and to test whether the prevalence is over a set threshold (5% by default) at the domain level</li>
 </ul>
-<p>The simplest way to interact with the package is through the <a href="https://shiny.dide.ic.ac.uk/DRpower-app/" class="external-link">interactive web app</a>, which contains all the main functions of the package in a user-friendly environment. If you are looking for a simple way to design a study or analyse your data then you should start with the app. Working directly with this package is recommended for people who want to do more advanced analyses or setup reproducible pipelines.</p>
-<p>The <a href="articles/rationale1_background.html">“How it works”</a> section gives a thorough explanation of the rationale behind the DRpower method. If you want to gain a deeper understanding of the statistical issues that motivate this software then you should start here.</p>
+<p style="text-align:center;">
+<img src="https://raw.githubusercontent.com/mrc-ide/DRpower/master/R_ignore/outputs/homepage_figure.png" height="338px" width="525px"><br> Example output from <em>DRpower</em>. This distribution gives the probability of pfhrp2/3 gene deletions being at any given prevalence in the domain. The red shaded region represents prevalence being above the 5% threshold - in this case there is an 87.4% chance of being above the threshold.
+</p>
+<p>The simplest way to interact with the package is through the <a href="https://shiny.dide.ic.ac.uk/DRpower-app/" class="external-link">interactive web app</a>, which contains all the main functions of the package in a user-friendly environment. If you are looking for a simple way to design a study or analyse your data then you should start with the app. Working directly with this package is recommended for people who want to do more advanced analyses, for example considering multiple end-points, or who want to set up reproducible pipelines.</p>
+<p>The <a href="articles/rationale1_background.html">“How it works”</a> section gives a thorough explanation of the rationale behind the <em>DRpower</em> method. If you want to gain a deeper understanding of the statistical issues that motivate this software then you should start here.</p>
 <p>For those wanting to jump straight into using the software, see the <a href="articles/installation.html">installation instructions</a> followed by a series of <a href="articles/tutorial_design.html">tutorials</a> on how to perform various analyses.</p>
 </div>
   </div>
@@ -194,6 +197,7 @@
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
 <li>Bob Verity <br><small class="roles"> Author, maintainer </small>  </li>
+<li>Shazia Ruybal <br><small class="roles"> Author </small>  </li>
 </ul>
 </div>
 
@@ -205,7 +209,7 @@
 
       <footer><div class="copyright">
   <p></p>
-<p>Developed by Bob Verity.</p>
+<p>Developed by Bob Verity, Shazia Ruybal.</p>
 </div>
 
 <div class="pkgdown">
