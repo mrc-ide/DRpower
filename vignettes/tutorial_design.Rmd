@@ -21,7 +21,7 @@ library(kableExtra)
 library(tidyverse)
 ```
 
-This tutorial demonstrates how you can use the DRpower package in the design phase of a *pfhrp2/3* deletion study to ensure you have adequate power. This takes a purely statistical view of the problem; the results presented here should be taken alonside other considerations such as logistcal, financial and ethical factors.
+This tutorial demonstrates how you can use the DRpower package in the design phase of a *pfhrp2/3* deletion study to ensure you have adequate power. This takes a purely statistical view of the problem; the results presented here should be taken alongside other considerations such as logistcal, financial and ethical factors.
 
 This tutorial covers:
 
@@ -164,14 +164,14 @@ The *DRpower* package contains simple functions for exploring other questions. F
 
 ```{r}
 # get power to detect a 1% variant at the domain level
-#get_power_presence(N = N, prevalence = 0.01, ICC = 0.05)
+get_power_presence(N = N, prevalence = 0.01, ICC = 0.05)
 ```
 
 We can see that the same sample sizes from the *pfhrp2/3* deletion study design also give us more than 80% power to detect rare variants at the domain level. Another way to approach this problem is to use the function `get_sample_size_presence()`, which tells us how many samples we need in each cluster to achieve 80% power:
 
 ```{r}
 # how many samples would we need to achieve 80% power in the presence analysis
-#get_sample_size_presence(n_clust = 6, prevalence = 0.01, ICC = 0.05)
+get_sample_size_presence(n_clust = 6, prevalence = 0.01, ICC = 0.05)
 ```
 
 So six clusters of 58 samples would do it. We have variable sample sizes, some above this level and some below, which is why the `get_power_presence()` method was useful.
@@ -180,10 +180,10 @@ What if we are not interested in summarising at the domain level, and instead we
 
 ```{r}
 # how many
-#get_sample_size_presence(n_clust = 1, prevalence = 0.01, ICC = 0)
+get_sample_size_presence(n_clust = 1, prevalence = 0.01, ICC = 0)
 
 # get power to detect a 1% variant in each of the individual clusters
-#mapply(get_power_presence, N, MoreArgs = list(ICC = 0))
+mapply(get_power_presence, N, MoreArgs = list(ICC = 0))
 ```
 
 We find that 161 samples are needed for a single site to be powered to detect a rare variant at 1% prevalence. Accordingly, only our large sites (250 samples) achieve power over 80%, and the smaller sites with 60 and 40 samples have power below 50%. Therefore we would conclude that 4 out of our 6 sites are underpowered at the individual level, and so we may be better off pooling results to the domain level.
@@ -196,14 +196,14 @@ The `get_sample_size_margin()` function tells us the per-cluster sample size nee
 
 ```{r}
 # get sample size needed to achieve 10% MOE if prevalence is 20% and we have 6 clusters
-#get_sample_size_margin(MOE = 0.1, n_clust = 6, prevalence = 0.2, ICC = 0.05)
+get_sample_size_margin(MOE = 0.1, n_clust = 6, prevalence = 0.2, ICC = 0.05)
 ```
 
 We only need 20 samples to achieve this level of precision, which we are well above. We can also use the `get_margin()` function to tell us what our MOE would be given a known sample size:
 
 ```{r}
 # get MOE assuming 40 samples in each of 6 clusters
-#get_margin(N = 40, n_clust = 6, prevalence = 0.2, ICC = 0.05)
+get_margin(N = 40, n_clust = 6, prevalence = 0.2, ICC = 0.05)
 ```
 
 With 40 samples we would expect to estimate prevalence to within plus or minus 8.7%.
@@ -215,7 +215,7 @@ set.seed(1)
 ```
 ```{r}
 # get MOE when using DRpower Bayesian model
-#get_margin_Bayesian(N, prevalence = 0.2, ICC = 0.05)
+get_margin_Bayesian(N, prevalence = 0.2, ICC = 0.05)
 ```
 
 Here, we expect around 13% error on the lower end, and around 31% error on the upper end. In other words, if the true prevalence of the marker is 20% in the population then we would expect our 95% CrI to extend from around 7% to 51%. This is quite a wide interval, and much wider than would assume based on the simpler `get_margin()` function. The reason is that the Bayesian model is making different assumptions, most notably estimating the ICC from data rather than assuming a known value.
