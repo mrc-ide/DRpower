@@ -142,7 +142,7 @@
       <h1 data-toc-skip>Power and Sample Size in the DRpower Model</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 25 Oct
+            <h4 data-toc-skip class="date">Last updated: 30 Nov
 2023</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/rationale8_power.Rmd" class="external-link"><code>vignettes/rationale8_power.Rmd</code></a></small>
@@ -191,10 +191,10 @@ with the DRpower package, one such set of results is shown below:</p>
 <p><img src="rationale8_power_files/figure-html/unnamed-chunk-3-1.png" width="700"></p>
 <p>There is some random noise in this plot, but the overall trend is
 clear. Power increases quickly at first and then plateaus out for larger
-sample sizes. Power reaches 80% for the DRpower method at around 110
+sample sizes. Power reaches 80% for the DRpower method at around 113
 samples per cluster. In contrast, the z-test method never reaches the
 80% power level.</p>
-<p>Why does the DRpower model have power so much higher than the z-test?
+<p>Why does the DRpower model have so much higher power than the z-test?
 This is not straightforward to answer, as the two approaches come from
 completely different statistical philosophies, but one very important
 difference is in the specific hypotheses that we are testing. In the
@@ -226,9 +226,9 @@ shown in the plot above. Find the first value of the sample size for
 which the power exceeds 80%.</li>
 <li>Intuitively, we would expect per-cluster sample sizes to decrease as
 the number of clusters increases. In some rare cases this method can
-give the opposite result due to random fluctuations in our estimation
-method. We therefore remove this effect by modifying results so that
-sample size can never decrease with more clusters.</li>
+give the opposite result due to random fluctuations. We therefore remove
+this effect by manually modifying results so that sample size can never
+decrease with more clusters.</li>
 <li>Sample sizes greater than 2000 are coded as <code>NA</code> because
 these are prohibitively large. Sample sizes less than 5 are fixed at 5
 because it would not be worth enrolling a cluster and collecting fewer
@@ -2051,7 +2051,7 @@ size, staff numbers, and malaria transmission intensity throughout the
 season. It may be that in some cases it is not possible to reach these
 numbers.</li>
 <li>For your newly refined sample size estimates, estimate power
-directly using the <code><a href="../reference/get_power_threshold.html">get_power_threshold()</a></code> function.</li>
+directly using the <code>get_power_threshold()</code> function.</li>
 </ol>
 <p>The best way to perform all of these steps is through the <a href="https://shiny.dide.ic.ac.uk/DRpower-app/" class="external-link">interactive web app</a>.
 But for those wanting to perform the same analysis in the R package, see
@@ -2071,7 +2071,7 @@ But for those wanting to perform the same analysis in the R package, see
 
       <footer><div class="copyright">
   <p></p>
-<p>Developed by Bob Verity.</p>
+<p>Developed by Bob Verity, Shazia Ruybal.</p>
 </div>
 
 <div class="pkgdown">

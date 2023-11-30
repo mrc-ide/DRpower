@@ -142,7 +142,6 @@
 <span>  CrI_type <span class="op">=</span> <span class="st">"HDI"</span>,</span>
 <span>  n_intervals <span class="op">=</span> <span class="fl">20</span>,</span>
 <span>  round_digits <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>  debug_on <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  use_cpp <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -163,7 +162,6 @@
 <span>  CrI_type <span class="op">=</span> <span class="st">"HDI"</span>,</span>
 <span>  n_intervals <span class="op">=</span> <span class="fl">20</span>,</span>
 <span>  round_digits <span class="op">=</span> <span class="fl">4</span>,</span>
-<span>  debug_on <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  use_cpp <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -171,8 +169,8 @@
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>n, N</dt>
-<dd><p>the numerator (<code>n</code>) and denominator (<code>N</code>) per cluster
-(vectors).</p></dd>
+<dd><p>the numerator (<code>n</code>) and denominator (<code>N</code>) per cluster.
+These are both integer vectors.</p></dd>
 
 
 <dt>alpha</dt>
@@ -182,25 +180,25 @@ argument for how this is calculated.</p></dd>
 
 
 <dt>prev_thresh</dt>
-<dd><p>return the probability that the prevalence is above this
-threshold. Can be a vector, in which case the return object contains one
-value for each input.</p></dd>
+<dd><p>the prevalence threshold that we are comparing against.
+Can be a vector, in which case the return object contains one value for
+each input.</p></dd>
 
 
 <dt>prior_prev_shape1, prior_prev_shape2, prior_ICC_shape1, prior_ICC_shape2</dt>
 <dd><p>parameters that dictate the shape of the Beta priors on prevalence and the
-ICC. Increasing the first shape parameter (e.g. <code>prior_prev_shape1</code>)
-pushes the distribution towards 1, increasing the second shape parameter
-(e.g. <code>prior_prev_shape2</code>) pushes the distribution towards 0.
-Increasing both shape parameters squeezes the distribution towards the
-centre and therefore makes it narrower. The default values of these
-parameters are based on an analysis of historical pfhrp2/3 studies.</p></dd>
+ICC. See the <a href="https://en.wikipedia.org/wiki/Beta_distribution" class="external-link">Wikipedia page on the Beta
+distribution</a> for more detail. The default values of these parameters were chosen
+based on an
+<a href="https://mrc-ide.github.io/DRpower/articles/historical_analysis.html" class="external-link">analysis
+of historical pfhrp2/3 studies</a>, although this does not guarantee that they
+will be suitable in all settings.</p></dd>
 
 
 <dt>MAP_on, post_mean_on, post_median_on, post_CrI_on, post_thresh_on, post_full_on</dt>
 <dd><p>a
-series of boolean (TRUE/FALSE) objects specifying which outputs to produce.
-The following options are available:</p><ul><li><p><code>MAP_on</code>: if <code>TRUE</code> then return the maximum a posteriori.</p></li>
+series of boolean values specifying which outputs to produce. The options are:</p><ul><li><p><code>MAP_on</code>: if <code>TRUE</code> then return the maximum <em>a
+  posteriori</em>.</p></li>
 <li><p><code>post_mean_on</code>: if <code>TRUE</code> then return the posterior mean.</p></li>
 <li><p><code>post_median_on</code>: if <code>TRUE</code> then return the posterior
   median.</p></li>
@@ -208,25 +206,28 @@ The following options are available:</p><ul><li><p><code>MAP_on</code>: if <code
   credible interval at significance level <code>alpha</code>. See <code>CrI_type</code>
   argument for how this is calculated.</p></li>
 <li><p><code>post_thresh_on</code>: if <code>TRUE</code> then return the posterior
-  probability of being above the threshold specified by <code>prev_thresh</code>.</p></li>
+  probability of being above the threshold(s) specified by
+  <code>prev_thresh</code>.</p></li>
 <li><p><code>post_full_on</code>: if <code>TRUE</code> then return the full posterior
-  distribution (as approximated using the adaptive quadrature approach) in
-  0.1% intervals from 0% to 100%.</p></li>
+  distribution, produced using the adaptive quadrature approach, at breaks
+  specified by <code>post_full_breaks</code>.</p></li>
 </ul></dd>
 
 
 <dt>post_full_breaks</dt>
 <dd><p>a vector of breaks at which to evaluate the full
-posterior distribution (if <code>post_full_on = TRUE</code>).</p></dd>
+posterior distribution (only if <code>post_full_on = TRUE</code>). Defaults to
+0.1% intervals from 0% to 100%.</p></dd>
 
 
 <dt>CrI_type</dt>
-<dd><p>which method to use when computing credible intervals, with
-options "ETI" (equal-tailed interval) and "HDI" (high-density interval).
+<dd><p>which method to use when computing credible intervals.
+Options are "ETI" (equal-tailed interval) or "HDI" (high-density interval).
 The ETI searches a distance <code>alpha/2</code> from either side of the [0,1]
 interval. The HDI method returns the narrowest interval that subtends a
 proportion <code>1-alpha</code> of the distribution. The HDI method is used by
-default.</p></dd>
+default as it guarantees that the MAP estimate is within the credible
+interval, which is not always the case for the ETI.</p></dd>
 
 
 <dt>n_intervals</dt>
@@ -241,46 +242,38 @@ used when reporting estimates. This is to simplify results and to avoid
 giving the false impression of extreme precision.</p></dd>
 
 
-<dt>debug_on</dt>
-<dd><p>for use in debugging. If <code>TRUE</code> and if <code>use_cpp =
-FALSE</code> then produces a plot of the posterior distribution evaluated by
-brute force (black) overlaid with the adaptive quadrature approximation
-(blue) for direct comparison. If <code>use_cpp = TRUE</code> then only the
-approximation is plotted. If the approximate distribution does not agree
-closely with the brute force solution then consider increasing the value of
-<code>n_intervals</code>. Note that producing this plot can be very slow, and so
-this option should be turned off when not needed.</p></dd>
-
-
 <dt>use_cpp</dt>
-<dd><p>if <code>TRUE</code> then use an Rcpp implementation of the adaptive
-quadrature approach that is much faster and therefore useful when running
-the function a large number of times.</p></dd>
+<dd><p>if <code>TRUE</code> (the default) then use an Rcpp implementation
+of the adaptive quadrature approach that is much faster than the base R
+method.</p></dd>
 
 </dl></div>
     <div id="details">
     <h2>Details</h2>
     <p>There are two unknown quantities in the DRpower model: the
-  prevalence and the ICC. Thes following functions integrate over a prior on
-  one quantity to give the marginal posterior distribution of the other.
-  Possible outputs include the posterior mean, median, credible interval
-  (CrI), probability of being above a threshold, and the full posterior
-  distribution. For speed, distributions are approximated using an adaptive
-  quadrature approach, in which the full distribution is split into intervals
-  of differing width and each intervals is approximated using Simpson's rule.
-  The number of intervals used in quadrature can be increased for more
-  accurate results, at the cost of slower speed.</p>
+  prevalence and the intra-cluster correlation (ICC). These functions
+  integrate over a prior on one quantity to arrive at the marginal posterior
+  distribution of the other. Possible outputs include the maximum <em>a
+  posteriori</em> (MAP) estimate, the posterior mean, posterior median, credible
+  interval (CrI), probability of being above a set threshold, and the full
+  posterior distribution. For speed, distributions are approximated using an
+  adaptive quadrature approach in which the full distribution is split into
+  intervals and each intervals is approximated using Simpson's rule. The
+  number of intervals used in quadrature can be increased for more accurate
+  results at the cost of slower speed.</p>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># basic example of estimating prevalence and ICC from observed counts</span></span></span>
-<span class="r-in"><span><span class="va">df_counts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>sample_size <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">80</span>, <span class="fl">110</span>, <span class="fl">120</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                        deletions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">5</span>, <span class="fl">6</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">get_prevalence</span><span class="op">(</span>n <span class="op">=</span> <span class="va">df_counts</span><span class="op">$</span><span class="va">deletions</span>, N <span class="op">=</span> <span class="va">df_counts</span><span class="op">$</span><span class="va">sample_size</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># basic example of estimating prevalence and</span></span></span>
+<span class="r-in"><span><span class="co"># ICC from observed counts</span></span></span>
+<span class="r-in"><span><span class="va">sample_size</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">80</span>, <span class="fl">110</span>, <span class="fl">120</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">deletions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">5</span>, <span class="fl">6</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="fu">get_prevalence</span><span class="op">(</span>n <span class="op">=</span> <span class="va">deletions</span>, N <span class="op">=</span> <span class="va">sample_size</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    MAP CrI_lower CrI_upper prob_above_threshold</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 4.96       1.7     15.72               0.6739</span>
-<span class="r-in"><span><span class="fu">get_ICC</span><span class="op">(</span>n <span class="op">=</span> <span class="va">df_counts</span><span class="op">$</span><span class="va">deletions</span>, N <span class="op">=</span> <span class="va">df_counts</span><span class="op">$</span><span class="va">sample_size</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">get_ICC</span><span class="op">(</span>n <span class="op">=</span> <span class="va">deletions</span>, N <span class="op">=</span> <span class="va">sample_size</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   MAP CrI_lower CrI_upper</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1   0         0    0.1642</span>
 <span class="r-in"><span></span></span>
@@ -294,7 +287,7 @@ the function a large number of times.</p></dd>
 
 
       <footer><div class="copyright">
-  <p></p><p>Developed by Bob Verity.</p>
+  <p></p><p>Developed by Bob Verity, Shazia Ruybal.</p>
 </div>
 
 <div class="pkgdown">

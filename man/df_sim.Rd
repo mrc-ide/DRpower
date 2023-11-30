@@ -5,25 +5,25 @@
 \alias{df_sim}
 \title{Summary of simulations from the threshold analysis}
 \format{
-A data frame of 547200 rows and 32 columns. The first 13 columns give
+A data.frame of 547200 rows and 19 columns. The first 13 columns give
   parameter combinations that were used in simulating and analysing data. The
   "reps" column gives the number of times simulation was repeated, and "seed"
   gives the value of the seed that was used at the start of this loop (to
   ensure reproducibility). "prev_thresh" gives the prevalence threshold used
-  in hypothesis testing. The remaining 16 columns give summary results over
-  simulations. The MAP, posterior mean, posterior median, lower and upper
-  credible intervals, and the probability of being above the target threshold
-  are all summarised in terms of their mean and variance. "n_reject" gives
-  the number of times the hypothesis of being below the threshold was
-  rejected. This is used to estimate empirical power as \code{n_reject /
-  reps}, and lower and upper CIs are calculated around this using the method
-  of Clopper and Pearson.
+  in hypothesis testing. The final three columns give the estimates power
+  over simulations along with lower and upper 95\% CIs calculated using the
+  method of Clopper and Pearson (1934).
 }
 \usage{
 data(df_sim)
 }
 \description{
-TODO
+This object was produced by running the function
+  \code{get_power()} over a wide range of parameter combinations. This
+  data.frame contains the results of these simulations attached to the
+  parameter values used in simulation. The most obvious use of this object is
+  in constructing power curves over a range of sample sizes (see
+  \code{?power_curve()}).
 }
 \examples{
 data(df_sim)

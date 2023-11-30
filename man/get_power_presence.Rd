@@ -4,23 +4,23 @@
 \alias{get_power_presence}
 \title{Calculate power when testing for presence of deletions}
 \usage{
-get_power_presence(N, prevalence = 0.01, ICC = 0.1)
+get_power_presence(N, prevalence = 0.01, ICC = 0.05)
 }
 \arguments{
-\item{N}{vector giving the number of samples obtained from each cluster.}
+\item{N}{vector of the number of samples obtained from each cluster.}
 
-\item{prevalence}{assumed true prevalence of pfhrp2 deletions. Input as
+\item{prevalence}{assumed true prevalence of pfhrp2/3 deletions as a
 proportion between 0 and 1.}
 
-\item{ICC}{assumed true intra-cluster correlation (ICC), between 0 and 1.}
+\item{ICC}{assumed true intra-cluster correlation (ICC) between 0 and 1.}
 }
 \description{
 Calculates power directly for the case of a clustered prevalence
   survey where the aim is to detect the presence of *any* deletions over all
   clusters. This design can be useful as a pilot study to identify priority
-  regions where deletions are likely. Note that we need to take account of
-  intra-cluster correlation here, as a high ICC will make it more likely that
-  we see zero deletions even when the prevalence is non-zero.
+  regions where high deletion prevalence is likely. Note that we need to take
+  account of intra-cluster correlation here, as a high ICC will make it more
+  likely that we see zero deletions even when the prevalence is non-zero.
 }
 \examples{
 get_power_presence(N = c(120, 90, 150), prevalence = 0.01, ICC = 0.1)

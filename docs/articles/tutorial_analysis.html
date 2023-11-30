@@ -141,7 +141,7 @@
       <h1 data-toc-skip>Analysing data</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 25 Oct
+            <h4 data-toc-skip class="date">Last updated: 30 Nov
 2023</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/tutorial_analysis.Rmd" class="external-link"><code>vignettes/tutorial_analysis.Rmd</code></a></small>
@@ -152,13 +152,15 @@
     
     
 <p>Here, we outline the main steps in analysing data using the DRpower
-Bayesian model.</p>
+Bayesian model. Although we focus on the <em>pfhrp2/3</em> use-case
+here, the same steps can be used to analyse the prevalence of drug
+resistance markers.</p>
 <div class="section level2">
 <h2 id="estimate-prevalence">1. Estimate prevalence<a class="anchor" aria-label="anchor" href="#estimate-prevalence"></a>
 </h2>
 <p>The main thing we want to estimate is usually the prevalence of
-<em>pfhrp2/3</em> deletions. This is extremely simple, and is carried
-out through the <code><a href="../reference/get_posterior.html">get_prevalence()</a></code> function. We pass into
+<em>pfhrp2/3</em> deletions. This is extremely simple to do, and is
+carried out through the <code><a href="../reference/get_posterior.html">get_prevalence()</a></code> function. We pass
 this function two sets of values; 1) the number of <em>pfhrp2/3</em>
 deletions observed in each cluster (numerator), and 2) the total sample
 size in each cluster (denominator):</p>
@@ -172,10 +174,10 @@ size in each cluster (denominator):</p>
 <span>               N <span class="op">=</span> <span class="va">sample_size</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    MAP CrI_lower CrI_upper prob_above_threshold</span></span>
 <span><span class="co">#&gt; 1 6.81       2.3     19.52               0.8791</span></span></code></pre></div>
-<p>Here, we obtain an estimate of 6.81% with a 95% CrI in the range
-[2.3% to 19.52%]. When presenting our estimates we should always report
-the full credible interval and not just the central estimate of 6.81%,
-as this may give a misleading impression of our confidence.</p>
+<p>We obtain a point estimate of 6.81% prevalence, with a 95% CrI in the
+range [2.3% to 19.52%]. When presenting our estimates we should always
+report the full credible interval and not just the central estimate of
+6.81%, as this may give a misleading impression of high confidence.</p>
 </div>
 <div class="section level2">
 <h2 id="compare-prevalence-against-threshold">2. Compare prevalence against threshold<a class="anchor" aria-label="anchor" href="#compare-prevalence-against-threshold"></a>
@@ -226,7 +228,7 @@ information into account.</p>
 
       <footer><div class="copyright">
   <p></p>
-<p>Developed by Bob Verity.</p>
+<p>Developed by Bob Verity, Shazia Ruybal.</p>
 </div>
 
 <div class="pkgdown">

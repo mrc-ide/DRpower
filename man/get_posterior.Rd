@@ -25,7 +25,6 @@ get_prevalence(
   CrI_type = "HDI",
   n_intervals = 20,
   round_digits = 2,
-  debug_on = FALSE,
   use_cpp = TRUE
 )
 
@@ -46,35 +45,34 @@ get_ICC(
   CrI_type = "HDI",
   n_intervals = 20,
   round_digits = 4,
-  debug_on = FALSE,
   use_cpp = TRUE
 )
 }
 \arguments{
-\item{n, N}{the numerator (\code{n}) and denominator (\code{N}) per cluster
-(vectors).}
+\item{n, N}{the numerator (\code{n}) and denominator (\code{N}) per cluster.
+These are both integer vectors.}
 
 \item{alpha}{the significance level of the credible interval - for example,
 use \code{alpha = 0.05} for a 95\% interval. See also \code{CrI_type}
 argument for how this is calculated.}
 
-\item{prev_thresh}{return the probability that the prevalence is above this
-threshold. Can be a vector, in which case the return object contains one
-value for each input.}
+\item{prev_thresh}{the prevalence threshold that we are comparing against.
+Can be a vector, in which case the return object contains one value for
+each input.}
 
 \item{prior_prev_shape1, prior_prev_shape2, prior_ICC_shape1, prior_ICC_shape2}{parameters that dictate the shape of the Beta priors on prevalence and the
-ICC. Increasing the first shape parameter (e.g. \code{prior_prev_shape1})
-pushes the distribution towards 1, increasing the second shape parameter
-(e.g. \code{prior_prev_shape2}) pushes the distribution towards 0.
-Increasing both shape parameters squeezes the distribution towards the
-centre and therefore makes it narrower. The default values of these
-parameters are based on an analysis of historical pfhrp2/3 studies.}
+ICC. See the \href{https://en.wikipedia.org/wiki/Beta_distribution}{Wikipedia page on the Beta
+distribution} for more detail. The default values of these parameters were chosen
+based on an
+\href{https://mrc-ide.github.io/DRpower/articles/historical_analysis.html}{analysis
+of historical pfhrp2/3 studies}, although this does not guarantee that they
+will be suitable in all settings.}
 
 \item{MAP_on, post_mean_on, post_median_on, post_CrI_on, post_thresh_on, post_full_on}{a
-series of boolean (TRUE/FALSE) objects specifying which outputs to produce.
-The following options are available:
+series of boolean values specifying which outputs to produce. The options are:
 \itemize{
-  \item \code{MAP_on}: if \code{TRUE} then return the maximum a posteriori.
+  \item \code{MAP_on}: if \code{TRUE} then return the maximum \emph{a
+  posteriori}.
   \item \code{post_mean_on}: if \code{TRUE} then return the posterior mean.
   \item \code{post_median_on}: if \code{TRUE} then return the posterior
   median.
@@ -82,21 +80,24 @@ The following options are available:
   credible interval at significance level \code{alpha}. See \code{CrI_type}
   argument for how this is calculated.
   \item \code{post_thresh_on}: if \code{TRUE} then return the posterior
-  probability of being above the threshold specified by \code{prev_thresh}.
+  probability of being above the threshold(s) specified by
+  \code{prev_thresh}.
   \item \code{post_full_on}: if \code{TRUE} then return the full posterior
-  distribution (as approximated using the adaptive quadrature approach) in
-  0.1\% intervals from 0\% to 100\%.
+  distribution, produced using the adaptive quadrature approach, at breaks
+  specified by \code{post_full_breaks}.
 }}
 
 \item{post_full_breaks}{a vector of breaks at which to evaluate the full
-posterior distribution (if \code{post_full_on = TRUE}).}
+posterior distribution (only if \code{post_full_on = TRUE}). Defaults to
+0.1\% intervals from 0\% to 100\%.}
 
-\item{CrI_type}{which method to use when computing credible intervals, with
-options "ETI" (equal-tailed interval) and "HDI" (high-density interval).
+\item{CrI_type}{which method to use when computing credible intervals.
+Options are "ETI" (equal-tailed interval) or "HDI" (high-density interval).
 The ETI searches a distance \code{alpha/2} from either side of the [0,1]
 interval. The HDI method returns the narrowest interval that subtends a
 proportion \code{1-alpha} of the distribution. The HDI method is used by
-default.}
+default as it guarantees that the MAP estimate is within the credible
+interval, which is not always the case for the ETI.}
 
 \item{n_intervals}{the number of intervals used in the adaptive quadrature
 method. Increasing this value gives a more accurate representation of the
@@ -106,18 +107,9 @@ true posterior, but comes at the cost of reduced speed.}
 used when reporting estimates. This is to simplify results and to avoid
 giving the false impression of extreme precision.}
 
-\item{debug_on}{for use in debugging. If \code{TRUE} and if \code{use_cpp =
-FALSE} then produces a plot of the posterior distribution evaluated by
-brute force (black) overlaid with the adaptive quadrature approximation
-(blue) for direct comparison. If \code{use_cpp = TRUE} then only the
-approximation is plotted. If the approximate distribution does not agree
-closely with the brute force solution then consider increasing the value of
-\code{n_intervals}. Note that producing this plot can be very slow, and so
-this option should be turned off when not needed.}
-
-\item{use_cpp}{if \code{TRUE} then use an Rcpp implementation of the adaptive
-quadrature approach that is much faster and therefore useful when running
-the function a large number of times.}
+\item{use_cpp}{if \code{TRUE} (the default) then use an Rcpp implementation
+of the adaptive quadrature approach that is much faster than the base R
+method.}
 }
 \description{
 Takes raw counts of the number of positive samples per cluster
@@ -127,21 +119,24 @@ Takes raw counts of the number of positive samples per cluster
 }
 \details{
 There are two unknown quantities in the DRpower model: the
-  prevalence and the ICC. Thes following functions integrate over a prior on
-  one quantity to give the marginal posterior distribution of the other.
-  Possible outputs include the posterior mean, median, credible interval
-  (CrI), probability of being above a threshold, and the full posterior
-  distribution. For speed, distributions are approximated using an adaptive
-  quadrature approach, in which the full distribution is split into intervals
-  of differing width and each intervals is approximated using Simpson's rule.
-  The number of intervals used in quadrature can be increased for more
-  accurate results, at the cost of slower speed.
+  prevalence and the intra-cluster correlation (ICC). These functions
+  integrate over a prior on one quantity to arrive at the marginal posterior
+  distribution of the other. Possible outputs include the maximum \emph{a
+  posteriori} (MAP) estimate, the posterior mean, posterior median, credible
+  interval (CrI), probability of being above a set threshold, and the full
+  posterior distribution. For speed, distributions are approximated using an
+  adaptive quadrature approach in which the full distribution is split into
+  intervals and each intervals is approximated using Simpson's rule. The
+  number of intervals used in quadrature can be increased for more accurate
+  results at the cost of slower speed.
 }
 \examples{
-# basic example of estimating prevalence and ICC from observed counts
-df_counts <- data.frame(sample_size = c(80, 110, 120),
-                        deletions = c(3, 5, 6))
-get_prevalence(n = df_counts$deletions, N = df_counts$sample_size)
-get_ICC(n = df_counts$deletions, N = df_counts$sample_size)
+# basic example of estimating prevalence and
+# ICC from observed counts
+sample_size <- c(80, 110, 120)
+deletions <- c(3, 5, 6)
+
+get_prevalence(n = deletions, N = sample_size)
+get_ICC(n = deletions, N = sample_size)
 
 }

@@ -21,21 +21,24 @@ Description: This package can be used in the design and/or analysis stages of
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-LazyDataCompression:xz
+LazyDataCompression: xz
 RoxygenNote: 7.2.3
 BugReports: https://github.com/mrc-ide/DRpower/issues
 Imports: 
     dplyr,
     extraDistr,
     magrittr,
-    Rcpp
+    Rcpp,
+    knitrProgressBar,
+    ggplot2,
+    tidyr
 Suggests: 
     knitr,
-    ggplot2,
+    cowplot,
     kableExtra,
     testthat (>= 3.0.0),
-    ggridges,
     tidyverse
+Remotes: rmflight/knitrProgressBar
 Config/testthat/edition: 3
 LinkingTo: 
     Rcpp

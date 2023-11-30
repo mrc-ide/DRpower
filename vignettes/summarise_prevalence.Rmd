@@ -23,23 +23,19 @@ library(tidyverse)
 
 ## 1. Is our Bayesian method biased?
 
-The `get_prevalence()` function calculates the full posterior distribution of the prevalence, but then it usually returns just a summary of this distribution (unless `post_full_on = TRUE`). There are many summaries that we could choose, for example, we might choose the posterior mean. But how good a summary is this? The plot below shows the posterior mean for the 6-cluster case compared with the true prevalence used in simulation, averaged over 1000 simulations. If the method is unbiased then the coloured lines should match the 1:1 line (dashed):
+The `get_prevalence()` function calculates the full posterior distribution of the prevalence, but then it usually returns just a summary of this distribution (unless `post_full_on = TRUE`). There are many summaries that we could choose, for example, we might choose the posterior mean. But how good a summary is this? The plot below shows the posterior mean for the 6-cluster case compared with the true prevalence used in simulation. These results are averaged over 1000 simulations. If the method is unbiased then the coloured lines should match the 1:1 dashed line:
 
 ```{r, echo=FALSE}
-df_sim %>%
-  filter(prior_ICC_shape2 == 9) %>%
-  filter(prev_thresh == 0.05) %>%
-  filter(n_clust == 6) %>%
-  filter(N %in% c(5, 50, 100)) %>%
-  filter(ICC == 0.05) %>%
-  mutate(N = as.factor(N)) %>%
+df_plot <- readRDS("../inst/extdata/sim_bias.rds")
+
+df_plot %>%
   ggplot() + theme_bw() +
-  geom_abline(slope = 1, linetype = "dashed") +
-  geom_line(aes(x = prevalence * 1e2, y = post_mean_mean, col = N)) +
+  geom_line(aes(x = 1e2*prevalence, y = post_mean, col = as.factor(N))) +
   xlim(c(0, 20)) + ylim(c(0, 25)) +
-  xlab("True prevalence") + ylab("Estimated prevalence (posterior mean)") +
+  geom_abline(linetype = "dashed") +
+  xlab("True prevalence") + ylab("Estimated prevalence") +
   scale_colour_discrete(name = "Sample size\nper cluster") +
-  ggtitle("Number of clusters = 6")
+  ggtitle("Summarised via posterior mean")
 ```
 
 We can see from this plot that the posterior mean doesn't match the 1:1 line very well, rather it tends to overestimate the prevalence. This is a particular problem when cluster sizes are very small (e.g. 5), but the issue remains with larger sizes (e.g. 100). What does this mean for our Bayesian method?
@@ -113,20 +109,14 @@ The dashed line gives the basic estimate we would obtain from the raw data (30 /
 That being said, there are some cases where we need a central estimate, and in this case **we recommend using the MAP estimate**. The plot below explores the bias of the MAP estimate:
 
 ```{r, echo=FALSE}
-df_sim %>%
-  filter(prior_ICC_shape2 == 9) %>%
-  filter(prev_thresh == 0.05) %>%
-  filter(n_clust == 6) %>%
-  filter(N %in% c(5, 50, 100)) %>%
-  filter(ICC == 0.05) %>%
-  mutate(N = as.factor(N)) %>%
+df_plot %>%
   ggplot() + theme_bw() +
-  geom_abline(slope = 1, linetype = "dashed") +
-  geom_line(aes(x = prevalence * 1e2, y = MAP_mean, col = N)) +
+  geom_line(aes(x = 1e2*prevalence, y = MAP, col = as.factor(N))) +
   xlim(c(0, 20)) + ylim(c(0, 25)) +
-  xlab("True prevalence") + ylab("Estimated prevalence (MAP)") +
+  geom_abline(linetype = "dashed") +
+  xlab("True prevalence") + ylab("Estimated prevalence") +
   scale_colour_discrete(name = "Sample size\nper cluster") +
-  ggtitle("Number of clusters = 6")
+  ggtitle("Summarised via MAP")
 ```
 
 Some bias remains for 5 samples per cluster, but for larger sample sizes the bias is very small. This is why the MAP is the default method returned by `get_prevalence()`.

@@ -21,11 +21,11 @@ library(kableExtra)
 library(tidyverse)
 ```
 
-Here, we outline the main steps in analysing data using the DRpower Bayesian model.
+Here, we outline the main steps in analysing data using the DRpower Bayesian model. Although we focus on the *pfhrp2/3* use-case here, the same steps can be used to analyse the prevalence of drug resistance markers.
 
 ## 1. Estimate prevalence
 
-The main thing we want to estimate is usually the prevalence of *pfhrp2/3* deletions. This is extremely simple, and is carried out through the `get_prevalence()` function. We pass into this function two sets of values; 1) the number of *pfhrp2/3* deletions observed in each cluster (numerator), and 2) the total sample size in each cluster (denominator):
+The main thing we want to estimate is usually the prevalence of *pfhrp2/3* deletions. This is extremely simple to do, and is carried out through the `get_prevalence()` function. We pass this function two sets of values; 1) the number of *pfhrp2/3* deletions observed in each cluster (numerator), and 2) the total sample size in each cluster (denominator):
 
 ```{r, echo=FALSE}
 # define observed data
@@ -46,7 +46,7 @@ get_prevalence(n = num_deletions,
                N = sample_size)
 ```
 
-Here, we obtain an estimate of `r z$MAP`% with a 95% CrI in the range [`r z$CrI_lower`% to `r z$CrI_upper`%]. When presenting our estimates we should always report the full credible interval and not just the central estimate of `r z$MAP`%, as this may give a misleading impression of our confidence.
+We obtain a point estimate of `r z$MAP`% prevalence, with a 95% CrI in the range [`r z$CrI_lower`% to `r z$CrI_upper`%]. When presenting our estimates we should always report the full credible interval and not just the central estimate of `r z$MAP`%, as this may give a misleading impression of high confidence.
 
 ## 2. Compare prevalence against threshold
 

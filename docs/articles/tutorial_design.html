@@ -141,7 +141,7 @@
       <h1 data-toc-skip>Designing a study</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 25 Oct
+            <h4 data-toc-skip class="date">Last updated: 30 Nov
 2023</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/tutorial_design.Rmd" class="external-link"><code>vignettes/tutorial_design.Rmd</code></a></small>
@@ -156,6 +156,18 @@ design phase of a <em>pfhrp2/3</em> deletion study to ensure you have
 adequate power. This takes a purely statistical view of the problem; the
 results presented here should be taken alonside other considerations
 such as logistcal, financial and ethical factors.</p>
+<p>This tutorial covers:</p>
+<ul>
+<li>Using sample size tables</li>
+<li>Interpreting power curves</li>
+<li>Refining cluster sizes based on real-world constraints and
+recalculating power</li>
+<li>Accounting for dropout, and working out how many suspected cases to
+enrol</li>
+<li>Using the same study design for other molecular end-points,
+including detecting rare variants and estimating a drug resistance
+marker to within a known margin of error</li>
+</ul>
 <div class="section level2">
 <h2 id="consult-sample-size-tables">1. Consult sample size tables<a class="anchor" aria-label="anchor" href="#consult-sample-size-tables"></a>
 </h2>
@@ -171,18 +183,10 @@ parameters we care about. In our case, we will power the study to detect
 a prevalence of 10% deletions in our region, and we will assume an
 intra-cluster correlation coefficient of 0.05 based on <a href="articles/historical_analysis.html">historical data</a>:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># load tidyverse package for manipulating data</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org" class="external-link">tidyverse</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># filter sample size data.frame</span></span>
-<span><span class="va">df_ss</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">prior_ICC_shape2</span> <span class="op">==</span> <span class="fl">9</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">ICC</span> <span class="op">==</span> <span class="fl">0.05</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">prev_thresh</span> <span class="op">==</span> <span class="fl">0.05</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/near.html" class="external-link">near</a></span><span class="op">(</span><span class="va">prevalence</span>, <span class="fl">0.1</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">n_clust</span>, <span class="va">N_opt</span><span class="op">)</span>  <span class="co"># show just these two columns</span></span>
+<code class="sourceCode R"><span><span class="co"># get sample size table for parameters of interest</span></span>
+<span><span class="fu"><a href="../reference/get_sample_size_table.html">get_sample_size_table</a></span><span class="op">(</span>prevalence <span class="op">=</span> <span class="fl">0.1</span>, ICC <span class="op">=</span> <span class="fl">0.05</span>, prev_thresh <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 19 × 2</span></span></span>
-<span><span class="co">#&gt;    n_clust N_opt</span></span>
+<span><span class="co">#&gt;    n_clust `0.1`</span></span>
 <span><span class="co">#&gt;      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span>       2    <span style="color: #BB0000;">NA</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span>       3    <span style="color: #BB0000;">NA</span></span></span>
@@ -212,16 +216,16 @@ sizes are too large to be reported in this table. It’s also interesting
 to note that the total sample size (<code>n_clust * N_opt</code>)
 <em>decreases</em> as we recruit more clusters. For example, a 6-cluster
 design would require 678 samples in total, but a 10-cluster design would
-need only 300. This is one of <em>many</em> arguments for why it’s a
-good idea to recruit as many clusters as possible.</p>
+require only 300. This is one of <em>many</em> arguments for recruiting
+as many clusters as possible.</p>
 <p>Let’s assume that we can only recruit 6 clusters for logistical
-reasons, meaning we would aim for 113 samples per cluster. These
+reasons, meaning we are aiming for 113 samples per cluster. These
 clusters can be chosen through randomisation of all health facilities,
 or by using predesignated sentinel surveillance sites. In the latter
 case, it is important that sentinel sites are chosen to be
-representative of the population in the province as a whole (e.g. in
-terms of demographic and social characteristics), otherwise we risk
-getting a biased view of <em>pfhrp2/3</em> deletion prevalence.</p>
+representative of the population in the domain as a whole (e.g. in terms
+of demographic and social characteristics), otherwise we risk getting a
+biased view of the prevalence of <em>pfhrp2/3</em> deletions.</p>
 </div>
 <div class="section level2">
 <h2 id="consult-power-curves">2. Consult power curves<a class="anchor" aria-label="anchor" href="#consult-power-curves"></a>
@@ -233,23 +237,11 @@ our power. On the other hand, it could be that the curve is very
 shallow, in which case we have some more wiggle room.</p>
 <p>All of the power curves that were used to produce the sample size
 tables are distributed with the DRpower package and accessible via the
-<code>df_sim</code> object. As before, we need to filter this very large
-data.frame to get the curve we are interested in:</p>
+<code>df_sim</code> object. We can also visualise them directly using
+the <code><a href="../reference/plot_power.html">plot_power()</a></code> function:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># filter data</span></span>
-<span><span class="va">df_sim_filter</span> <span class="op">&lt;-</span> <span class="va">df_sim</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">prior_ICC_shape2</span> <span class="op">==</span> <span class="fl">9</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">n_clust</span> <span class="op">==</span> <span class="fl">6</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">ICC</span> <span class="op">==</span> <span class="fl">0.05</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">prev_thresh</span> <span class="op">==</span> <span class="fl">0.05</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/near.html" class="external-link">near</a></span><span class="op">(</span><span class="va">prevalence</span>, <span class="fl">0.1</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># plot power as a function of N</span></span>
-<span><span class="va">df_sim_filter</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">N</span>, y <span class="op">=</span> <span class="va">power_mean</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="fl">0.8</span>, alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">150</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># plot power as a function of per-cluster sample size</span></span>
+<span><span class="fu"><a href="../reference/plot_power.html">plot_power</a></span><span class="op">(</span>n_clust <span class="op">=</span> <span class="fl">6</span>, prevalence <span class="op">=</span> <span class="fl">0.1</span>, N_max <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span></code></pre></div>
 <p><img src="tutorial_design_files/figure-html/unnamed-chunk-4-1.png" width="700"></p>
 <p>We find that the power curve is fairly shallow around the chosen
 value of N = 113. For example, the value N = 70 still achieves 75%
@@ -260,50 +252,51 @@ probability of finding an interesting result if it is there, so a study
 with 75% power has alsmost as good a chance of success as a study with
 80% power. It is certainly not the case that if we fail to hit 80% then
 the study is completely invalid. This is important because a drop in
-sample size from 113 per cluster to 70 may be the difference between a
-study that is feasible to conduct and one that is not. We need to
-balance these factors against each other when coming up with a study
+sample size from 113 per cluster to 70 per cluster may be the difference
+between a study that is feasible to conduct and one that is not. We need
+to balance these factors against each other when coming up with a study
 design.</p>
 <p>That being said, we should not allow power to drop too low or the
 study may not be worth doing. In our case we will stick to the target
 value of 113 samples per cluster, as we believe we can raise funds to
-this level and successfully carry out the project in practice.</p>
+this level and successfully carry out the study with this sample
+size.</p>
 </div>
 <div class="section level2">
 <h2 id="refine-cluster-sizes">3. Refine cluster sizes<a class="anchor" aria-label="anchor" href="#refine-cluster-sizes"></a>
 </h2>
 <p>Next, we should examine our 6 clusters individually to see if they
 are able to recruit 113 samples. Ideally, this should be informed by
-historical case reports, which can give a good indication of how many
-malaria cases tend to be seen throughout the transmission season.</p>
+historical incidence trends at each of the sites, which can give a good
+indication of how many malaria cases tend to be seen throughout the
+transmission season.</p>
 <p>In our case, let’s assume that two sites are in low transmission
-areas, meaning they can only recruit 60 samples during the study
-timeframe. Another two sites are very small, and only have the capacity
-to enrol 40 samples due to staffing issues.</p>
-<p>The question is - do these smaller clusters hurt our power? We cannot
-work this out from sample size tables or power curves because it is very
-unlikely that we have results for this exact situation. But we can
-explore power directly using the <code><a href="../reference/get_power_threshold.html">get_power_threshold()</a></code>
-function:</p>
+areas, meaning they can only recruit 60 samples during the study time
+frame. Another two sites are very small, and only have the capacity to
+enrol 40 samples due to staffing issues.</p>
+<p>The question is - how badly do these smaller cluster sizes hurt our
+power? We cannot work this out from sample size tables or power curves
+because these assume the same sample size in each site. But we can
+explore power directly using the <code><a href="../reference/get_power.html">get_power()</a></code> function:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/get_power_threshold.html">get_power_threshold</a></span><span class="op">(</span>N <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">113</span>, <span class="fl">113</span>, <span class="fl">60</span>, <span class="fl">60</span>, <span class="fl">40</span>, <span class="fl">40</span><span class="op">)</span>,   <span class="co"># new cluster sizes</span></span>
-<span>                    prevalence <span class="op">=</span> <span class="fl">0.1</span>,</span>
-<span>                    ICC <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>                    prev_thresh <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>                    reps <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   power lower upper</span></span>
-<span><span class="co">#&gt; 1  73.7 70.85 76.41</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/get_power.html">get_power</a></span><span class="op">(</span>N <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">113</span>, <span class="fl">113</span>, <span class="fl">60</span>, <span class="fl">60</span>, <span class="fl">40</span>, <span class="fl">40</span><span class="op">)</span>,   <span class="co"># new cluster sizes</span></span>
+<span>          prevalence <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>          ICC <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>          prev_thresh <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>          reps <span class="op">=</span> <span class="fl">1e2</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   prev_thresh power lower upper</span></span>
+<span><span class="co">#&gt; 1        0.05    70 60.02 78.76</span></span></code></pre></div>
 <p>We find that power is slightly lower than before, probably around
 74%. We could try to balance things out by obtaining more samples from
 our remaining two clusters:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/get_power_threshold.html">get_power_threshold</a></span><span class="op">(</span>N <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">250</span>, <span class="fl">250</span>, <span class="fl">60</span>, <span class="fl">60</span>, <span class="fl">40</span>, <span class="fl">40</span><span class="op">)</span>,   <span class="co"># rebalanced cluster sizes</span></span>
-<span>                    prevalence <span class="op">=</span> <span class="fl">0.1</span>,</span>
-<span>                    ICC <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>                    prev_thresh <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>                    reps <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   power lower upper</span></span>
-<span><span class="co">#&gt; 1  77.7 74.99 80.25</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/get_power.html">get_power</a></span><span class="op">(</span>N <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">250</span>, <span class="fl">250</span>, <span class="fl">60</span>, <span class="fl">60</span>, <span class="fl">40</span>, <span class="fl">40</span><span class="op">)</span>,   <span class="co"># rebalanced cluster sizes</span></span>
+<span>          prevalence <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>          ICC <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>          prev_thresh <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>          reps <span class="op">=</span> <span class="fl">1e2</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   prev_thresh power lower upper</span></span>
+<span><span class="co">#&gt; 1        0.05    77 67.51 84.83</span></span></code></pre></div>
 <p>This rebalancing has helped, power is now back up to around 78%, but
 it comes at the cost of obtaining more samples. The total sample size
 has now gone up to 700 from the original 678.</p>
@@ -311,13 +304,13 @@ has now gone up to 700 from the original 678.</p>
 recruit just one more cluster, rather than expanding our existing
 clusters:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/get_power_threshold.html">get_power_threshold</a></span><span class="op">(</span>N <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">113</span>, <span class="fl">113</span>, <span class="fl">60</span>, <span class="fl">60</span>, <span class="fl">40</span>, <span class="fl">40</span>, <span class="fl">40</span><span class="op">)</span>,   <span class="co"># one more cluster of size 40</span></span>
-<span>                    prevalence <span class="op">=</span> <span class="fl">0.1</span>,</span>
-<span>                    ICC <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>                    prev_thresh <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>                    reps <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   power lower upper</span></span>
-<span><span class="co">#&gt; 1  78.2 75.51 80.72</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/get_power.html">get_power</a></span><span class="op">(</span>N <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">113</span>, <span class="fl">113</span>, <span class="fl">60</span>, <span class="fl">60</span>, <span class="fl">40</span>, <span class="fl">40</span>, <span class="fl">40</span><span class="op">)</span>,   <span class="co"># one more cluster of size 40</span></span>
+<span>          prevalence <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>          ICC <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>          prev_thresh <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>          reps <span class="op">=</span> <span class="fl">1e2</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   prev_thresh power lower upper</span></span>
+<span><span class="co">#&gt; 1        0.05    78 68.61 85.67</span></span></code></pre></div>
 <p>Power is now recovered to around 78% while the total sample size is
 only 466. This emphasises the point that <em>where possible</em> we
 should put our efforts into recruiting more clusters rather than
@@ -334,43 +327,59 @@ what we can realistically achieve given real world constraints.</p>
 <div class="section level2">
 <h2 id="account-for-dropout">4. Account for dropout<a class="anchor" aria-label="anchor" href="#account-for-dropout"></a>
 </h2>
-<p>The numbers above refer to <em>confirmed malaria cases</em> (by some
-gold standard that is <em>not</em> HRP2-based RDTs). But when designing
-a study we need to know how many <em>suspected</em> malaria cases to
-enrol, which may be much higher. Many suspected malaria cases come back
-negative due to the symptoms overlapping with many other illnesses.</p>
-<p>To calculate the number of suspected cases that we need to enrol, we
-should divide our sample sizes through by the expected positive
-fraction. For example, if we assume that 40% of suspected cases will
-come back positive then we would do the following:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">N_suspected</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">ceiling</a></span><span class="op">(</span><span class="va">N</span> <span class="op">/</span> <span class="fl">0.4</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">N_suspected</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 625 625 150 150 100 100</span></span></code></pre></div>
-<p>The <code><a href="https://rdrr.io/r/base/Round.html" class="external-link">ceiling()</a></code> function rounds values up to the nearest
-whole number. Here, we have assumed the same positive fraction over all
-sites, but if you have data from individual sites that can be used then
-that is even better. We might also expect the positive fraction to have
-a relationship with transmission intensity, so it’s a good idea to
-tailor these values to the setting where possible.</p>
-<p>We also need to account for dropout, meaning samples that - for one
-reason or another - do not make it all the way to the final analysis.
+<p>It is always sensible to account for dropout, meaning samples that,
+for whatever reason, do not make it all the way to the final analysis.
 Reasons can include people withdrawing consent from the study, RDTs
 getting lost, samples getting contaminated or failing the molecular
-laboritory methods. It is always a good idea to assume <em>some</em>
-level of dropout. A local technician is often the best person to give
-informed advice on the expected dropout. In our case we will assume
-dropout of 10%, meaning we need to divide through by 0.9:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">N_final</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">ceiling</a></span><span class="op">(</span><span class="va">N_suspected</span> <span class="op">/</span> <span class="fl">0.9</span><span class="op">)</span></span>
+laboritory methods. Although these events might be unlikely, failing to
+account for potential dropout makes our study quite fragile to unforseen
+events that can hurt our power. A local technician is often the best
+person to give informed advice on the expected dropout. In our case we
+will assume dropout of 10%, meaning we need to divide through by
+0.9:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">N_adjusted</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">ceiling</a></span><span class="op">(</span><span class="va">N</span> <span class="op">/</span> <span class="fl">0.9</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">N_final</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 695 695 167 167 112 112</span></span></code></pre></div>
-<p>This are the final numbers that we want to enrol. At this stage, it
-is worth doing a sanity check with the staff at the local facilities to
-ensure they will be able to enrol these numbers within the study period.
-This is also the point at which we can do full budget calculations.</p>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">N_adjusted</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 278 278  67  67  45  45</span></span></code></pre></div>
+<p>The <code><a href="https://rdrr.io/r/base/Round.html" class="external-link">ceiling()</a></code> function rounds values up to the nearest
+whole number.</p>
+<p>Note that these numbers refer to <em>confirmed malaria cases</em> (by
+some gold standard that is <em>not</em> HRP2-based RDTs). When designing
+a study we may need to know how many <em>suspected</em> malaria cases to
+enrol, which may be much higher as suspected malaria cases come back
+negative due to the symptoms overlapping with other illnesses. To
+calculate the number of suspected cases that we need to enrol we should
+divide our sample sizes through by the expected positive fraction. For
+example, if we expect 40% of suspected cases to come back positive then
+we would do the following:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">N_suspected</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">ceiling</a></span><span class="op">(</span><span class="va">N_adjusted</span> <span class="op">/</span> <span class="fl">0.4</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">N_suspected</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 695 695 168 168 113 113</span></span></code></pre></div>
+<p>Here, we have assumed the same positive fraction over all sites, but
+if you have data from individual sites that can be used then that is
+even better. We might also expect the positive fraction to have a
+relationship with transmission intensity, in which case we may want to
+tailor these values to the setting.</p>
+<p>To be completely clear about what each of these numbers mean:</p>
+<ul>
+<li>
+<code>N_suspected</code> gives the number of suspected malaria cases
+that we expect to enrol (1952 in total)</li>
+<li>
+<code>N_adjusted</code> gives the number of confirmed malaria cases
+that we expect to enrol (780 in total)</li>
+<li>
+<code>N</code> gives the number of confirmed malaria cases that we
+expect to end up with at the end of the study after dropout (700 in
+total)</li>
+</ul>
+<p>At this stage, it is worth doing a sanity check with the staff at the
+local facilities to ensure they will be able to enrol these numbers
+within the study period. This is also the point at which we can do full
+budget calculations.</p>
 </div>
 <div class="section level2">
 <h2 id="iterate-and-improve">5. Iterate and improve<a class="anchor" aria-label="anchor" href="#iterate-and-improve"></a>
@@ -384,8 +393,141 @@ then we are free to explore variations until we find something that will
 work. What we should <em>not</em> do is 1) continue doggedly with a plan
 that we believe will fail in practice, or 2) throw all statistical
 arguments out the window and just collect whatever samples we can get
-our hands on. It is normally possible to balance statistical arguments
+our hands on. It is usually possible to balance statistical arguments
 against real world constraints to get something that satisfies both.</p>
+</div>
+<div class="section level2">
+<h2 id="detecting-rare-variants-bonus-section">6. Detecting rare variants (bonus section)<a class="anchor" aria-label="anchor" href="#detecting-rare-variants-bonus-section"></a>
+</h2>
+<p>We often plan on using the same samples for other research purposes.
+For example, it is common to look for drug resistance markers at the
+same time as <em>pfhrp2/3</em> deletions. In this case, we should
+perform a separate power analysis and sample size calculation for these
+other end-points and always <em>take the largest sample size</em>
+between the two analyses, as this is the one that will give sufficient
+power over all end-points.</p>
+<p>The <em>DRpower</em> package contains simple functions for exploring
+other questions. For example, imagine we are looking to detect the
+presence of rare variants, for example <em>pfk13</em> mutations
+conferring partial resistance to artemisinin. Here, we are asking
+whether there are <em>any</em> mutants in the domain, and a single
+positive result confirms that there are. The function
+<code><a href="../reference/get_power_presence.html">get_power_presence()</a></code> tells us our power to detect
+<em>any</em> mutants given the known prevalence. Similar to the
+<em>pfhrp2/3</em> deletion analysis, this assumes we will run a
+multi-site study and summarise results over all sites, meaning we need
+to account for intra-cluster correlation:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># get power to detect a 1% variant at the domain level</span></span>
+<span><span class="fu"><a href="../reference/get_power_presence.html">get_power_presence</a></span><span class="op">(</span>N <span class="op">=</span> <span class="va">N</span>, prevalence <span class="op">=</span> <span class="fl">0.01</span>, ICC <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.865711</span></span></code></pre></div>
+<p>We can see that the same sample sizes from the <em>pfhrp2/3</em>
+deletion study design also give us more than 80% power to detect rare
+variants at the domain level. Another way to approach this problem is to
+use the function <code><a href="../reference/get_sample_size_presence.html">get_sample_size_presence()</a></code>, which tells us
+how many samples we need in each cluster to achieve 80% power:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># how many samples would we need to achieve 80% power in the presence analysis</span></span>
+<span><span class="fu"><a href="../reference/get_sample_size_presence.html">get_sample_size_presence</a></span><span class="op">(</span>n_clust <span class="op">=</span> <span class="fl">6</span>, prevalence <span class="op">=</span> <span class="fl">0.01</span>, ICC <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 58</span></span></code></pre></div>
+<p>So six clusters of 58 samples would do it. We have variable sample
+sizes, some above this level and some below, which is why the
+<code><a href="../reference/get_power_presence.html">get_power_presence()</a></code> method was useful.</p>
+<p>What if we are not interested in summarising at the domain level, and
+instead we want to know our power in each of the individual sites? We
+can use the same functions as before, now run independently over each of
+the clusters. We should fix the ICC at zero because this is no longer a
+multi-cluster study:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># how many</span></span>
+<span><span class="fu"><a href="../reference/get_sample_size_presence.html">get_sample_size_presence</a></span><span class="op">(</span>n_clust <span class="op">=</span> <span class="fl">1</span>, prevalence <span class="op">=</span> <span class="fl">0.01</span>, ICC <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 161</span></span>
+<span></span>
+<span><span class="co"># get power to detect a 1% variant in each of the individual clusters</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/mapply.html" class="external-link">mapply</a></span><span class="op">(</span><span class="va">get_power_presence</span>, <span class="va">N</span>, MoreArgs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>ICC <span class="op">=</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.9189415 0.9189415 0.4528434 0.4528434 0.3310282 0.3310282</span></span></code></pre></div>
+<p>We find that 161 samples are needed for a single site to be powered
+to detect a rare variant at 1% prevalence. Accordingly, only our large
+sites (250 samples) achieve power over 80%, and the smaller sites with
+60 and 40 samples have power below 50%. Therefore we would conclude that
+4 out of our 6 sites are underpowered at the individual level, and so we
+may be better off pooling results to the domain level.</p>
+</div>
+<div class="section level2">
+<h2 id="controling-the-margin-of-error-bonus-section">7. Controling the margin of error (bonus section)<a class="anchor" aria-label="anchor" href="#controling-the-margin-of-error-bonus-section"></a>
+</h2>
+<p>What if we also plan on using the same samples to look for a drug
+resistance marker that we believe to be at high prevalence? In this
+case, it can be useful to consider what will be the expected margin of
+error in our analysis. This is not the same as a power analysis, as we
+are not conducting a hypothesis test. Rather, we are trying to choose a
+sample size that gives us a certain level of precision in our
+analysis.</p>
+<p>The <code><a href="../reference/get_margins.html">get_sample_size_margin()</a></code> function tells us the
+per-cluster sample size needed to achieve a given margin of error (MOE)
+if we plan on pooling results over multiple clusters. Here, we assume
+that the prevalence of the marker is 20% in the population, and we hope
+to estimate this to within plus or minus 10%:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># get sample size needed to achieve 10% MOE if prevalence is 20% and we have 6 clusters</span></span>
+<span><span class="fu"><a href="../reference/get_margins.html">get_sample_size_margin</a></span><span class="op">(</span>MOE <span class="op">=</span> <span class="fl">0.1</span>, n_clust <span class="op">=</span> <span class="fl">6</span>, prevalence <span class="op">=</span> <span class="fl">0.2</span>, ICC <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 20</span></span></code></pre></div>
+<p>We only need 20 samples to achieve this level of precision, which we
+are well above. We can also use the <code><a href="../reference/get_margins.html">get_margin()</a></code> function
+to tell us what our MOE would be given a known sample size:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># get MOE assuming 40 samples in each of 6 clusters</span></span>
+<span><span class="fu"><a href="../reference/get_margins.html">get_margin</a></span><span class="op">(</span>N <span class="op">=</span> <span class="fl">40</span>, n_clust <span class="op">=</span> <span class="fl">6</span>, prevalence <span class="op">=</span> <span class="fl">0.2</span>, ICC <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.08691875</span></span></code></pre></div>
+<p>With 40 samples we would expect to estimate prevalence to within plus
+or minus 8.7%.</p>
+<p>The formula used above is extremely simple. It does not allow for
+different sample sizes per cluster, and it also assumes we know the ICC
+exactly rather than estimating it from data. An alternative approach is
+to use the <em>DRpower</em> Bayesian model to estimate the prevalence.
+In other words, we will use the <code><a href="../reference/get_posterior.html">get_prevalence()</a></code> function
+to obtain a 95% Bayesian credible interval (CrI). If we plan to estimate
+prevalence this way, then we should use the function
+<code><a href="../reference/get_margin_Bayesian.html">get_margin_Bayesian()</a></code> to estimate our MOE. This function
+works by simulation, and accepts different sample sizes in each
+cluster:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># get MOE when using DRpower Bayesian model</span></span>
+<span><span class="fu"><a href="../reference/get_margin_Bayesian.html">get_margin_Bayesian</a></span><span class="op">(</span><span class="va">N</span>, prevalence <span class="op">=</span> <span class="fl">0.2</span>, ICC <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
+<span><span class="co">#&gt;       estimate   CI_2.5  CI_97.5</span></span>
+<span><span class="co">#&gt; lower  12.6323 12.03405 13.23055</span></span>
+<span><span class="co">#&gt; upper  31.0595 30.12544 31.99356</span></span></code></pre></div>
+<p>Here, we expect around 13% error on the lower end, and around 31%
+error on the upper end. In other words, if the true prevalence of the
+marker is 20% in the population then we would expect our 95% CrI to
+extend from around 7% to 51%. This is quite a wide interval, and much
+wider than would assume based on the simpler <code><a href="../reference/get_margins.html">get_margin()</a></code>
+function. The reason is that the Bayesian model is making different
+assumptions, most notably estimating the ICC from data rather than
+assuming a known value.</p>
+<p>In summary…</p>
+<ul>
+<li>We have sample sizes (<code>N</code>) that we are happy with for our
+<em>pfhrp2/3</em> analysis. These don’t quite achieve 80% power, but
+they are not far off. They have been chosen taking into account
+logistical and feasibility constraints. We also know the number of
+suspected malaria cases that we need to enrol
+(<code>N_suspected</code>).</li>
+<li>The sample sample sizes give us 86% power to detect rare
+<em>pfk13</em> variants at 1% in the population when summarised at the
+domain level. We do not have power at the individual site level, meaning
+there is a good chance we would miss some mutants in the smaller sites
+if present at 1% prevalence.</li>
+<li>The sample sample sizes give us a margin of error of around 13% on
+the low side and 31% on the high side when estimating the prevalence of
+a variant at 20% in the population. This is a fairly low degree of
+precision, and so we should only expect to be able to conclude roughly
+which quarter of the prevalence range our marker is in.</li>
+</ul>
+<p>Notice that this summary considers all end-points for the same sample
+sizes. We have now arrived at a detailed plan, and have a good idea of
+what we can expect from our results if we go ahead with these
+numbers.</p>
 <p align="center">
 <button class="btn btn-primary" onclick="window.location.href='https://mrc-ide.github.io/DRpower/articles/tutorial_analysis.html';">
 Next topic
@@ -406,7 +548,7 @@ Next topic
 
       <footer><div class="copyright">
   <p></p>
-<p>Developed by Bob Verity.</p>
+<p>Developed by Bob Verity, Shazia Ruybal.</p>
 </div>
 
 <div class="pkgdown">

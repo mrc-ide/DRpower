@@ -5,16 +5,30 @@
 \alias{df_ss}
 \title{Minimum sample sizes for the threshold analysis}
 \format{
-A data frame of 6840 rows and 15 columns. The first 14 columns give
+A data.frame of 6840 rows and 15 columns. The first 14 columns give
   parameter combinations that were used in simulating and analysing data. The
   final "N_opt" column gives the optimal sample size to achieve a power of
-  80%.
+  80\%.
 }
 \usage{
 data(df_ss)
 }
 \description{
-TODO
+This object was produced by finding the point at which
+  \code{df_sim} crossed the target power threshold of 80\% (see details).
+}
+\details{
+Minimum sample sizes were calculated as follows:
+  \enumerate{
+  \item Find the value of N that crosses the threshold, and the value of N
+  preceding it that does not.
+  \item Do linear interpolation between these two values to get the estimated
+  sample size at the threshold. \item Deal with special cases of N always
+  being below the target power or always above the target power.
+  \item Some additional manual wrangling of final results. Ensure that N
+  always decreases with increasing numbers of clusters (this is not always
+  the case due to random variation).
+  }
 }
 \examples{
 data(df_ss)

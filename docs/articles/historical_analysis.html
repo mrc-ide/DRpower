@@ -142,7 +142,7 @@
       <h1 data-toc-skip>Historical analysis</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 25 Oct
+            <h4 data-toc-skip class="date">Last updated: 30 Nov
 2023</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/historical_analysis.Rmd" class="external-link"><code>vignettes/historical_analysis.Rmd</code></a></small>
@@ -162,242 +162,505 @@ sensible values for the intra-cluster correlation coefficient (ICC).
 Estimates of the ICC from historical data are vastly better than using
 simple rules of thumb (e.g. using 1.5 for the design effect) and
 thankfully the Bayesian framework gives us an excellent way of
-incorporating this information into our analys.</p>
+incorporating this information into our analysis.</p>
 <p>A large number of <em>pfhrp2/3</em> studies can be explored through
 the <a href="https://apps.who.int/malaria/maps/threats/" class="external-link">WHO malaria
-threats map</a>. Although the data are not available for direct download
-from this site, they can be manually extracted, or in our case they were
-made available by request from the WHO. A data.frame giving all
-downloaded studies is available in the DRpower package through the
-<code>studies_inclusion</code> object (loaded by default). The raw
-data.frame consists of 94 studies. Our first step was to apply the
-following filters:</p>
+threats map</a>. We downloaded all <em>pfhrp2/3</em> data from this
+website on 27 Nov 2023 - the resulting file can be found in the <a href="https://github.com/mrc-ide/DRpower/" class="external-link">Github repos</a> for this
+tool inside the folder. Note the term in this file name - this is
+because two additional columns were added manually, which are called and
+. These columns specify certain rows that should be discarded because
+the raw data contains issues, for example data entry mistakes. We then
+performed the following filtering steps in order:</p>
 <ol style="list-style-type: decimal">
 <li>
-<strong>Must have at least 10 samples total</strong>. Less than this
-and there is very little information in the data, meaning our
-conclusions are driven by our priors.</li>
+<strong>Remove raw data mistakes</strong>. Rows were dropped that
+were identified as having issues in the raw data.</li>
 <li>
-<strong>Must have at least 5 deletions total</strong>. Although
-technically there is some information present on the ICC even when
-prevalence is zero, again we risk being strongly influenced by the
-prior.</li>
+<strong>Continent</strong>. Filtered to Africa, Asia or South
+America.</li>
 <li>
-<strong>Must have data available at sub-ADMIN1 level</strong>. We
-are interested in estimating the ICC at the province (ADMIN1) level,
-meaning we need data at this level of geographic resolution.</li>
+<strong>Patient type</strong>. We are only interested in
+<em>clinically relevant</em> <em>pfhrp2/3</em> deletions, and so we
+focus on studies of symptomatic patients only.</li>
 <li>
-<strong>Data must be from symptomatic individuals</strong>. We are
-only interested in <em>clinically relevant</em> <em>pfhrp2/3</em>
-deletions, and so we exclude studies on asymptomatic individuals.</li>
+<strong>Study type</strong>. Filtered to convenience surveys or
+cross-sectional prospective surveys only.</li>
+<li>
+<strong>Merge per site</strong>. Combined counts (tested and
+positive) of studies conducted in the same exact location (based on
+lat/lon) in the same year and from the same source publication. These
+are considered a single site.</li>
+<li>
+<strong>Number of samples</strong>. Filtered to have 10 or more
+samples per site. Avoids very small sample sizes which would have very
+little information from the data and therefore would be driven by our
+prior assumptions.</li>
+<li>
+<strong>Map to ADMIN1</strong>. All sites were mapped to ADMIN1
+level by comparing the lat/lon coordinates against a shapefile from <a href="https://gadm.org/" class="external-link">GADM</a> version 4.1.0, first administrative
+unit.</li>
+<li>
+<strong>Add further studies</strong>. Results were combined with
+studies that contain additional information not reflected in the WHO
+malaria threats map data. For example, some studies have site-level
+resolution despite not being apparent in the original data download.
+These additional studies can be found in the <a href="https://github.com/mrc-ide/DRpower/" class="external-link">R_ignore/data folder</a>
+under the name .</li>
+<li>
+<strong>Filter on number of sites</strong>. Filter to ADMIN1 regions
+that contain at least 3 distinct sites within the same year and from the
+same source publication.</li>
 </ol>
-<p>This filtered the original data.frame down to 12 studies. Granular
-data from these 12 studies is available within the package through the
-<code>historical_data</code> object. At this point, a further filter was
-applied:</p>
-<ol style="list-style-type: decimal">
-<li>
-<strong>ADMIN1 units must contain data from 3 or more sites within
-the same sampling period</strong>. Multiple sites are needed to provide
-information on the ICC, and 3 sites was chosen as a minimum. Prevalence
-may fluctuate over time, hence the restriction to be in the sampling
-period.</li>
-</ol>
-<p>After applying this second filter, data remained from 5 studies
-covering 4 countries and 6 ADMIN1 regions:</p>
+<p>This filtered the original data down to 6 studies and 7 ADMIN1
+domains globally. This filtered dataset is available within the package
+through the <code>historical_data</code> object:</p>
 <div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:300px; overflow-x: scroll; width:700px; ">
 <table class="table table table-striped table-hover table-condensed" style="margin-left: auto; margin-right: auto;">
 <thead><tr>
 <th style="text-align:left;border-bottom: 1px solid; border-top: 1px solidposition: sticky; top:0; background-color: #FFFFFF;">
-Study_name
+CONTINENT_NAME
 </th>
 <th style="text-align:left;border-bottom: 1px solid; border-top: 1px solidposition: sticky; top:0; background-color: #FFFFFF;">
-Country
+COUNTRY_NAME
 </th>
 <th style="text-align:left;border-bottom: 1px solid; border-top: 1px solidposition: sticky; top:0; background-color: #FFFFFF;">
-ADMIN1
+ADMIN1_NAME
 </th>
 <th style="text-align:left;border-bottom: 1px solid; border-top: 1px solidposition: sticky; top:0; background-color: #FFFFFF;">
-Year
+SITE_NAME
 </th>
 <th style="text-align:right;border-bottom: 1px solid; border-top: 1px solidposition: sticky; top:0; background-color: #FFFFFF;">
-Num_sites
+LONGITUDE
+</th>
+<th style="text-align:right;border-bottom: 1px solid; border-top: 1px solidposition: sticky; top:0; background-color: #FFFFFF;">
+LATITUDE
+</th>
+<th style="text-align:right;border-bottom: 1px solid; border-top: 1px solidposition: sticky; top:0; background-color: #FFFFFF;">
+YEAR_START
+</th>
+<th style="text-align:right;border-bottom: 1px solid; border-top: 1px solidposition: sticky; top:0; background-color: #FFFFFF;">
+YEAR_END
+</th>
+<th style="text-align:right;border-bottom: 1px solid; border-top: 1px solidposition: sticky; top:0; background-color: #FFFFFF;">
+HRP2_TESTED
+</th>
+<th style="text-align:right;border-bottom: 1px solid; border-top: 1px solidposition: sticky; top:0; background-color: #FFFFFF;">
+HRP2_NUM_DELETION
 </th>
 <th style="text-align:left;border-bottom: 1px solid; border-top: 1px solidposition: sticky; top:0; background-color: #FFFFFF;">
-Paper_link
+CITATION_URL
 </th>
 </tr></thead>
 <tbody>
 <tr>
 <td style="text-align:left;">
-Alemayehu_etal_2021
+Asia
 </td>
 <td style="text-align:left;">
-Ethiopia
+India
 </td>
 <td style="text-align:left;">
-Benishangul-Gumuz Regional State
+Odisha
 </td>
 <td style="text-align:left;">
-2018
+Central table land
 </td>
 <td style="text-align:right;">
-4
+84.87502
+</td>
+<td style="text-align:right;">
+21.191065
+</td>
+<td style="text-align:right;">
+2013
+</td>
+<td style="text-align:right;">
+2013
+</td>
+<td style="text-align:right;">
+163
+</td>
+<td style="text-align:right;">
+16
 </td>
 <td style="text-align:left;">
-<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8095343/#MOESM3" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8095343/#MOESM3</a>
+<a href="https://malariajournal.biomedcentral.com/articles/10.1186/s12936-018-2502-3" class="external-link uri">https://malariajournal.biomedcentral.com/articles/10.1186/s12936-018-2502-3</a>
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Feleke_etal_2021
+Asia
 </td>
 <td style="text-align:left;">
-Ethiopia
+India
 </td>
 <td style="text-align:left;">
-Amhara
+Odisha
 </td>
 <td style="text-align:left;">
-2017-2018
+Coastal Track, Odisha
 </td>
 <td style="text-align:right;">
-4
+85.71103
 </td>
-<td style="text-align:left;">
-<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8478644/" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8478644/</a>
+<td style="text-align:right;">
+20.048885
 </td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Feleke_etal_2021
+<td style="text-align:right;">
+2013
 </td>
-<td style="text-align:left;">
-Ethiopia
+<td style="text-align:right;">
+2013
 </td>
-<td style="text-align:left;">
-Tigray
-</td>
-<td style="text-align:left;">
-2017-2018
+<td style="text-align:right;">
+76
 </td>
 <td style="text-align:right;">
 6
 </td>
 <td style="text-align:left;">
-<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8478644/" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8478644/</a>
+<a href="https://malariajournal.biomedcentral.com/articles/10.1186/s12936-018-2502-3" class="external-link uri">https://malariajournal.biomedcentral.com/articles/10.1186/s12936-018-2502-3</a>
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Mihreteab_etal_2021
+Asia
 </td>
 <td style="text-align:left;">
-Eritrea
+India
 </td>
 <td style="text-align:left;">
-Gash Barka
+Odisha
 </td>
 <td style="text-align:left;">
-2019
+Eastern Ghat
 </td>
 <td style="text-align:right;">
-5
+82.74350
+</td>
+<td style="text-align:right;">
+19.185838
+</td>
+<td style="text-align:right;">
+2013
+</td>
+<td style="text-align:right;">
+2013
+</td>
+<td style="text-align:right;">
+48
+</td>
+<td style="text-align:right;">
+7
 </td>
 <td style="text-align:left;">
-<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8548324/#MOESM1" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8548324/#MOESM1</a>
+<a href="https://malariajournal.biomedcentral.com/articles/10.1186/s12936-018-2502-3" class="external-link uri">https://malariajournal.biomedcentral.com/articles/10.1186/s12936-018-2502-3</a>
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Munyeku_etal_2021
+Asia
 </td>
 <td style="text-align:left;">
-Democratic Republic of the Congo
+India
 </td>
 <td style="text-align:left;">
-Kwilu province
+Odisha
 </td>
 <td style="text-align:left;">
-2018
+Northern Plateau
 </td>
 <td style="text-align:right;">
-3
+85.58265
+</td>
+<td style="text-align:right;">
+21.747202
+</td>
+<td style="text-align:right;">
+2013
+</td>
+<td style="text-align:right;">
+2013
+</td>
+<td style="text-align:right;">
+97
+</td>
+<td style="text-align:right;">
+9
 </td>
 <td style="text-align:left;">
-<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8146217/" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8146217/</a>
+<a href="https://malariajournal.biomedcentral.com/articles/10.1186/s12936-018-2502-3" class="external-link uri">https://malariajournal.biomedcentral.com/articles/10.1186/s12936-018-2502-3</a>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+South America
+</td>
+<td style="text-align:left;">
+Peru
+</td>
+<td style="text-align:left;">
+Loreto
+</td>
+<td style="text-align:left;">
+Iquitos, Loreto
+</td>
+<td style="text-align:right;">
+-73.25000
+</td>
+<td style="text-align:right;">
+-3.733333
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+159
+</td>
+<td style="text-align:right;">
+123
+</td>
+<td style="text-align:left;">
+<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9674673/#MOESM1" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9674673/#MOESM1</a>
 </td>
 </tr>
 <tr>
 <td style="text-align:left;border-bottom: 1px solid">
-Valdivia_etal_2022
+South America
 </td>
 <td style="text-align:left;border-bottom: 1px solid">
 Peru
 </td>
 <td style="text-align:left;border-bottom: 1px solid">
-Inquitos
+Loreto
 </td>
 <td style="text-align:left;border-bottom: 1px solid">
-2011-2018
+Mazan, Loreto
 </td>
 <td style="text-align:right;border-bottom: 1px solid">
-7
+-73.09550
+</td>
+<td style="text-align:right;border-bottom: 1px solid">
+-3.495800
+</td>
+<td style="text-align:right;border-bottom: 1px solid">
+2009
+</td>
+<td style="text-align:right;border-bottom: 1px solid">
+2009
+</td>
+<td style="text-align:right;border-bottom: 1px solid">
+11
+</td>
+<td style="text-align:right;border-bottom: 1px solid">
+3
 </td>
 <td style="text-align:left;border-bottom: 1px solid">
-<a href="https://pubmed.ncbi.nlm.nih.gov/36400806/" class="external-link uri">https://pubmed.ncbi.nlm.nih.gov/36400806/</a>
+<a href="http://pdf.usaid.gov/pdf_docs/PA00JT5W.pdf" class="external-link uri">http://pdf.usaid.gov/pdf_docs/PA00JT5W.pdf</a>
 </td>
 </tr>
-</tbody>
-</table>
-</div>
-<p><br><br> The filtered data from these studies are shown below:</p>
-<div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:300px; overflow-x: scroll; width:700px; ">
-<table class="table table table-striped table-hover table-condensed" style="margin-left: auto; margin-right: auto;">
-<thead><tr>
-<th style="text-align:left;border-bottom: 1px solid; border-top: 1px solidposition: sticky; top:0; background-color: #FFFFFF;">
-Study_name
-</th>
-<th style="text-align:left;border-bottom: 1px solid; border-top: 1px solidposition: sticky; top:0; background-color: #FFFFFF;">
-Country
-</th>
-<th style="text-align:left;border-bottom: 1px solid; border-top: 1px solidposition: sticky; top:0; background-color: #FFFFFF;">
-ADMIN1
-</th>
-<th style="text-align:left;border-bottom: 1px solid; border-top: 1px solidposition: sticky; top:0; background-color: #FFFFFF;">
-ADMIN2
-</th>
-<th style="text-align:left;border-bottom: 1px solid; border-top: 1px solidposition: sticky; top:0; background-color: #FFFFFF;">
-Site
-</th>
-<th style="text-align:left;border-bottom: 1px solid; border-top: 1px solidposition: sticky; top:0; background-color: #FFFFFF;">
-Year
-</th>
-<th style="text-align:right;border-bottom: 1px solid; border-top: 1px solidposition: sticky; top:0; background-color: #FFFFFF;">
-Tested
-</th>
-<th style="text-align:right;border-bottom: 1px solid; border-top: 1px solidposition: sticky; top:0; background-color: #FFFFFF;">
-Deletions
-</th>
-</tr></thead>
-<tbody>
 <tr>
 <td style="text-align:left;">
-Alemayehu_etal_2021
+South America
+</td>
+<td style="text-align:left;">
+Peru
+</td>
+<td style="text-align:left;">
+Loreto
+</td>
+<td style="text-align:left;">
+Moronacocha, Loreto
+</td>
+<td style="text-align:right;">
+-73.26376
+</td>
+<td style="text-align:right;">
+-3.748880
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+24
+</td>
+<td style="text-align:right;">
+19
+</td>
+<td style="text-align:left;">
+<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9674673/#MOESM1" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9674673/#MOESM1</a>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+South America
+</td>
+<td style="text-align:left;">
+Peru
+</td>
+<td style="text-align:left;">
+Loreto
+</td>
+<td style="text-align:left;">
+Padre cocha, Loreto
+</td>
+<td style="text-align:right;">
+-73.27942
+</td>
+<td style="text-align:right;">
+-3.699667
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+140
+</td>
+<td style="text-align:right;">
+109
+</td>
+<td style="text-align:left;">
+<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9674673/#MOESM1" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9674673/#MOESM1</a>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+South America
+</td>
+<td style="text-align:left;">
+Peru
+</td>
+<td style="text-align:left;">
+Loreto
+</td>
+<td style="text-align:left;">
+Requena, Loreto
+</td>
+<td style="text-align:right;">
+-74.51422
+</td>
+<td style="text-align:right;">
+-5.908611
+</td>
+<td style="text-align:right;">
+2009
+</td>
+<td style="text-align:right;">
+2009
+</td>
+<td style="text-align:right;">
+11
+</td>
+<td style="text-align:right;">
+11
+</td>
+<td style="text-align:left;">
+<a href="http://pdf.usaid.gov/pdf_docs/PA00JT5W.pdf" class="external-link uri">http://pdf.usaid.gov/pdf_docs/PA00JT5W.pdf</a>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+South America
+</td>
+<td style="text-align:left;">
+Peru
+</td>
+<td style="text-align:left;">
+Loreto
+</td>
+<td style="text-align:left;">
+Soplin, Loreto
+</td>
+<td style="text-align:right;">
+-74.49797
+</td>
+<td style="text-align:right;">
+-6.812799
+</td>
+<td style="text-align:right;">
+2009
+</td>
+<td style="text-align:right;">
+2009
+</td>
+<td style="text-align:right;">
+31
+</td>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:left;">
+<a href="http://pdf.usaid.gov/pdf_docs/PA00JT5W.pdf" class="external-link uri">http://pdf.usaid.gov/pdf_docs/PA00JT5W.pdf</a>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+South America
+</td>
+<td style="text-align:left;">
+Peru
+</td>
+<td style="text-align:left;">
+Loreto
+</td>
+<td style="text-align:left;">
+Yurimaguas, Loreto
+</td>
+<td style="text-align:right;">
+-76.17766
+</td>
+<td style="text-align:right;">
+-5.807148
+</td>
+<td style="text-align:right;">
+2009
+</td>
+<td style="text-align:right;">
+2009
+</td>
+<td style="text-align:right;">
+12
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+<a href="http://pdf.usaid.gov/pdf_docs/PA00JT5W.pdf" class="external-link uri">http://pdf.usaid.gov/pdf_docs/PA00JT5W.pdf</a>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Africa
 </td>
 <td style="text-align:left;">
 Ethiopia
 </td>
 <td style="text-align:left;">
-Benishangul-Gumuz Regional State
-</td>
-<td style="text-align:left;">
-Assosa Zone
+Benshangul-Gumaz
 </td>
 <td style="text-align:left;">
 Sherkole Health Centre
 </td>
-<td style="text-align:left;">
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+2018
+</td>
+<td style="text-align:right;">
 2018
 </td>
 <td style="text-align:right;">
@@ -406,24 +669,33 @@ Sherkole Health Centre
 <td style="text-align:right;">
 14
 </td>
+<td style="text-align:left;">
+<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8095343/" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8095343/</a>
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Alemayehu_etal_2021
+Africa
 </td>
 <td style="text-align:left;">
 Ethiopia
 </td>
 <td style="text-align:left;">
-Benishangul-Gumuz Regional State
-</td>
-<td style="text-align:left;">
-Assosa Zone
+Benshangul-Gumaz
 </td>
 <td style="text-align:left;">
 Bambasi Health Centre
 </td>
-<td style="text-align:left;">
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+2018
+</td>
+<td style="text-align:right;">
 2018
 </td>
 <td style="text-align:right;">
@@ -432,24 +704,33 @@ Bambasi Health Centre
 <td style="text-align:right;">
 9
 </td>
+<td style="text-align:left;">
+<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8095343/" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8095343/</a>
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Alemayehu_etal_2021
+Africa
 </td>
 <td style="text-align:left;">
 Ethiopia
 </td>
 <td style="text-align:left;">
-Benishangul-Gumuz Regional State
-</td>
-<td style="text-align:left;">
-Assosa Zone
+Benshangul-Gumaz
 </td>
 <td style="text-align:left;">
 Kurmuk Health Centre
 </td>
-<td style="text-align:left;">
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+2018
+</td>
+<td style="text-align:right;">
 2018
 </td>
 <td style="text-align:right;">
@@ -458,24 +739,33 @@ Kurmuk Health Centre
 <td style="text-align:right;">
 10
 </td>
+<td style="text-align:left;">
+<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8095343/" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8095343/</a>
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Alemayehu_etal_2021
+Africa
 </td>
 <td style="text-align:left;">
 Ethiopia
 </td>
 <td style="text-align:left;">
-Benishangul-Gumuz Regional State
-</td>
-<td style="text-align:left;">
-Assosa Zone
+Benshangul-Gumaz
 </td>
 <td style="text-align:left;">
 Assosa Health Centre
 </td>
-<td style="text-align:left;">
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+2018
+</td>
+<td style="text-align:right;">
 2018
 </td>
 <td style="text-align:right;">
@@ -484,110 +774,13 @@ Assosa Health Centre
 <td style="text-align:right;">
 6
 </td>
-</tr>
-<tr>
 <td style="text-align:left;">
-Feleke_etal_2021
-</td>
-<td style="text-align:left;">
-Ethiopia
-</td>
-<td style="text-align:left;">
-Amhara
-</td>
-<td style="text-align:left;">
-Metema
-</td>
-<td style="text-align:left;">
-</td>
-<td style="text-align:left;">
-2017-2018
-</td>
-<td style="text-align:right;">
-233
-</td>
-<td style="text-align:right;">
-30
+<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8095343/" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8095343/</a>
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Feleke_etal_2021
-</td>
-<td style="text-align:left;">
-Ethiopia
-</td>
-<td style="text-align:left;">
-Amhara
-</td>
-<td style="text-align:left;">
-Quara
-</td>
-<td style="text-align:left;">
-</td>
-<td style="text-align:left;">
-2017-2018
-</td>
-<td style="text-align:right;">
-516
-</td>
-<td style="text-align:right;">
-39
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Feleke_etal_2021
-</td>
-<td style="text-align:left;">
-Ethiopia
-</td>
-<td style="text-align:left;">
-Amhara
-</td>
-<td style="text-align:left;">
-Tegede
-</td>
-<td style="text-align:left;">
-</td>
-<td style="text-align:left;">
-2017-2018
-</td>
-<td style="text-align:right;">
-296
-</td>
-<td style="text-align:right;">
-65
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Feleke_etal_2021
-</td>
-<td style="text-align:left;">
-Ethiopia
-</td>
-<td style="text-align:left;">
-Amhara
-</td>
-<td style="text-align:left;">
-West Armachiho
-</td>
-<td style="text-align:left;">
-</td>
-<td style="text-align:left;">
-2017-2018
-</td>
-<td style="text-align:right;">
-295
-</td>
-<td style="text-align:right;">
-75
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Feleke_etal_2021
+Africa
 </td>
 <td style="text-align:left;">
 Ethiopia
@@ -598,10 +791,17 @@ Tigray
 <td style="text-align:left;">
 Ahferom
 </td>
-<td style="text-align:left;">
+<td style="text-align:right;">
+NA
 </td>
-<td style="text-align:left;">
-2017-2018
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+2017
+</td>
+<td style="text-align:right;">
+2018
 </td>
 <td style="text-align:right;">
 117
@@ -609,10 +809,13 @@ Ahferom
 <td style="text-align:right;">
 18
 </td>
+<td style="text-align:left;">
+<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8478644/" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8478644/</a>
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Feleke_etal_2021
+Africa
 </td>
 <td style="text-align:left;">
 Ethiopia
@@ -623,10 +826,17 @@ Tigray
 <td style="text-align:left;">
 Atseged Tsimbila
 </td>
-<td style="text-align:left;">
+<td style="text-align:right;">
+NA
 </td>
-<td style="text-align:left;">
-2017-2018
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+2017
+</td>
+<td style="text-align:right;">
+2018
 </td>
 <td style="text-align:right;">
 160
@@ -634,10 +844,13 @@ Atseged Tsimbila
 <td style="text-align:right;">
 48
 </td>
+<td style="text-align:left;">
+<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8478644/" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8478644/</a>
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Feleke_etal_2021
+Africa
 </td>
 <td style="text-align:left;">
 Ethiopia
@@ -648,10 +861,17 @@ Tigray
 <td style="text-align:left;">
 Gulomekeda
 </td>
-<td style="text-align:left;">
+<td style="text-align:right;">
+NA
 </td>
-<td style="text-align:left;">
-2017-2018
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+2017
+</td>
+<td style="text-align:right;">
+2018
 </td>
 <td style="text-align:right;">
 21
@@ -659,10 +879,13 @@ Gulomekeda
 <td style="text-align:right;">
 5
 </td>
+<td style="text-align:left;">
+<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8478644/" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8478644/</a>
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Feleke_etal_2021
+Africa
 </td>
 <td style="text-align:left;">
 Ethiopia
@@ -673,10 +896,17 @@ Tigray
 <td style="text-align:left;">
 K. Humera
 </td>
-<td style="text-align:left;">
+<td style="text-align:right;">
+NA
 </td>
-<td style="text-align:left;">
-2017-2018
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+2017
+</td>
+<td style="text-align:right;">
+2018
 </td>
 <td style="text-align:right;">
 176
@@ -684,10 +914,13 @@ K. Humera
 <td style="text-align:right;">
 39
 </td>
+<td style="text-align:left;">
+<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8478644/" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8478644/</a>
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Feleke_etal_2021
+Africa
 </td>
 <td style="text-align:left;">
 Ethiopia
@@ -698,10 +931,17 @@ Tigray
 <td style="text-align:left;">
 L. Adiabo
 </td>
-<td style="text-align:left;">
+<td style="text-align:right;">
+NA
 </td>
-<td style="text-align:left;">
-2017-2018
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+2017
+</td>
+<td style="text-align:right;">
+2018
 </td>
 <td style="text-align:right;">
 145
@@ -709,10 +949,13 @@ L. Adiabo
 <td style="text-align:right;">
 22
 </td>
+<td style="text-align:left;">
+<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8478644/" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8478644/</a>
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Feleke_etal_2021
+Africa
 </td>
 <td style="text-align:left;">
 Ethiopia
@@ -723,10 +966,17 @@ Tigray
 <td style="text-align:left;">
 T. Adiabo
 </td>
-<td style="text-align:left;">
+<td style="text-align:right;">
+NA
 </td>
-<td style="text-align:left;">
-2017-2018
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+2017
+</td>
+<td style="text-align:right;">
+2018
 </td>
 <td style="text-align:right;">
 69
@@ -734,10 +984,153 @@ T. Adiabo
 <td style="text-align:right;">
 10
 </td>
+<td style="text-align:left;">
+<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8478644/" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8478644/</a>
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Mihreteab_etal_2021
+Africa
+</td>
+<td style="text-align:left;">
+Ethiopia
+</td>
+<td style="text-align:left;">
+Amhara
+</td>
+<td style="text-align:left;">
+Metema
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+2017
+</td>
+<td style="text-align:right;">
+2018
+</td>
+<td style="text-align:right;">
+233
+</td>
+<td style="text-align:right;">
+30
+</td>
+<td style="text-align:left;">
+<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8478644/" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8478644/</a>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Africa
+</td>
+<td style="text-align:left;">
+Ethiopia
+</td>
+<td style="text-align:left;">
+Amhara
+</td>
+<td style="text-align:left;">
+Quara
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+2017
+</td>
+<td style="text-align:right;">
+2018
+</td>
+<td style="text-align:right;">
+516
+</td>
+<td style="text-align:right;">
+39
+</td>
+<td style="text-align:left;">
+<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8478644/" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8478644/</a>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Africa
+</td>
+<td style="text-align:left;">
+Ethiopia
+</td>
+<td style="text-align:left;">
+Amhara
+</td>
+<td style="text-align:left;">
+Tegede
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+2017
+</td>
+<td style="text-align:right;">
+2018
+</td>
+<td style="text-align:right;">
+296
+</td>
+<td style="text-align:right;">
+65
+</td>
+<td style="text-align:left;">
+<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8478644/" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8478644/</a>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Africa
+</td>
+<td style="text-align:left;">
+Ethiopia
+</td>
+<td style="text-align:left;">
+Amhara
+</td>
+<td style="text-align:left;">
+West Armachiho
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+2017
+</td>
+<td style="text-align:right;">
+2018
+</td>
+<td style="text-align:right;">
+295
+</td>
+<td style="text-align:right;">
+75
+</td>
+<td style="text-align:left;">
+<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8478644/" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8478644/</a>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Africa
 </td>
 <td style="text-align:left;">
 Eritrea
@@ -746,11 +1139,18 @@ Eritrea
 Gash Barka
 </td>
 <td style="text-align:left;">
-</td>
-<td style="text-align:left;">
 Agordat
 </td>
-<td style="text-align:left;">
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+2019
+</td>
+<td style="text-align:right;">
 2019
 </td>
 <td style="text-align:right;">
@@ -759,10 +1159,13 @@ Agordat
 <td style="text-align:right;">
 15
 </td>
+<td style="text-align:left;">
+<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8548324/" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8548324/</a>
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Mihreteab_etal_2021
+Africa
 </td>
 <td style="text-align:left;">
 Eritrea
@@ -771,11 +1174,18 @@ Eritrea
 Gash Barka
 </td>
 <td style="text-align:left;">
-</td>
-<td style="text-align:left;">
 Shambuko
 </td>
-<td style="text-align:left;">
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+2019
+</td>
+<td style="text-align:right;">
 2019
 </td>
 <td style="text-align:right;">
@@ -784,10 +1194,13 @@ Shambuko
 <td style="text-align:right;">
 10
 </td>
+<td style="text-align:left;">
+<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8548324/" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8548324/</a>
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Mihreteab_etal_2021
+Africa
 </td>
 <td style="text-align:left;">
 Eritrea
@@ -796,11 +1209,18 @@ Eritrea
 Gash Barka
 </td>
 <td style="text-align:left;">
-</td>
-<td style="text-align:left;">
 Tesseney
 </td>
-<td style="text-align:left;">
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+2019
+</td>
+<td style="text-align:right;">
 2019
 </td>
 <td style="text-align:right;">
@@ -809,10 +1229,13 @@ Tesseney
 <td style="text-align:right;">
 1
 </td>
+<td style="text-align:left;">
+<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8548324/" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8548324/</a>
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Mihreteab_etal_2021
+Africa
 </td>
 <td style="text-align:left;">
 Eritrea
@@ -821,11 +1244,18 @@ Eritrea
 Gash Barka
 </td>
 <td style="text-align:left;">
-</td>
-<td style="text-align:left;">
 Tokombia
 </td>
-<td style="text-align:left;">
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+2019
+</td>
+<td style="text-align:right;">
 2019
 </td>
 <td style="text-align:right;">
@@ -834,10 +1264,13 @@ Tokombia
 <td style="text-align:right;">
 6
 </td>
+<td style="text-align:left;">
+<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8548324/" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8548324/</a>
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
-Mihreteab_etal_2021
+Africa
 </td>
 <td style="text-align:left;">
 Eritrea
@@ -846,11 +1279,18 @@ Eritrea
 Gash Barka
 </td>
 <td style="text-align:left;">
-</td>
-<td style="text-align:left;">
 Barentu
 </td>
-<td style="text-align:left;">
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+2019
+</td>
+<td style="text-align:right;">
 2019
 </td>
 <td style="text-align:right;">
@@ -859,255 +1299,8 @@ Barentu
 <td style="text-align:right;">
 1
 </td>
-</tr>
-<tr>
 <td style="text-align:left;">
-Munyeku_etal_2021
-</td>
-<td style="text-align:left;">
-Democratic Republic of the Congo
-</td>
-<td style="text-align:left;">
-Kwilu province
-</td>
-<td style="text-align:left;">
-Bandundu
-</td>
-<td style="text-align:left;">
-</td>
-<td style="text-align:left;">
-2018
-</td>
-<td style="text-align:right;">
-121
-</td>
-<td style="text-align:right;">
-19
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Munyeku_etal_2021
-</td>
-<td style="text-align:left;">
-Democratic Republic of the Congo
-</td>
-<td style="text-align:left;">
-Kwilu province
-</td>
-<td style="text-align:left;">
-Kikwit-Nord
-</td>
-<td style="text-align:left;">
-</td>
-<td style="text-align:left;">
-2018
-</td>
-<td style="text-align:right;">
-276
-</td>
-<td style="text-align:right;">
-17
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Munyeku_etal_2021
-</td>
-<td style="text-align:left;">
-Democratic Republic of the Congo
-</td>
-<td style="text-align:left;">
-Kwilu province
-</td>
-<td style="text-align:left;">
-Kikwit-Sud
-</td>
-<td style="text-align:left;">
-</td>
-<td style="text-align:left;">
-2018
-</td>
-<td style="text-align:right;">
-94
-</td>
-<td style="text-align:right;">
-9
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Valdivia_etal_2022
-</td>
-<td style="text-align:left;">
-Peru
-</td>
-<td style="text-align:left;">
-Inquitos
-</td>
-<td style="text-align:left;">
-Amazon Hope
-</td>
-<td style="text-align:left;">
-</td>
-<td style="text-align:left;">
-2011-2018
-</td>
-<td style="text-align:right;">
-10
-</td>
-<td style="text-align:right;">
-3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Valdivia_etal_2022
-</td>
-<td style="text-align:left;">
-Peru
-</td>
-<td style="text-align:left;">
-Inquitos
-</td>
-<td style="text-align:left;">
-Bellavista Nanay
-</td>
-<td style="text-align:left;">
-</td>
-<td style="text-align:left;">
-2011-2018
-</td>
-<td style="text-align:right;">
-10
-</td>
-<td style="text-align:right;">
-9
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Valdivia_etal_2022
-</td>
-<td style="text-align:left;">
-Peru
-</td>
-<td style="text-align:left;">
-Inquitos
-</td>
-<td style="text-align:left;">
-Apoyo Hospital
-</td>
-<td style="text-align:left;">
-</td>
-<td style="text-align:left;">
-2011-2018
-</td>
-<td style="text-align:right;">
-119
-</td>
-<td style="text-align:right;">
-99
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Valdivia_etal_2022
-</td>
-<td style="text-align:left;">
-Peru
-</td>
-<td style="text-align:left;">
-Inquitos
-</td>
-<td style="text-align:left;">
-Moronacocha
-</td>
-<td style="text-align:left;">
-</td>
-<td style="text-align:left;">
-2011-2018
-</td>
-<td style="text-align:right;">
-24
-</td>
-<td style="text-align:right;">
-19
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Valdivia_etal_2022
-</td>
-<td style="text-align:left;">
-Peru
-</td>
-<td style="text-align:left;">
-Inquitos
-</td>
-<td style="text-align:left;">
-Padrecocha
-</td>
-<td style="text-align:left;">
-</td>
-<td style="text-align:left;">
-2011-2018
-</td>
-<td style="text-align:right;">
-140
-</td>
-<td style="text-align:right;">
-109
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Valdivia_etal_2022
-</td>
-<td style="text-align:left;">
-Peru
-</td>
-<td style="text-align:left;">
-Inquitos
-</td>
-<td style="text-align:left;">
-Puerto America
-</td>
-<td style="text-align:left;">
-</td>
-<td style="text-align:left;">
-2011-2018
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;border-bottom: 1px solid">
-Valdivia_etal_2022
-</td>
-<td style="text-align:left;border-bottom: 1px solid">
-Peru
-</td>
-<td style="text-align:left;border-bottom: 1px solid">
-Inquitos
-</td>
-<td style="text-align:left;border-bottom: 1px solid">
-Santa Clara
-</td>
-<td style="text-align:left;border-bottom: 1px solid">
-</td>
-<td style="text-align:left;border-bottom: 1px solid">
-2011-2018
-</td>
-<td style="text-align:right;border-bottom: 1px solid">
-13
-</td>
-<td style="text-align:right;border-bottom: 1px solid">
-9
+<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8548324/" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8548324/</a>
 </td>
 </tr>
 </tbody>
@@ -1118,37 +1311,37 @@ Santa Clara
 <h2 id="estimating-the-icc">2. Estimating the ICC<a class="anchor" aria-label="anchor" href="#estimating-the-icc"></a>
 </h2>
 <p>We can estimate the ICC using the Bayesian model in DRpower by
-running the <code><a href="../reference/get_posterior.html">get_ICC()</a></code> function on each of the 6 studies. We
+running the <code><a href="../reference/get_posterior.html">get_ICC()</a></code> function on each of the 7 domains We
 will assume a completely flat prior on the ICC by setting
 <code>prior_ICC_shape1 = 1</code> and <code>prior_ICC_shape2 = 1</code>,
 and we will return the full posterior distribution by setting
 <code>post_full_on = TRUE</code>.</p>
-<p><img src="historical_analysis_files/figure-html/unnamed-chunk-5-1.png" width="700"></p>
+<p><img src="historical_analysis_files/figure-html/unnamed-chunk-4-1.png" width="768"></p>
 <p>We can see that there is limited information on the ICC, as evidenced
-by the relatively spread out posteriors. That being said, there is
-evidence that it is greater than 0 and less than around 0.3. We can
-combine information over sites by multiplying together these posteriors
-to give the following:</p>
-<p><img src="historical_analysis_files/figure-html/unnamed-chunk-6-1.png" width="480"></p>
-<p>This distribution is much sharper, peaking at ICC = 0.038 and
-entertaining values up to around 0.1. However, combining posteriors in
-this way makes the hard assumption that there is a single ICC that is
-the same everywhere, which may not be true for different populations and
-geographic regions. For this reason, we take a more practical approach
-when defining priors; we manually define the prior on ICC to be
-consistent with historical data while also capturing the plausible range
-between studies. We opt for a Beta(1, 9) distribution, as shown
-below:</p>
-<p><img src="historical_analysis_files/figure-html/unnamed-chunk-7-1.png" width="480"></p>
-<p>This distribution allows for ICC values anywhere in the plausible
-range from 0 to 0.3, while at the same time putting very low probability
-on values greater than this. This prior is adopted as the default in all
-DRpower functions, and can be overwritten by setting
+by the relatively spread out posteriors. That being said, most studies
+agree that it is greater than 0 and less than around 0.3, the exception
+being Loreto region of Peru in 2009, which suggests higher values but is
+also extremely vague due to small sample sizes.</p>
+<p>We can combine information over sites by multiplying together these
+posteriors. The result is shown in panel b), and is much sharper,
+peaking at ICC = 0.038 and entertaining values up to around 0.1.
+However, combining posteriors in this way makes the hard assumption that
+there is a single ICC that is the same everywhere in the world, which
+may not be true for different populations and geographic regions. For
+this reason, we take a more practical approach when defining priors; we
+manually define the prior on ICC to be consistent with historical data
+while also capturing the plausible range between studies. We opt for a
+Beta(1, 9) distribution, which is also shown in panel b). This
+distribution allows for ICC values anywhere in the plausible range from
+0 to 0.3, while at the same time putting very low probability on values
+greater than this. This prior is adopted as the default in all DRpower
+functions, and can be overwritten by setting
 <code>prior_ICC_shape1</code> and <code>prior_ICC_shape2</code>
 manually.</p>
-<p>When estimating power, we are forced to simulate under an assumed
-ICC. For the reasons above, we focus on the case of ICC = 0.05 as a
-realistic value that is likely to hold true for most studies. However,
+<p>The second place we need to know the ICC is when estimating power. In
+our simulation approach, we are forced to simulate data under an assumed
+ICC value. For the reasons above, we focus on the case of ICC = 0.05 as
+a realistic value that is likely to hold true for most studies. However,
 if the aim is to be cautious about the ICC then one can opt for a larger
 value, which will in turn lead to larger sample sizes.</p>
 </div>
@@ -1166,7 +1359,7 @@ value, which will in turn lead to larger sample sizes.</p>
 
       <footer><div class="copyright">
   <p></p>
-<p>Developed by Bob Verity.</p>
+<p>Developed by Bob Verity, Shazia Ruybal.</p>
 </div>
 
 <div class="pkgdown">

@@ -55,26 +55,26 @@ df_ztest <- data.frame(n = 5:200) %>%
 # plot power as a function of sample size for both methods
 df_filtered %>%
   ggplot() + theme_bw() +
-  geom_hline(yintercept = 0.8, col = grey(0.6)) +
-  geom_linerange(aes(x = N, ymin = power_lower, ymax = power_upper)) +
-  geom_line(aes(x = N, y = power_mean, colour = "DRpower")) +
-  geom_line(aes(x = n, y = power, colour = "z-test"), data = df_ztest) +
+  geom_pointrange(aes(x = N, y = power, ymin = lower, ymax = upper, colour = "DRpower")) +
+  geom_hline(yintercept = 80, linetype = "dashed") +
+  geom_line(aes(x = n, y = 1e2*power, colour = "z-test"), data = df_ztest) +
   scale_color_manual(values = c("black", "red"), name = "Method") +
-  xlim(c(0, 200)) + ylim(c(0, 1)) +
+  xlim(c(0, 200)) +
+  scale_y_continuous(limits = c(0, 100), expand = c(0, 0)) +
   xlab("Sample size per cluster") + ylab("Power") +
   ggtitle("Assumptions:\nclusters = 5, prevalence = 10%, ICC = 0.05")
 ```
 
-There is some random noise in this plot, but the overall trend is clear. Power increases quickly at first and then plateaus out for larger sample sizes. Power reaches 80% for the DRpower method at around 110 samples per cluster. In contrast, the z-test method never reaches the 80% power level.
+There is some random noise in this plot, but the overall trend is clear. Power increases quickly at first and then plateaus out for larger sample sizes. Power reaches 80% for the DRpower method at around 113 samples per cluster. In contrast, the z-test method never reaches the 80% power level.
 
-Why does the DRpower model have power so much higher than the z-test? This is not straightforward to answer, as the two approaches come from completely different statistical philosophies, but one very important difference is in the specific hypotheses that we are testing. In the z-test approach we are trying to disprove a single hypothesis; that the prevalence is *exactly* equal to the threshold. On the other hand, in the Bayesian approach we are comparing two hypotheses; 1) the prevalence is above the threshold, vs. 2) the prevalence is below the threshold. By "below the threshold" we don't mean exactly *on* the threshold, but rather anywhere below it. This is sometimes referred to as a *composite hypothesis test* because we are assuming a range of values rather than a single value. This composite hypothesis is easier to disprove because we are being less pessimistic about the prevalence of *pfhrp2/3* deletions. So, this boils down to a difference in assumptions under the null hypothesis. We feel that the Bayesian perspective is justified here because a "low" prevalence of *pfhrp2/3* deletions will often mean values below the threshold rather than exactly on it.
+Why does the DRpower model have so much higher power than the z-test? This is not straightforward to answer, as the two approaches come from completely different statistical philosophies, but one very important difference is in the specific hypotheses that we are testing. In the z-test approach we are trying to disprove a single hypothesis; that the prevalence is *exactly* equal to the threshold. On the other hand, in the Bayesian approach we are comparing two hypotheses; 1) the prevalence is above the threshold, vs. 2) the prevalence is below the threshold. By "below the threshold" we don't mean exactly *on* the threshold, but rather anywhere below it. This is sometimes referred to as a *composite hypothesis test* because we are assuming a range of values rather than a single value. This composite hypothesis is easier to disprove because we are being less pessimistic about the prevalence of *pfhrp2/3* deletions. So, this boils down to a difference in assumptions under the null hypothesis. We feel that the Bayesian perspective is justified here because a "low" prevalence of *pfhrp2/3* deletions will often mean values below the threshold rather than exactly on it.
 
 ## 8.1. Sample size calculation
 
 Once we have a power curve like the one above, we can work out what sample size we would need to achieve any given power. For the simulation-based approach this will be approximate because of noise in the power curve. We take a two-step approach:
 
 1. Use linear interpolation between a fixed set of simulations, as shown in the plot above. Find the first value of the sample size for which the power exceeds 80%.
-2. Intuitively, we would expect per-cluster sample sizes to decrease as the number of clusters increases. In some rare cases this method can give the opposite result due to random fluctuations in our estimation method. We therefore remove this effect by modifying results so that sample size can never decrease with more clusters.
+2. Intuitively, we would expect per-cluster sample sizes to decrease as the number of clusters increases. In some rare cases this method can give the opposite result due to random fluctuations. We therefore remove this effect by manually modifying results so that sample size can never decrease with more clusters.
 3. Sample sizes greater than 2000 are coded as `NA` because these are prohibitively large. Sample sizes less than 5 are fixed at 5 because it would not be worth enrolling a cluster and collecting fewer than this many samples.
 
 For an assumed ICC of 0.05 based on [historical data](articles/historical_analysis.html), this leads to the sample size table shown below:
