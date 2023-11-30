@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">DRpower</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
       </span>
     </div>
 
@@ -159,19 +159,19 @@
 studies and to use this information to increase the power and validity
 of our approach. In particular, we are interested in coming up with
 sensible values for the intra-cluster correlation coefficient (ICC).
-Estimates of the ICC from historical data are vastly better than using
-simple rules of thumb (e.g. using 1.5 for the design effect) and
-thankfully the Bayesian framework gives us an excellent way of
-incorporating this information into our analysis.</p>
+Estimates of the ICC from historical data are vastly better than simple
+rules of thumb (e.g. using 1.5 for the design effect) and thankfully the
+Bayesian framework gives us an excellent way of incorporating this
+information into our analysis.</p>
 <p>A large number of <em>pfhrp2/3</em> studies can be explored through
 the <a href="https://apps.who.int/malaria/maps/threats/" class="external-link">WHO malaria
 threats map</a>. We downloaded all <em>pfhrp2/3</em> data from this
-website on 27 Nov 2023 - the resulting file can be found in the <a href="https://github.com/mrc-ide/DRpower/" class="external-link">Github repos</a> for this
+website on 27 Nov 2023. The resulting file can be found in the <a href="https://github.com/mrc-ide/DRpower/" class="external-link">Github repos</a> for this
 tool inside the folder. Note the term in this file name - this is
 because two additional columns were added manually, which are called and
-. These columns specify certain rows that should be discarded because
-the raw data contains issues, for example data entry mistakes. We then
-performed the following filtering steps in order:</p>
+. These columns specify certain rows that should be discarded because of
+issues in the raw data, for example data entry mistakes. We then
+performed the following filtering steps:</p>
 <ol style="list-style-type: decimal">
 <li>
 <strong>Remove raw data mistakes</strong>. Rows were dropped that
@@ -187,19 +187,19 @@ focus on studies of symptomatic patients only.</li>
 <strong>Study type</strong>. Filtered to convenience surveys or
 cross-sectional prospective surveys only.</li>
 <li>
-<strong>Merge per site</strong>. Combined counts (tested and
+<strong>Merge per site</strong>. Combined counts (both tested and
 positive) of studies conducted in the same exact location (based on
 lat/lon) in the same year and from the same source publication. These
 are considered a single site.</li>
 <li>
 <strong>Number of samples</strong>. Filtered to have 10 or more
-samples per site. Avoids very small sample sizes which would have very
+samples per site. Avoids very small sample sizes that would contain very
 little information from the data and therefore would be driven by our
 prior assumptions.</li>
 <li>
 <strong>Map to ADMIN1</strong>. All sites were mapped to ADMIN1
-level by comparing the lat/lon coordinates against a shapefile from <a href="https://gadm.org/" class="external-link">GADM</a> version 4.1.0, first administrative
-unit.</li>
+level by comparing the lat/lon coordinates against a shapefile from <a href="https://gadm.org/" class="external-link">GADM</a> version 4.1.0, focusing on first
+administrative unit.</li>
 <li>
 <strong>Add further studies</strong>. Results were combined with
 studies that contain additional information not reflected in the WHO
@@ -208,13 +208,16 @@ resolution despite not being apparent in the original data download.
 These additional studies can be found in the <a href="https://github.com/mrc-ide/DRpower/" class="external-link">R_ignore/data folder</a>
 under the name .</li>
 <li>
-<strong>Filter on number of sites</strong>. Filter to ADMIN1 regions
-that contain at least 3 distinct sites within the same year and from the
-same source publication.</li>
+<strong>Filter on number of sites</strong>. At this point, we have a
+combined dataset with all sites mapped to an ADMIN1 region. We filter to
+ADMIN1 regions that contain at least 3 distinct sites within the same
+year and from the same source publication. Setting a minimum number of
+sites per domain ensures that we have information about the ICC in our
+data, and again we avoid being driven by our prior assumptions.</li>
 </ol>
-<p>This filtered the original data down to 6 studies and 7 ADMIN1
-domains globally. This filtered dataset is available within the package
-through the <code>historical_data</code> object:</p>
+<p>The filtered data contains 6 studies and 7 ADMIN1 domains. This
+filtered dataset is available within the package through the
+<code>historical_data</code> object:</p>
 <div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:300px; overflow-x: scroll; width:700px; ">
 <table class="table table table-striped table-hover table-condensed" style="margin-left: auto; margin-right: auto;">
 <thead><tr>
@@ -1310,9 +1313,9 @@ NA
 <div class="section level2">
 <h2 id="estimating-the-icc">2. Estimating the ICC<a class="anchor" aria-label="anchor" href="#estimating-the-icc"></a>
 </h2>
-<p>We can estimate the ICC using the Bayesian model in DRpower by
-running the <code><a href="../reference/get_posterior.html">get_ICC()</a></code> function on each of the 7 domains We
-will assume a completely flat prior on the ICC by setting
+<p>We can estimate the ICC using the Bayesian model in <em>DRpower</em>
+by running the <code><a href="../reference/get_posterior.html">get_ICC()</a></code> function on each of the 7 domains
+We will assume a completely flat prior on the ICC by setting
 <code>prior_ICC_shape1 = 1</code> and <code>prior_ICC_shape2 = 1</code>,
 and we will return the full posterior distribution by setting
 <code>post_full_on = TRUE</code>.</p>
@@ -1334,16 +1337,16 @@ while also capturing the plausible range between studies. We opt for a
 Beta(1, 9) distribution, which is also shown in panel b). This
 distribution allows for ICC values anywhere in the plausible range from
 0 to 0.3, while at the same time putting very low probability on values
-greater than this. This prior is adopted as the default in all DRpower
-functions, and can be overwritten by setting
+greater than this. This prior is adopted as the default in all
+<em>DRpower</em> functions, and can be overwritten by setting
 <code>prior_ICC_shape1</code> and <code>prior_ICC_shape2</code>
 manually.</p>
 <p>The second place we need to know the ICC is when estimating power. In
 our simulation approach, we are forced to simulate data under an assumed
-ICC value. For the reasons above, we focus on the case of ICC = 0.05 as
-a realistic value that is likely to hold true for most studies. However,
-if the aim is to be cautious about the ICC then one can opt for a larger
-value, which will in turn lead to larger sample sizes.</p>
+ICC value. Based on the information above, we focus on the case of ICC =
+0.05 as a realistic value that is likely to hold true for most studies.
+However, if the aim is to be cautious about the ICC then one can opt for
+a larger value, which will in turn lead to larger sample sizes.</p>
 </div>
   </div>
 

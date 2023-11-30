@@ -26,22 +26,21 @@ library(cowplot)
 
 ## 1. Available data on *pfhrp2/3* deletions
 
-Our objective here is to learn from historical *pfhrp2/3* studies and to use this information to increase the power and validity of our approach. In particular, we are interested in coming up with sensible values for the intra-cluster correlation coefficient (ICC). Estimates of the ICC from historical data are vastly better than using simple rules of thumb (e.g. using 1.5 for the design effect) and thankfully the Bayesian framework gives us an excellent way of incorporating this information into our analysis.
+Our objective here is to learn from historical *pfhrp2/3* studies and to use this information to increase the power and validity of our approach. In particular, we are interested in coming up with sensible values for the intra-cluster correlation coefficient (ICC). Estimates of the ICC from historical data are vastly better than simple rules of thumb (e.g. using 1.5 for the design effect) and thankfully the Bayesian framework gives us an excellent way of incorporating this information into our analysis.
 
-A large number of *pfhrp2/3* studies can be explored through the [WHO malaria threats map](https://apps.who.int/malaria/maps/threats/). We downloaded all *pfhrp2/3* data from this website on 27 Nov 2023 - the resulting file \emph{MTM_PFHRP23_GENE_DELETIONS_20231127_edited.xlsx} can be found in the [Github repos](https://github.com/mrc-ide/DRpower/) for this tool inside the \emph{R_ignore} folder. Note the term \emph{_edited} in this file name - this is because two additional columns were added manually, which are called \emph{discard} and \emph{discard_reason}. These columns specify certain rows that should be discarded because the raw data contains issues, for example data entry mistakes. We then performed the following filtering steps in order:
+A large number of *pfhrp2/3* studies can be explored through the [WHO malaria threats map](https://apps.who.int/malaria/maps/threats/). We downloaded all *pfhrp2/3* data from this website on 27 Nov 2023. The resulting file \emph{MTM_PFHRP23_GENE_DELETIONS_20231127_edited.xlsx} can be found in the [Github repos](https://github.com/mrc-ide/DRpower/) for this tool inside the \emph{R_ignore} folder. Note the term \emph{_edited} in this file name - this is because two additional columns were added manually, which are called \emph{discard} and \emph{discard_reason}. These columns specify certain rows that should be discarded because of issues in the raw data, for example data entry mistakes. We then performed the following filtering steps:
 
 1. **Remove raw data mistakes**. Rows were dropped that were identified as having issues in the raw data.
 2. **Continent**. Filtered to Africa, Asia or South America.
 3. **Patient type**. We are only interested in *clinically relevant* *pfhrp2/3* deletions, and so we focus on studies of symptomatic patients only.
 4. **Study type**. Filtered to convenience surveys or cross-sectional prospective surveys only.
-5. **Merge per site**. Combined counts (tested and positive) of studies conducted in the same exact location (based on lat/lon) in the same year and from the same source publication. These are considered a single site.
-6. **Number of samples**. Filtered to have 10 or more samples per site. Avoids very small sample sizes which would have very little information from the data and therefore would be driven by our prior assumptions.
-7. **Map to ADMIN1**. All sites were mapped to ADMIN1 level by comparing the lat/lon coordinates against a shapefile from [GADM](https://gadm.org/) version 4.1.0, first administrative unit.
+5. **Merge per site**. Combined counts (both tested and positive) of studies conducted in the same exact location (based on lat/lon) in the same year and from the same source publication. These are considered a single site.
+6. **Number of samples**. Filtered to have 10 or more samples per site. Avoids very small sample sizes that would contain very little information from the data and therefore would be driven by our prior assumptions.
+7. **Map to ADMIN1**. All sites were mapped to ADMIN1 level by comparing the lat/lon coordinates against a shapefile from [GADM](https://gadm.org/) version 4.1.0, focusing on first administrative unit.
 8. **Add further studies**. Results were combined with studies that contain additional information not reflected in the WHO malaria threats map data. For example, some studies have site-level resolution despite not being apparent in the original data download. These additional studies can be found in the [R_ignore/data folder](https://github.com/mrc-ide/DRpower/) under the name \emph{additional_data.csv}.
-9. **Filter on number of sites**. Filter to ADMIN1 regions that contain at least 3 distinct sites
-within the same year and from the same source publication.
+9. **Filter on number of sites**. At this point, we have a combined dataset with all sites mapped to an ADMIN1 region. We filter to ADMIN1 regions that contain at least 3 distinct sites within the same year and from the same source publication. Setting a minimum number of sites per domain ensures that we have information about the ICC in our data, and again we avoid being driven by our prior assumptions.
 
-This filtered the original data down to 6 studies and 7 ADMIN1 domains globally. This filtered dataset is available within the package through the `historical_data` object:
+The filtered data contains 6 studies and 7 ADMIN1 domains. This filtered dataset is available within the package through the `historical_data` object:
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 historical_data %>%
@@ -52,10 +51,9 @@ historical_data %>%
   scroll_box(width = "700px", height = "300px")
 ```
 
-
 ## 2. Estimating the ICC
 
-We can estimate the ICC using the Bayesian model in DRpower by running the `get_ICC()` function on each of the 7 domains We will assume a completely flat prior on the ICC by setting `prior_ICC_shape1 = 1` and `prior_ICC_shape2 = 1`, and we will return the full posterior distribution by setting `post_full_on = TRUE`.
+We can estimate the ICC using the Bayesian model in *DRpower* by running the `get_ICC()` function on each of the 7 domains We will assume a completely flat prior on the ICC by setting `prior_ICC_shape1 = 1` and `prior_ICC_shape2 = 1`, and we will return the full posterior distribution by setting `post_full_on = TRUE`.
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=4}
 plot1 <- readRDS("../inst/extdata/historical_ICC.rds")
@@ -64,7 +62,7 @@ print(plot1)
 
 We can see that there is limited information on the ICC, as evidenced by the relatively spread out posteriors. That being said, most studies agree that it is greater than 0 and less than around 0.3, the exception being Loreto region of Peru in 2009, which suggests higher values but is also extremely vague due to small sample sizes.
 
-We can combine information over sites by multiplying together these posteriors. The result is shown in panel b), and is much sharper, peaking at ICC = 0.038 and entertaining values up to around 0.1. However, combining posteriors in this way makes the hard assumption that there is a single ICC that is the same everywhere in the world, which may not be true for different populations and geographic regions. For this reason, we take a more practical approach when defining priors; we manually define the prior on ICC to be consistent with historical data while also capturing the plausible range between studies. We opt for a Beta(1, 9) distribution, which is also shown in panel b). This distribution allows for ICC values anywhere in the plausible range from 0 to 0.3, while at the same time putting very low probability on values greater than this. This prior is adopted as the default in all DRpower functions, and can be overwritten by setting  `prior_ICC_shape1` and `prior_ICC_shape2` manually.
+We can combine information over sites by multiplying together these posteriors. The result is shown in panel b), and is much sharper, peaking at ICC = 0.038 and entertaining values up to around 0.1. However, combining posteriors in this way makes the hard assumption that there is a single ICC that is the same everywhere in the world, which may not be true for different populations and geographic regions. For this reason, we take a more practical approach when defining priors; we manually define the prior on ICC to be consistent with historical data while also capturing the plausible range between studies. We opt for a Beta(1, 9) distribution, which is also shown in panel b). This distribution allows for ICC values anywhere in the plausible range from 0 to 0.3, while at the same time putting very low probability on values greater than this. This prior is adopted as the default in all *DRpower* functions, and can be overwritten by setting  `prior_ICC_shape1` and `prior_ICC_shape2` manually.
 
-The second place we need to know the ICC is when estimating power. In our simulation approach, we are forced to simulate data under an assumed ICC value. For the reasons above, we focus on the case of ICC = 0.05 as a realistic value that is likely to hold true for most studies. However, if the aim is to be cautious about the ICC then one can opt for a larger value, which will in turn lead to larger sample sizes.
+The second place we need to know the ICC is when estimating power. In our simulation approach, we are forced to simulate data under an assumed ICC value. Based on the information above, we focus on the case of ICC = 0.05 as a realistic value that is likely to hold true for most studies. However, if the aim is to be cautious about the ICC then one can opt for a larger value, which will in turn lead to larger sample sizes.
 

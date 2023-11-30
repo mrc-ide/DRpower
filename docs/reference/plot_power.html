@@ -19,7 +19,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">DRpower</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
       </span>
     </div>
 
@@ -133,41 +133,36 @@
 
     <div id="arguments">
     <h2>Arguments</h2>
-    <dl><dt>n_bins</dt>
-<dd><p>the number of equally spaced breaks in the contour plot. For
-example, 5 bins creates 4 contour lines at 20%, 40%, 60% and 80% of
-the maximum value.</p></dd>
+    <dl><dt>n_clust</dt>
+<dd><p>the number of clusters. Allowed values are anything in
+<code>2:20</code>, including vectors of values.</p></dd>
+
+
+<dt>prevalence</dt>
+<dd><p>the assumed true prevalence of pfhrp2/3 deletions in the
+domain. Allowed values are anything in <code>seq(0, 0.2, 0.01)</code>, including
+vectors of values.</p></dd>
+
+
+<dt>ICC</dt>
+<dd><p>the assumed intra-cluster correlation. Allowed values are" {0,
+0.01, 0.02, 0.05, 0.1, 0.2}.</p></dd>
+
+
+<dt>prev_thresh</dt>
+<dd><p>the prevalence threshold against which we are comparing.
+Allowed values are: {0.05, 0.08, 0.1}.</p></dd>
+
+
+<dt>N_min, N_max</dt>
+<dd><p>plotting limits on the x-axis.</p></dd>
 
 </dl></div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">plot_power</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> function (n_clust = 5, prevalence = 0.1, ICC = 0.05, prev_thresh = 0.05, </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     N_min = 1, N_max = 2000) </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> {</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     assert_vector_pos_int(n_clust, zero_allowed = FALSE)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     assert_vector_bounded(prevalence)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     assert_vector_bounded(ICC)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     assert_vector_bounded(prev_thresh)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     assert_single_pos_int(N_min)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     assert_single_pos_int(N_max)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     n_clust2 &lt;- n_clust</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     prevalence2 &lt;- prevalence</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     ICC2 &lt;- ICC</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     prev_thresh2 &lt;- prev_thresh</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     df_plot &lt;- df_sim %&gt;% dplyr::filter(near(n_clust, n_clust2)) %&gt;% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         dplyr::filter(near(prevalence, prevalence2)) %&gt;% dplyr::filter(near(ICC, </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         ICC2)) %&gt;% dplyr::filter(near(prev_thresh, prev_thresh2)) %&gt;% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         dplyr::filter(N &gt;= N_min) %&gt;% dplyr::filter(N &lt;= N_max)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     df_plot %&gt;% ggplot() + theme_bw() + geom_pointrange(aes(x = N, </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         y = power, ymin = lower, ymax = upper)) + geom_hline(yintercept = 80, </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         linetype = "dashed") + xlim(c(N_min, N_max)) + scale_y_continuous(limits = c(0, </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         100), expand = c(0, 0)) + xlab("Sample size per cluster") + </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         ylab("Power (%)")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x119f6f3f8&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: namespace:DRpower&gt;</span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">plot_power</span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="plot_power-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

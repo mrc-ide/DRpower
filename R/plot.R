@@ -56,7 +56,7 @@ plot_prevalence <- function(n, N, prev_range = c(0, 1), alpha = 0.05, prev_thres
   assert_single_logical(use_cpp)
   
   # get posterior
-  x <- seq(prev_range[1], prev_range[2], 0.001)
+  x <- seq(prev_range[1], prev_range[2], length.out = 1e3)
   post <- get_prevalence(n = n, 
                          N = N,
                          alpha = alpha,
@@ -83,13 +83,16 @@ plot_prevalence <- function(n, N, prev_range = c(0, 1), alpha = 0.05, prev_thres
   lab1 <- sprintf("%s%% chance below threshold", round(1e2*(1 - post$prob_above_threshold), 1))
   lab2 <- sprintf("%s%% chance above threshold", round(1e2*post$prob_above_threshold, 1))
   
+  # find the y value where x equals the prev_thresh
+  y_thresh <- y[which.min(abs(x - prev_thresh))]
+  
   data.frame(x = x, y = y) %>%
-    mutate(above = ifelse(x > 0.05, lab2, lab1),
+    mutate(above = ifelse(x > prev_thresh, lab2, lab1),
            above = factor(above, levels = c(lab1, lab2))) %>%
     ggplot() + theme_bw() +
     geom_ribbon(aes(x = 1e2*x, ymin = 0, ymax = y, fill = above)) +
     geom_line(aes(x = 1e2*x, y = y)) +
-    geom_segment(aes(x = 5, xend = 5, y = 0, yend = y[x == 0.05])) +
+    geom_segment(aes(x = 1e2*prev_thresh, xend = 1e2*prev_thresh, y = 0, yend = y_thresh)) +
     geom_errorbar(aes(xmin = post$CrI_lower, xmax = post$CrI_upper, y = 1.1*max(y)), width = 0.5) +
     annotate(geom = "text", x = post$MAP, y = 1.2*max(y), label = "95% Credible Interval", hjust = 0) +
     geom_point(aes(x = post$MAP, y = 1.1*max(y))) +

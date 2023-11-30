@@ -24,19 +24,19 @@ library(tidyverse)
 
 ## 2. Why is this a tricky problem?
 
-The type of data that we will work with is shown below. This is a very simple dataset consisting of a numerator and denominator for each cluster. The cluster-level prevalence is calculated as one over the other, expressed as a percentage.
+The type of data that we will work with is shown below. This is a very simple dataset consisting of a numerator and denominator for each site. The site-level prevalence is calculated as numerator over denominator, expressed as a percentage.
 
 ```{r, echo=FALSE}
-df_ex <- data.frame(cluster = 1:5,
+df_ex <- data.frame(site = 1:5,
            n_tested = 50,
            n_deletions = c(15, 10, 1, 2, 7)) %>%
-  dplyr::mutate(cluster_prevalence = n_deletions / n_tested * 100)
+  dplyr::mutate(site_prevalence = n_deletions / n_tested * 100)
 
 n_tested <- df_ex$n_tested
 n_deletions <- df_ex$n_deletions
 c <- nrow(df_ex)
 n <- df_ex$n_tested[1]
-p <- mean(df_ex$cluster_prev / 100)
+p <- mean(df_ex$site_prevalence / 100)
 z <- qnorm(0.975)
 d <- z * sqrt(p * (1 - p) / (n*c))
 Wald_lower <- (p - d)*100
@@ -49,40 +49,40 @@ df_ex %>%
   row_spec(5, extra_css = "border-bottom: 1px solid")
 ```
 
-This example is even simpler than most real world datasets, as here the number of people tested is identical over all clusters when it reality it often varies. So why is this a tricky dataset to analyse? How can we possibly get our analysis wrong here!?
+This example is even simpler than most real world datasets, as here the number of people tested is identical over all sites when in reality it often varies. So why is this a tricky dataset to analyse? How can we possibly get our analysis wrong here!?
 
-Recall that our aim is to estimate prevalence of deletions at the province level, meaning we will need to pool results over clusters. One way to do this is to sum the number of deletions over clusters, then sum the number tested over clusters, then divide one by the other to get the prevalence. This gives `r sum(df_ex$n_deletions)` / `r sum(df_ex$n_tested)` = `r p * 100`%. This analysis assumes that all individuals are independent, i.e., they have the same probability of carrying the *pfhrp2/3* deleted strain irrespective of what cluster they belong to.
+Recall that our aim is to estimate prevalence of deletions at the domain level, meaning we will need to pool results over sites. One way to do this is to sum the number of deletions over sites, then sum the number tested over sites, then divide one by the other to get the prevalence. This gives `r sum(df_ex$n_deletions)` / `r sum(df_ex$n_tested)` = `r p * 100`%. This analysis assumes that all individuals are independent, i.e., they have the same probability of carrying the *pfhrp2/3* deleted strain irrespective of what site they belong to.
 
-We also typically want to construct a confidence interval (CI) on this result. A common approach for binomial data like this would be to use the [Wald interval](https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval#Normal_approximation_interval_or_Wald_interval), defined as $\hat{p} \pm z\sqrt{\frac{\hat{p}(1 - \hat{p})}{nc}}$, where $\hat{p}$ is our estimate of the prevalence, $n$ is the sample size per cluster, $c$ is the number of clusters and $z$ is the critical value of the normal distribution (for a 95% CI we can use $z = 1.96$). For the data above we get `r p * 100`% $\pm$ `r round(d * 100, 2)`%, which gives the interval (`r round(Wald_lower, 2)`% to `r round(Wald_upper, 2)`%). Based on this interval we would confidently conclude that the prevalence of deletions is above 5% at the province level.
+We also typically want to construct a confidence interval (CI) on this result. A common approach for binomial data like this would be to use the [Wald interval](https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval#Normal_approximation_interval_or_Wald_interval), defined as $\hat{p} \pm z\sqrt{\frac{\hat{p}(1 - \hat{p})}{nc}}$, where $\hat{p}$ is our estimate of the prevalence, $n$ is the sample size per site, $c$ is the number of sites and $z$ is the critical value of the normal distribution (for a 95% CI we can use $z = 1.96$). For the data above we get `r p * 100`% $\pm$ `r round(d * 100, 2)`%, which gives the interval (`r round(Wald_lower, 2)`% to `r round(Wald_upper, 2)`%). Based on this interval we would confidently conclude that the prevalence of deletions is above 5% at the domain level.
 
 ### 2.1 Dealing with overdispersion
 
-But now look at the data again, focusing on the prevalence in each cluster. Notice that some clusters are quite a bit higher than this `r p*100`% average level, while some are much lower. Could this be explained by random chance? We can explore this statistically by looking at the spread between clusters. If individuals are completely independent then we would expect the variance in cluster-level prevalence to be approximately $\frac{\hat{p}(1 - \hat{p})}{n}$. Hence, we would expect values to fall within the shaded region in the plot below around 95% of the time:
+But now look at the data again, this time focusing on the prevalence in each site. Notice that some sites are quite a bit higher than this `r p*100`% average level, while some are much lower. Could this be explained by random chance? We can explore this statistically by looking at the spread between sites. If individuals are completely independent then we would expect the variance in site-level prevalence to be approximately $\frac{\hat{p}(1 - \hat{p})}{n}$. Hence, we would expect values to fall within the shaded region in the plot below around 95% of the time:
 
 ```{r, echo=FALSE, fig.width=5, fig.height=4}
 d <- z * sqrt(p * (1 - p) / n)
 
 df_ex %>%
   ggplot() + theme_bw() +
-  geom_point(aes(x = cluster, y = cluster_prevalence)) +
-  geom_ribbon(aes(x = cluster, ymin = (p - d) * 100, ymax = (p  + d) * 100), fill = "red", alpha = 0.3) +
+  geom_point(aes(x = site, y = site_prevalence)) +
+  geom_ribbon(aes(x = site, ymin = (p - d) * 100, ymax = (p  + d) * 100), fill = "red", alpha = 0.3) +
   ylim(c(0, 40)) +
-  xlab("Cluster") + ylab("Prevalence (%)")
+  xlab("Site") + ylab("Prevalence (%)")
 ```
 
-We can see that only 2 out of 5 clusters fall inside this region, which is very unlikely by chance. Clusters are therefore **overdispersed**, meaning there is a greater spread in values than we would expect. Another way of looking at this is to say that individuals *within* a cluster are more similar to each other than we would expect by chance, i.e., there is **intra-cluster correlation** (ICC). These sound like two very different ideas, but in fact they are two sides of the same coin - if there is overdispersion between clusters then there must be ICC within clusters, and if there is ICC then there must be overdispersion.
+We can see that only 2 out of 5 sites fall inside this region, which is very unlikely by chance. Sites are therefore **overdispersed**, meaning there is a greater spread in values than we would expect by chance. Another way of looking at this is to say that individuals *within* a site are more similar to each other than we would expect by chance, i.e., there is **intra-cluster correlation** (ICC). These sound like two very different ideas, but in fact they are two sides of the same coin - if there is overdispersion between sites (clusters) then there must be ICC within sites, and if there is ICC then there must be overdispersion.
 
-There are a range of factors that can cause intra-cluster correlation. Individuals in the same cluster may have similar behaviours, similar economic levels and access to care, similar risk factors or even similar phenotypes. The cluster itself (i.e., health facility) may also introduce correlations, for example the same hospital practices may affect the entire community. Finally, the actual process of disease transmission can introduce correlations, for example if there has been a local outbreak then we are more likely to see a second *pfhrp2/3* deleted sample having seen a first.
+There are a range of factors that can cause intra-cluster correlation. Individuals in the same site may have similar behaviours, similar economic levels and access to care, similar risk factors or even similar phenotypes. The site itself (i.e., health facility) may also introduce correlations, for example the same hospital practices may affect the entire community. Finally, the actual process of disease transmission can introduce correlations, for example if there has been a local outbreak then we are more likely to see a second *pfhrp2/3* deleted sample having seen a first.
 
-If our data our overdispersed then there will be more uncertainty around our province-level estimate than we originally expected. This means the CIs above will be too narrow and we are at risk of incorrectly concluding that prevalence is above 5%. One simple way to deal with this issue is to treat our `r c` clusters as `r c` observations rather than `r c*n` observations, ignoring the fact that we know the sample size per cluster. In this case, we would calculate the province-level prevalence as the mean of the 5 cluster-level values. This calculation gives $\hat{p} =$ `r p*100`%, exactly the same as before. The reason for getting the same value here is that sample sizes are the same over all clusters, although in general the two methods may give different results.
+If our data our overdispersed then there will be more uncertainty around our domain-level estimate than we originally expected. This means the CIs above will be too narrow and we risk of incorrectly concluding that prevalence is above 5%. One simple way to deal with this issue is to treat our `r c` sites as `r c` observations rather than `r c*n` observations, ignoring the fact that we know the sample size per site. In this case, we would calculate the domain-level prevalence as the mean of the 5 site-level values. This calculation gives $\hat{p} =$ `r p*100`%, exactly the same as before. The reason for getting the same value here is that sample sizes are the same over all sites, although in general the two methods may give different results.
 
 ```{r, echo=FALSE}
-d <- z * sd(df_ex$cluster_prevalence) / sqrt(c)
+d <- z * sd(df_ex$site_prevalence) / sqrt(c)
 standard_lower <- p*100 - d
 standard_upper <- p*100 + d
 ```
 
-But how should we construct a CI in this case? We are no longer treating our observations as binomial counts, meaning we should use a different approach. First, we calculate the sample variance, $s^2 = \frac{\sum_{i=1}^c (\hat{p}_i - \hat{p})^2}{c - 1}$, where $\hat{p}_i$ is the observed prevalence in cluster $i$. Then we calculate the CI as $\hat{p} \pm z\sqrt{\frac{s^2}{c}}$ (to be even more exact we could take $z$ from the Student's t-distribution rather than the normal distribution). For our example data this gives `r p*100`% $\pm$ `r round(d, 2)`%, which gives the interval (`r round(standard_lower, 2)`% to `r round(standard_upper, 2)`%). This is a *much* wider CI than before, and this time it even spans 5% meaning we would not switch RDTs based on this result. We can see how the simple choice of how to construct CIs has a major effect on the study conclusions, and in this case would result in a different nationwide strategy with respect to switching RDTs. Hence, it is very important that we get this right!
+But how should we construct a CI in this case? We are no longer treating our observations as binomial counts, meaning we should not use the Wald interval. First, we calculate the sample variance, $s^2 = \frac{\sum_{i=1}^c (\hat{p}_i - \hat{p})^2}{c - 1}$, where $\hat{p}_i$ is the observed prevalence in site $i$. Then we calculate the CI as $\hat{p} \pm z\sqrt{\frac{s^2}{c}}$ (to be even more exact we could take $z$ from the Student's t-distribution rather than the normal distribution). For our example data this gives `r p*100`% $\pm$ `r round(d, 2)`%, which gives the interval (`r round(standard_lower, 2)`% to `r round(standard_upper, 2)`%). This is a *much* wider CI than before, and this time it even spans 5% meaning we would not switch RDTs based on this result. We can see how the simple choice of how to construct CIs has a major effect on the study conclusions, and in this case would result in a different nationwide strategy with respect to switching RDTs. Hence, it is very important that we get this right!
 
 This second way of constructing CIs is better than the first in that it takes into account overdispersion, but even this approach suffers from some weaknesses. Before getting into these issues we should talk about the design effect. 
 

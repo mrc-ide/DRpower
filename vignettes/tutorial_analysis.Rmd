@@ -25,7 +25,7 @@ Here, we outline the main steps in analysing data using the DRpower Bayesian mod
 
 ## 1. Estimate prevalence
 
-The main thing we want to estimate is usually the prevalence of *pfhrp2/3* deletions. This is extremely simple to do, and is carried out through the `get_prevalence()` function. We pass this function two sets of values; 1) the number of *pfhrp2/3* deletions observed in each cluster (numerator), and 2) the total sample size in each cluster (denominator):
+The main thing we want to estimate is usually the prevalence of *pfhrp2/3* deletions. This is extremely simple to do, and is carried out through the `get_prevalence()` function. We pass this function two sets of values; 1) the number of *pfhrp2/3* deletions observed in each site (numerator), and 2) the total sample size in each site (denominator):
 
 ```{r, echo=FALSE}
 # define observed data
@@ -46,11 +46,11 @@ get_prevalence(n = num_deletions,
                N = sample_size)
 ```
 
-We obtain a point estimate of `r z$MAP`% prevalence, with a 95% CrI in the range [`r z$CrI_lower`% to `r z$CrI_upper`%]. When presenting our estimates we should always report the full credible interval and not just the central estimate of `r z$MAP`%, as this may give a misleading impression of high confidence.
+We obtain a point estimate of `r z$MAP`% prevalence, with a 95% CrI in the range [`r z$CrI_lower`% to `r z$CrI_upper`%]. When presenting our estimates we should always report the full credible interval and not just the central estimate of `r z$MAP`%, as this may give a misleading impression of how confident we are in this value.
 
-## 2. Compare prevalence against threshold
+## 2. Compare prevalence against a threshold
 
-The second thing we may want to do is to establish whether the prevalence is above the 5% threshold. The probability of being above this threshold is given in the `prob_above_threshold` output, in this case `r z$prob_above_threshold`. Before conducting this analysis, we should have decided what level of confidence we need in order to accept this hypothesis - we advise using 0.95 by default. In this case, `r z$prob_above_threshold` is below 0.95 so we do not have sufficient evidence to conclude that prevalence is above 5%.
+The second thing we may want to do is to establish whether the prevalence is above the 5% threshold at the domain level. The probability of being above this threshold is given in the `prob_above_threshold` output above, in this case `r z$prob_above_threshold`. Before conducting this analysis, we should have decided what level of confidence we need in order to accept this hypothesis - we advise using 0.95 by default. In this case, `r z$prob_above_threshold` is below 0.95 so we do not have sufficient evidence to conclude that prevalence is above 5% at the domain level.
 
 Note that it is possible for the CrI to span the 5% threshold, but for the `prob_above_threshold` to still be greater than 0.95. This is because the CrI is two-sided, whereas the hypothesis test is one sided.
 
