@@ -47,7 +47,6 @@ historical_data %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
   row_spec(0, extra_css = "border-bottom: 1px solid; border-top: 1px solid") %>%
-  row_spec(6, extra_css = "border-bottom: 1px solid") %>%
   scroll_box(width = "700px", height = "300px")
 ```
 

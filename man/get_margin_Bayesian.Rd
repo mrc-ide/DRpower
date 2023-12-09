@@ -73,37 +73,36 @@ return a summary including the mean and 95\% CI of these limits.}
 \item{silent}{if \code{TRUE} then suppress all console output.}
 }
 \value{
-If \code{return_full = FALSE} (the default) returns a data.frame
-  where the lower MOE is in the first row, and the upper MOE is in the second
-  row. The first column gives the point estimate, and the subsequent columns
-  give the 95\% CI on this estimate. If \code{return_full = TRUE} then
-  returns a complete data.frame of all lower and upper MOE realisations over
-  simulations.
+If \code{return_full = FALSE} (the default) returns an estimate of
+  the lower and upper CrI limit in the form of a data.frame. The first row
+  gives the lower limit, the second row gives the upper limit. The first
+  column gives the point estimate, the subsequent columns give the 95\% CI on
+  this estimate. If \code{return_full = TRUE} then returns a complete
+  data.frame of all lower and upper CI realisations over simulations.
 }
 \description{
 As well as comparing against a threshold, the function
   \code{get_prevalence()} can be used to estimate a Bayesian credible
-  interval (CrI) on the prevalence. We can estimate the margin of error (MOE)
-  of this approach by simulation; repeatedly simulating datasets from known
-  parameters, running \code{get_prevalence()} and measuring the MOE. Advantages of
-  this method are that it accounts for uncertainty in the ICC, accounts for
-  uncertainty in prevalence estimation by using simulation, and allows for
-  incorporation of prior information.
+  interval (CrI) on the prevalence. This function returns the margin of error
+  (MOE) we can expect via this method, in terms of the expected lower and
+  upper limits of our credible interval (CrI).
 }
 \details{
 Estimates MOE using the following approach:
 \enumerate{
  \item Simulate data via the function \code{rbbinom_reparam()} using known
- values (e.g. a known "true" prevalence and intra-cluster correlation).
- \item Analyse data using \code{get_prevalence()} to determine the
- upper and lower limits of the credible interval.
- \item Repeat steps 1-2 many times to obtain the distribution of upper and
- lower limits Return either the full distribution, or the mean of the
- distribution along with upper and lower 95\% CIs.
+ values, e.g. a known "true" prevalence and intra-cluster correlation.
+ \item Analyse data using \code{get_prevalence()}. Determine the upper and
+ lower limits of the credible interval.
+ \item Repeat steps 1-2 \code{reps} times to obtain the distribution of upper
+ and lower limits. Return the mean of this distribution along with upper and
+ lower 95\% CIs. To be completely clear, we are producing a 95\% CI on the
+ limits of a CrI, which can be confusing! See \emph{Value} for a clear
+ explanation of how to interpret the output.
 }
-Note that we have not implemented a function that returns the sample size
-needed to achieve a given MOE under the Bayesian model because this would
-require repeated simulation over different values of \code{N}, which is
+Note that we have not implemented a function to return the sample size
+needed to achieve a given MOE under the Bayesian model, as this would
+require repeated simulation over different values of \code{N} which is
 computationally costly. The appropriate value can be established manually if
 needed by running \code{get_margin_Bayesian()} for different sample sizes.
 }
