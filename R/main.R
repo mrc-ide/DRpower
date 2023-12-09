@@ -7,15 +7,15 @@
 #' @export
 
 check_DRpower_loaded <- function() {
-  message("DRpower version 0.1.0 loaded successfully!")
+  message("DRpower version 1.0.1 loaded successfully!")
 }
 
 #------------------------------------------------
 # reparameterisation of the beta-binomial distribution in terms of a mean (p)
 # and an intra-cluster correlation coefficient (rho). The shape parameters of
 # this distribution are alpha = p*(1/rho - 1) and beta = (1 - p)*(1/rho - 1).
-# The implied beta distribution has mean p and variance rho. Deals with special
-# cases that simplify to the binomial or bernoulli distributions
+# The implied beta distribution has mean p and variance p*(1-p)*rho. Deals with
+# special cases that simplify to the binomial or bernoulli distributions
 #' @importFrom extraDistr dbbinom
 #' @importFrom stats dbinom
 #' @noRd
@@ -130,10 +130,18 @@ loglike_joint_rho <- function(n, N, rho, n_intervals = 40,
 # quadrature
 #' @noRd
 
-loglike_joint_p <- function(n, N, p, n_intervals = 40,
+loglike_joint_p <- function(n, N, p, rho_fixed = NULL, n_intervals = 40,
                             prior_p_shape1 = 1, prior_p_shape2 = 1,
                             prior_rho_shape1 = 1, prior_rho_shape2 = 1,
                             debug_on = FALSE) {
+  
+  # simple evaluation if using fixed rho (no need to integrate)
+  if (!is.null(rho_fixed)) {
+    ret <- loglike_joint(n = n, N = N, p = p, rho = rho_fixed, prior_p_shape1 = prior_p_shape1,
+                         prior_p_shape2 = prior_p_shape2, prior_rho_shape1 = prior_rho_shape1,
+                         prior_rho_shape2 = prior_rho_shape2)
+    return(ret)
+  }
   
   # integrate over rho via adaptive quadrature
   df_quad <- adaptive_quadrature(f1 = function(rho) {
@@ -184,6 +192,11 @@ loglike_joint_p <- function(n, N, p, n_intervals = 40,
 #' @param prev_thresh the prevalence threshold that we are comparing against.
 #'   Can be a vector, in which case the return object contains one value for
 #'   each input.
+#' @param ICC normally this should be set to \code{NULL} (the default), in which
+#'   case the ICC is estimated from the data. However, a fixed value can be
+#'   entered here, in which case this overrides the use of the prior
+#'   distribution as specified by \code{prior_ICC_shape1} and
+#'   \code{prior_ICC_shape2}.
 #' @param prior_prev_shape1,prior_prev_shape2,prior_ICC_shape1,prior_ICC_shape2
 #'   parameters that dictate the shape of the Beta priors on prevalence and the
 #'   ICC. See the \href{https://en.wikipedia.org/wiki/Beta_distribution}{Wikipedia page on the Beta
@@ -229,6 +242,7 @@ loglike_joint_p <- function(n, N, p, n_intervals = 40,
 #' @param use_cpp if \code{TRUE} (the default) then use an Rcpp implementation
 #'   of the adaptive quadrature approach that is much faster than the base R
 #'   method.
+#' @param silent if \code{TRUE} then suppress all console output.
 NULL
 
 ##' @rdname get_posterior
@@ -245,14 +259,14 @@ NULL
 #' 
 #' @export
 
-get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
+get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05, ICC = NULL,
                            prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
                            prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 9.0,
                            MAP_on = TRUE, post_mean_on = FALSE, post_median_on = FALSE,
                            post_CrI_on = TRUE, post_thresh_on = TRUE,
                            post_full_on = FALSE, post_full_breaks = seq(0, 1, l = 1001),
                            CrI_type = "HDI", n_intervals = 20, round_digits = 2,
-                           use_cpp = TRUE) {
+                           use_cpp = TRUE, silent = FALSE) {
   
   # avoid "no visible binding" note
   dummy <- A <- B <- C <- x0 <- x1 <- post_mean <- NULL
@@ -266,6 +280,12 @@ get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
   assert_same_length(n, N, message = "N must be either a single value (all clusters the same size) or a vector with the same length as n")
   assert_single_bounded(alpha, inclusive_left = FALSE, inclusive_right = FALSE)
   assert_vector_bounded(prev_thresh)
+  if (!is.null(ICC)) {
+    if (!silent) {
+      message(sprintf("Note: the ICC is set to the fixed value %s. This overrides the use of the prior on ICC. Use silent = TRUE to suppress this message.", ICC))
+    }
+    assert_single_bounded(ICC)
+  }
   assert_single_bounded(prior_prev_shape1, left = 1e-3, right = 1e3)
   assert_single_bounded(prior_prev_shape2, left = 1e-3, right = 1e3)
   assert_single_bounded(prior_ICC_shape1, left = 1e-3, right = 1e3)
@@ -284,6 +304,7 @@ get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
   assert_greq(n_intervals, 5)
   assert_single_pos_int(round_digits, zero_allowed = FALSE)
   assert_single_logical(use_cpp)
+  assert_single_logical(silent)
   
   # split based on C++ vs. R
   if (use_cpp) {
@@ -291,6 +312,7 @@ get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
     # get arguments into list
     args_params <- list(n = n,
                         N = N,
+                        ICC = ifelse(is.null(ICC), -1, ICC),
                         prior_prev_shape1 = prior_prev_shape1,
                         prior_prev_shape2 = prior_prev_shape2,
                         prior_ICC_shape1 = prior_ICC_shape1,
@@ -323,7 +345,7 @@ get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05,
     # get distribution of p via adaptive quadrature
     # NB, set debug_on = TRUE to plot distribution
     df_quad <- adaptive_quadrature(f1 = function(p) {
-      loglike_joint_p(n = n, N = N, p = p, n_intervals = n_intervals,
+      loglike_joint_p(n = n, N = N, p = p, rho_fixed = ICC, n_intervals = n_intervals,
                       prior_p_shape1 = prior_prev_shape1, prior_p_shape2 = prior_prev_shape2,
                       prior_rho_shape1 = prior_ICC_shape1, prior_rho_shape2 = prior_ICC_shape2)
     }, n_intervals = n_intervals, left = 0, right = 1, debug_on = FALSE)
@@ -689,6 +711,12 @@ get_joint <- function(n, N,
 #' @param rejection_threshold the posterior probability of being above the
 #'   prevalence threshold needs to be greater than \code{rejection_threshold} in
 #'   order to reject the null hypothesis.
+#' @param ICC_infer the value of the ICC assumed in the inference step. If we
+#'   plan on estimating the ICC from our data, i.e. running
+#'   \code{get_prevalence(ICC = NULL)} (the default), then we should also set
+#'   \code{ICC=NULL} here (the default). However, if we plan on running
+#'   \code{get_prevalence()} with ICC set to a known value then we should
+#'   insert this value here as \code{ICC_infer}.
 #' @param reps number of times to repeat simulation per parameter combination.
 #' @param silent if \code{TRUE} then suppress all console output.
 #'
@@ -707,6 +735,7 @@ get_joint <- function(n, N,
 get_power <- function(N, prevalence = 0.10, ICC = 0.05,
                       prev_thresh = 0.05,
                       rejection_threshold = 0.95,
+                      ICC_infer = NULL,
                       prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
                       prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 9.0,
                       n_intervals = 20, round_digits = 2,
@@ -723,6 +752,12 @@ get_power <- function(N, prevalence = 0.10, ICC = 0.05,
   assert_single_bounded(ICC)
   assert_vector_bounded(prev_thresh)
   assert_single_bounded(rejection_threshold)
+  if (!is.null(ICC_infer)) {
+    if (!silent) {
+      message(sprintf("Note: this assumes the ICC will be set to the fixed value %s when analysing your data. This overrides the use of the prior on ICC. Use silent = TRUE to suppress this message.", ICC_infer))
+    }
+    assert_single_bounded(ICC_infer)
+  }
   assert_single_bounded(prior_prev_shape1, left = 1e-3, right = 1e3)
   assert_single_bounded(prior_prev_shape2, left = 1e-3, right = 1e3)
   assert_single_bounded(prior_ICC_shape1, left = 1e-3, right = 1e3)
@@ -769,6 +804,7 @@ get_power <- function(N, prevalence = 0.10, ICC = 0.05,
                             N = l_u[[i]]$N,
                             alpha = 0.05,
                             prev_thresh = prev_thresh,
+                            ICC = ICC_infer,
                             prior_prev_shape1 = prior_prev_shape1,
                             prior_prev_shape2 = prior_prev_shape2,
                             prior_ICC_shape1 = prior_ICC_shape1,
@@ -782,7 +818,8 @@ get_power <- function(N, prevalence = 0.10, ICC = 0.05,
                             CrI_type = "HDI",
                             n_intervals = n_intervals,
                             round_digits = 5,
-                            use_cpp = use_cpp)
+                            use_cpp = use_cpp,
+                            silent = TRUE)
     
     sim_correct[i,] <- (p_est$prob_above_threshold[[1]] > rejection_threshold)
   }

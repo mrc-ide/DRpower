@@ -20,7 +20,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">DRpower</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.1</span>
       </span>
     </div>
 
@@ -128,6 +128,7 @@
 <span>  <span class="va">N</span>,</span>
 <span>  alpha <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  prev_thresh <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  ICC <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  prior_prev_shape1 <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  prior_prev_shape2 <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  prior_ICC_shape1 <span class="op">=</span> <span class="fl">1</span>,</span>
@@ -142,7 +143,8 @@
 <span>  CrI_type <span class="op">=</span> <span class="st">"HDI"</span>,</span>
 <span>  n_intervals <span class="op">=</span> <span class="fl">20</span>,</span>
 <span>  round_digits <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>  use_cpp <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  use_cpp <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  silent <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">get_ICC</span><span class="op">(</span></span>
@@ -183,6 +185,14 @@ argument for how this is calculated.</p></dd>
 <dd><p>the prevalence threshold that we are comparing against.
 Can be a vector, in which case the return object contains one value for
 each input.</p></dd>
+
+
+<dt>ICC</dt>
+<dd><p>normally this should be set to <code>NULL</code> (the default), in which
+case the ICC is estimated from the data. However, a fixed value can be
+entered here, in which case this overrides the use of the prior
+distribution as specified by <code>prior_ICC_shape1</code> and
+<code>prior_ICC_shape2</code>.</p></dd>
 
 
 <dt>prior_prev_shape1, prior_prev_shape2, prior_ICC_shape1, prior_ICC_shape2</dt>
@@ -246,6 +256,10 @@ giving the false impression of extreme precision.</p></dd>
 <dd><p>if <code>TRUE</code> (the default) then use an Rcpp implementation
 of the adaptive quadrature approach that is much faster than the base R
 method.</p></dd>
+
+
+<dt>silent</dt>
+<dd><p>if <code>TRUE</code> then suppress all console output.</p></dd>
 
 </dl></div>
     <div id="details">

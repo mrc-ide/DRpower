@@ -49,14 +49,16 @@ proportion between 0 and 1.}
 }
 \value{
 the functions \code{get_margin()} and \code{get_margin_CP()} return
-  the margin of error of the prevalence as a value between 0 and 1 (i.e. not
-  as a \%). In the case of \code{get_margin_CP()} a different MOE is returned
-  for the upper and lower limits.
+  the expected lower and upper CI limits on the prevalence as a value between
+  0 and 1 (i.e. not as a percentage). Technically this is not the MOE, as
+  that would be the difference between these limits and the assumed
+  prevalence. However, we feel this is a more useful and more intuitive
+  output.
 }
 \description{
 Calculate the expected margin of error when estimating
-  prevalence from a clustered survey. Alternatively, calculate the sample
-  size required to achieve a given target margin of error.
+  prevalence from a clustered survey, or calculate the sample size required
+  to achieve a given target margin of error.
 }
 \details{
 A very common approach when constructing confidence intervals (CIs)
@@ -67,42 +69,44 @@ A very common approach when constructing confidence intervals (CIs)
   where \eqn{\hat{p}} is our estimate of the prevalence, \eqn{z} is the
   critical value of the normal distribution (\eqn{z=1.96} for a 95\%
   interval) and \eqn{N} is the sample size. When estimating prevalence from a
-  clustered survey we need to modify this formula as follows:
+  clustered survey, we need to modify this formula as follows:
   
   \deqn{\hat{p} \pm z\sqrt{\frac{\hat{p}(1 - \hat{p})}{Nc}(1 + (n - 1) r)}}
   
   where \eqn{\hat{p}} is the \emph{mean} prevalence over clusters, \eqn{c} is
   the number of clusters, and \eqn{r} is the intra-cluster correlation (ICC,
   a value between 0 and 1). The term to the right of the \eqn{\pm} symbol is
-  called the \emph{margin of error} (MOE). The function \code{get_margin()}
-  returns this value.
+  called the \emph{margin of error} (MOE). We can give this term the name
+  \eqn{d}. The function \code{get_margin()} returns the values
+  \eqn{\hat{p}-d} and \eqn{\hat{p}+d}, i.e. the lower and upper estimates of
+  what our CI will be.
   
   We can also rearrange this formula to get the sample size (\eqn{N})
-  required to reach any given MOE:
+  required to achieve any given MOE:
   
   \deqn{ N = \frac{ z^2p(1-p)(1-r) }{ cd^2 - z^2p(1-p)r } }
   
-  where \eqn{d} is the desired MOE. The function
-  \code{get_sample_size_margin()} returns this value. Note that in some cases
-  it might not be possible to achieve the specified MOE for any finite sample
-  size due to the ICC introducing too much variation, in which case this
-  formula will return a negative value and the function will return an error.
+  The function \code{get_sample_size_margin()} returns the value of \eqn{N}.
+  Note that in some cases it might not be possible to achieve the specified
+  MOE for any finite sample size due to the ICC introducing too much
+  variation, in which case this formula will return a negative value and the
+  function will return an error.
   
-  Although this is a very common approach, it has a number of weaknesses.
-  First, notice that we sneakily replaced \eqn{\hat{p}} with \eqn{p} when
-  moving to the sample size formula above. This implies that there is no
-  uncertainty in our prevalence estimation, which is not true. Also note that
-  the Wald interval assumes that the sampling distribution of our estimator
-  is Gaussian, which is also not true. The difference between the Gaussian
-  and the true distribution is particularly pronounced when prevalence is at
-  the extremes of the range (near 0\% or 100\%). In these cases, the Wald
-  interval can actually include values less than 0 or greater than 1, which
-  is nonsensical.
+  Although this is a very common approach, it has several weaknesses. First,
+  notice that we sneakily replaced \eqn{\hat{p}} with \eqn{p} when moving to
+  the sample size formula above. This implies that there is no uncertainty in
+  our prevalence estimate, which is not true. Also note that the Wald
+  interval assumes that the sampling distribution of our estimator is
+  Gaussian, which is also not true. The difference between the Gaussian and
+  the true distribution is particularly pronounced when prevalence is at the
+  extremes of the range (near 0\% or 100\%). Here, the Wald interval can
+  actually include values less than 0 or greater than 1, which are
+  nonsensical.
   
   An arguably better approach is to construct CIs using the method of Clopper
   and Pearson (1934). This confidence interval guarantees that the false
-  positive rate is \emph{at least} \code{alpha}, and in this sense is
-  conservative. It is asymmetric and does not suffer from the problem of
+  positive rate is \emph{at least} \eqn{alpha}, and in this sense is
+  conservative. It can be asymmetric and does not suffer from the problem of
   allowing values outside the [0,1] range. To make the Clopper-Pearson
   interval apply to a multi-cluster survey, we can use the idea of effective
   sample size, \eqn{N_e}:
@@ -110,15 +114,15 @@ A very common approach when constructing confidence intervals (CIs)
   \deqn{ D_{eff} = 1 + (N - 1)r }
   \deqn{ N_e = \frac{N}{D_{eff}} }
   
-  We then calculate the CI as normal but using \eqn{N_e} in place of \eqn{N}.
-  The function \code{get_margin_CP()} returns the lower and upper MOE using
-  the Clopper-Pearson interval, and the function
+  We then calculate the Clopper-Pearson CI but using \eqn{N_e} in place of
+  \eqn{N}. The function \code{get_margin_CP()} returns the expected lower and
+  upper CI limits using the Clopper-Pearson interval, and the function
   \code{get_sample_size_margin_CP()} returns the corresponding sample size
-  needed to achieve a certain MOE.
+  needed to achieve a certain MOE (the maximum of either lower or upper).
 
-  A third option is to use the DRpower model to estimate the credible
-  interval of prevalence. See \code{?get_margin_Bayesian()} for how to
-  estimate the margin of error under this method.
+  A third option is to use the DRpower Bayesian model to estimate the
+  credible interval of prevalence. See \code{?get_margin_Bayesian()} for how
+  to do this.
 }
 \examples{
 get_margin(N = 60, n_clust = 3, prevalence = 0.2)

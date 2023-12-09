@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">DRpower</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.1</span>
       </span>
     </div>
 
@@ -141,7 +141,7 @@
       <h1 data-toc-skip>Designing a study</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 30 Nov
+            <h4 data-toc-skip class="date">Last updated: 09 Dec
 2023</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/tutorial_design.Rmd" class="external-link"><code>vignettes/tutorial_design.Rmd</code></a></small>
@@ -459,16 +459,15 @@ may be better off pooling results to the domain level.</p>
 <h2 id="controling-the-margin-of-error-bonus-section">7. Controling the margin of error (bonus section)<a class="anchor" aria-label="anchor" href="#controling-the-margin-of-error-bonus-section"></a>
 </h2>
 <p>What if we also plan on using the same samples to look for a drug
-resistance marker that we already believe to be at high prevalence, and
-we want to estimate this prevalence? In this case, it can be useful to
-consider what will be the expected margin of error in our analysis. This
-is not the same as a power analysis, as we are not conducting a
-hypothesis test. Rather, we are trying to choose a sample size that
-gives us a certain level of precision.</p>
+resistance marker that we already believe to be at high prevalence? In
+this case, it can be useful to consider what will be the expected margin
+of error in our analysis. This is not the same as a power analysis, as
+we are not conducting a hypothesis test. Rather, we are trying to choose
+a sample size that gives us a certain level of precision.</p>
 <p>The <code><a href="../reference/get_margins.html">get_sample_size_margin()</a></code> function tells us the
 per-site sample size needed to achieve a given margin of error (MOE) if
 we plan on pooling results over multiple sites. Here, we assume that the
-prevalence of the marker is 20% in the population, and we hope to
+prevalence of the marker is 20% in the population, and we aim to
 estimate this to within plus or minus 10%:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># get sample size needed to achieve 10% MOE if prevalence is 20% and we have 6 sites</span></span>
@@ -480,56 +479,53 @@ to tell us what our MOE would be given a known sample size:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># get MOE assuming 40 samples in each of 6 sites</span></span>
 <span><span class="fu"><a href="../reference/get_margins.html">get_margin</a></span><span class="op">(</span>N <span class="op">=</span> <span class="fl">40</span>, n_clust <span class="op">=</span> <span class="fl">6</span>, prevalence <span class="op">=</span> <span class="fl">0.2</span>, ICC <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.08691875</span></span></code></pre></div>
-<p>With 40 samples we would expect to estimate prevalence to within plus
-or minus 8.7%.</p>
+<span><span class="co">#&gt;     lower     upper </span></span>
+<span><span class="co">#&gt; 0.1130813 0.2869187</span></span></code></pre></div>
+<p>With 40 samples we would expect our 95% CI to range from around 11.3%
+to 28.7%, in other words a MOE of around 8.7%.</p>
 <p>The formula used above is extremely simple. It does not allow for
-different sample sizes per site, and it also assumes we know the ICC
-exactly rather than estimating it from data. An alternative approach is
-to use the <em>DRpower</em> Bayesian model to estimate the prevalence.
-In other words, we plan on using the <code><a href="../reference/get_posterior.html">get_prevalence()</a></code>
-function to obtain a 95% Bayesian credible interval (CrI). If we plan to
-estimate prevalence this way, then we should use the function
-<code><a href="../reference/get_margin_Bayesian.html">get_margin_Bayesian()</a></code> to estimate our MOE. This function
-works by simulation, and accepts different sample sizes in each
-site:</p>
+different sample sizes per site, and it also assumes that we know the
+ICC exactly rather than estimating it from data. An alternative approach
+is to use the <em>DRpower</em> Bayesian model to estimate the
+prevalence. In other words, we plan on using the
+<code><a href="../reference/get_posterior.html">get_prevalence()</a></code> function to obtain a 95% Bayesian credible
+interval (CrI). If we plan to estimate prevalence this way, then we
+should use the function <code><a href="../reference/get_margin_Bayesian.html">get_margin_Bayesian()</a></code> to estimate
+our MOE. This function works by simulation, and allows for different
+sample sizes in each site:</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># get MOE when using DRpower Bayesian model</span></span>
 <span><span class="fu"><a href="../reference/get_margin_Bayesian.html">get_margin_Bayesian</a></span><span class="op">(</span><span class="va">N</span>, prevalence <span class="op">=</span> <span class="fl">0.2</span>, ICC <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
 <span><span class="co">#&gt;       estimate   CI_2.5  CI_97.5</span></span>
 <span><span class="co">#&gt; lower  12.6323 12.03405 13.23055</span></span>
 <span><span class="co">#&gt; upper  31.0595 30.12544 31.99356</span></span></code></pre></div>
-<p>Here, we expect around 13% error on the lower end, and around 31%
-error on the upper end. In other words, if the true prevalence of the
-marker is 20% in the population then we would expect our 95% CrI to
-extend from around 7% to 51%. This is quite a wide interval, and much
-wider than we obtained from the simpler <code><a href="../reference/get_margins.html">get_margin()</a></code>
-function. The reason is that the Bayesian model is making different
-assumptions, most notably estimating the ICC from data rather than
-assuming a known value.</p>
+<p>Using this method, we expect our 95% CrI to range from around 12.6%
+to 31%. Note that this MOE is different in the lower and upper
+directions meaning the CrI is not symmetric. It is also narrower at the
+lower end than our previous <code><a href="../reference/get_margins.html">get_margin()</a></code> estimate, but
+wider at the upper end. The Bayesian model makes different assumptions,
+and so in general we shouldn’t expect the CrI to be the same as the
+CI.</p>
 <p>In summary…</p>
 <ul>
 <li>We have sample sizes (<code>N</code>) that we are happy with for our
 <em>pfhrp2/3</em> analysis. These don’t quite achieve 80% power, but
 they are not far off. They have been chosen taking into account
-logistical and feasibility constraints. We also know the number of
-suspected malaria cases that we need to enrol
-(<code>N_suspected</code>).</li>
+logistical and feasibility constraints as well as statistical
+considerations. We also know the number of suspected malaria cases that
+we need to enrol (<code>N_suspected</code>).</li>
 <li>The same sample sizes give us 86% power to detect rare
 <em>pfk13</em> variants at 1% in the population when summarised at the
 domain level. We do not have power to detect rare variants at the
 individual site level in most sites.</li>
-<li>The same sample sizes give us a margin of error of around 13% on the
-low side and 31% on the high side when estimating the prevalence of a
-variant at 20% in the population. This is a fairly wide interval, and so
-we should expect to only be able to make broad conclusions about whether
-the variant is at low, intermediate, or high prevalence.</li>
+<li>The same sample sizes give us a margin of error of around 10% when
+estimating the prevalence of a variant at 20% in the population.</li>
 </ul>
 <p>Notice that this summary considers all end-points for the same sample
 sizes. We have now arrived at a detailed plan and have a good idea of
-what we can expect from our results. It is up to us to decide if this is
-good enough, or if we need to revisit assumptions and modify the
-plan.</p>
+what we can expect from our results. It is up to us to decide if we want
+to go ahead with this plan, or if we want to revisit assumptions and
+modify the plan accordingly.</p>
 <p align="center">
 <button class="btn btn-primary" onclick="window.location.href='https://mrc-ide.github.io/DRpower/articles/tutorial_analysis.html';">
 Next topic
