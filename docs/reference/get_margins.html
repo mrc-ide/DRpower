@@ -21,7 +21,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">DRpower</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.2</span>
       </span>
     </div>
 
@@ -183,11 +183,10 @@ proportion between 0 and 1.</p></dd>
     
 
 <p>the functions <code>get_margin()</code> and <code>get_margin_CP()</code> return
-  the expected lower and upper CI limits on the prevalence as a value between
-  0 and 1 (i.e. not as a percentage). Technically this is not the MOE, as
-  that would be the difference between these limits and the assumed
-  prevalence. However, we feel this is a more useful and more intuitive
-  output.</p>
+  the expected lower and upper CI limits on the prevalence as percentage.
+  Technically this is not the MOE, as that would be the difference between
+  these limits and the assumed prevalence. However, we feel this is a more
+  useful and more intuitive output.</p>
     </div>
     <div id="details">
     <h2>Details</h2>
@@ -252,15 +251,15 @@ limits illustrated in the case of the binomial. Biometrika, 26, 404–413. doi:
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">get_margin</span><span class="op">(</span>N <span class="op">=</span> <span class="fl">60</span>, n_clust <span class="op">=</span> <span class="fl">3</span>, prevalence <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      lower      upper </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 0.08386306 0.31613694 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     lower     upper </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  8.386306 31.613694 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">get_sample_size_margin</span><span class="op">(</span>MOE <span class="op">=</span> <span class="fl">0.07</span>, n_clust <span class="op">=</span> <span class="fl">3</span>, prevalence <span class="op">=</span> <span class="fl">0.2</span>, ICC <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 72</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">get_margin_CP</span><span class="op">(</span>N <span class="op">=</span> <span class="fl">60</span>, n_clust <span class="op">=</span> <span class="fl">3</span>, prevalence <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     lower     upper </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 0.0439134 0.4788017 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    lower    upper </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  4.39134 47.88017 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">get_sample_size_margin_CP</span><span class="op">(</span>MOE <span class="op">=</span> <span class="fl">0.14</span>, n_clust <span class="op">=</span> <span class="fl">3</span>, prevalence <span class="op">=</span> <span class="fl">0.2</span>, ICC <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 93</span>

@@ -70,17 +70,17 @@ Next, we should examine our 6 sites individually to see if they are able to recr
 
 In our case, let's assume that two sites are in low transmission areas, meaning they can only recruit 60 samples during the study time frame. Another two sites are very small, and only have the capacity to enrol 40 samples due to staffing issues.
 
-The question is - how badly do these smaller sample sizes hurt our power? We cannot work this out from sample size tables or power curves because these assume the same sample size in each site. But we can explore power directly using the `get_power()` function:
+The question is - how badly do these smaller sample sizes hurt our power? We cannot work this out from sample size tables or power curves because these assume the same sample size in each site. But we can explore power directly using the `get_power_threshold()` function:
 
 ```{r, echo=FALSE}
 set.seed(1)
 ```
 ```{r}
-get_power(N = c(113, 113, 60, 60, 40, 40),   # new sample sizes per site
-          prevalence = 0.1,
-          ICC = 0.05,
-          prev_thresh = 0.05,
-          reps = 1e2)
+get_power_threshold(N = c(113, 113, 60, 60, 40, 40),   # new sample sizes per site
+                    prevalence = 0.1,
+                    ICC = 0.05,
+                    prev_thresh = 0.05,
+                    reps = 1e3)
 ```
 
 We find that power is slightly lower than before, probably around 74%. We could try to balance things out by obtaining more samples from our remaining two sites:
@@ -89,11 +89,11 @@ We find that power is slightly lower than before, probably around 74%. We could 
 set.seed(1)
 ```
 ```{r}
-get_power(N = c(250, 250, 60, 60, 40, 40),   # rebalanced cluster sizes
-          prevalence = 0.1,
-          ICC = 0.05,
-          prev_thresh = 0.05,
-          reps = 1e2)
+get_power_threshold(N = c(250, 250, 60, 60, 40, 40),   # rebalanced cluster sizes
+                    prevalence = 0.1,
+                    ICC = 0.05,
+                    prev_thresh = 0.05,
+                    reps = 1e3)
 ```
 
 This rebalancing has helped, power is now back up to around 78%, but it comes at the cost of obtaining more samples. The total sample size has now gone up to 700 from the original 678.
@@ -104,11 +104,11 @@ As an aside, compare this with what happens if we were able to recruit just one 
 set.seed(1)
 ```
 ```{r}
-get_power(N = c(113, 113, 60, 60, 40, 40, 40),   # one more site of size 40
-          prevalence = 0.1,
-          ICC = 0.05,
-          prev_thresh = 0.05,
-          reps = 1e2)
+get_power_threshold(N = c(113, 113, 60, 60, 40, 40, 40),   # one more site of size 40
+                    prevalence = 0.1,
+                    ICC = 0.05,
+                    prev_thresh = 0.05,
+                    reps = 1e3)
 ```
 
 Power is now recovered to around 78% while the total sample size is only 466. This emphasises the point that *where possible* we should put our efforts into recruiting more sites rather than increasing per-site sample sizes.

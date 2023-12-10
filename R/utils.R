@@ -19,8 +19,8 @@ NULL
 #'   cluster for given values of the ICC and the prevalence threshold against
 #'   which we are comparing.
 #' 
-#' @details The function \code{get_power()} was run over a large range of
-#'   parameter combinations and results were stored within the \code{df_sim}
+#' @details The function \code{get_power_threshold()} was run over a large range
+#'   of parameter combinations and results were stored within the \code{df_sim}
 #'   object (see \code{?df_sim}). These simulations were then used to produce
 #'   minimum sample size estimates by linear interpolation that were stored
 #'   within the \code{df_ss} object (see \code{?df_ss}). This function provides

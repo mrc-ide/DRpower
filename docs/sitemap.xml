@@ -73,9 +73,6 @@
     <loc>/reference/get_joint.html</loc>
   </url>
   <url>
-    <loc>/reference/get_joint_grid.html</loc>
-  </url>
-  <url>
     <loc>/reference/get_margin_Bayesian.html</loc>
   </url>
   <url>
@@ -83,9 +80,6 @@
   </url>
   <url>
     <loc>/reference/get_posterior.html</loc>
-  </url>
-  <url>
-    <loc>/reference/get_power.html</loc>
   </url>
   <url>
     <loc>/reference/get_power_presence.html</loc>
@@ -116,8 +110,5 @@
   </url>
   <url>
     <loc>/reference/plot_power.html</loc>
-  </url>
-  <url>
-    <loc>/reference/studies_inclusion.html</loc>
   </url>
 </urlset>

@@ -75,10 +75,11 @@ return a summary including the mean and 95\% CI of these limits.}
 \value{
 If \code{return_full = FALSE} (the default) returns an estimate of
   the lower and upper CrI limit in the form of a data.frame. The first row
-  gives the lower limit, the second row gives the upper limit. The first
-  column gives the point estimate, the subsequent columns give the 95\% CI on
-  this estimate. If \code{return_full = TRUE} then returns a complete
-  data.frame of all lower and upper CI realisations over simulations.
+  gives the lower limit, the second row gives the upper limit, both as
+  percentages. The first column gives the point estimate, the subsequent
+  columns give the 95\% CI on this estimate. If \code{return_full = TRUE}
+  then returns a complete data.frame of all lower and upper CI realisations
+  over simulations.
 }
 \description{
 As well as comparing against a threshold, the function

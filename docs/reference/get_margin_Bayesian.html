@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">DRpower</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.2</span>
       </span>
     </div>
 
@@ -227,10 +227,13 @@ return a summary including the mean and 95% CI of these limits.</p></dd>
 
 <p>If <code>return_full = FALSE</code> (the default) returns an estimate of
   the lower and upper CrI limit in the form of a data.frame. The first row
-  gives the lower limit, the second row gives the upper limit. The first
-  column gives the point estimate, the subsequent columns give the 95% CI on
-  this estimate. If <code>return_full = TRUE</code> then returns a complete
-  data.frame of all lower and upper CI realisations over simulations.</p>
+  gives the lower limit, the second row gives the upper limit, both as
+  percentages. The first column gives the point estimate, the subsequent
+  columns give the 95% CI on this estimate. If <code>return_full = TRUE</code></p>
+
+
+<p>then returns a complete data.frame of all lower and upper CI realisations
+  over simulations.</p>
     </div>
     <div id="details">
     <h2>Details</h2>
@@ -253,10 +256,10 @@ needed by running <code>get_margin_Bayesian()</code> for different sample sizes.
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">get_margin_Bayesian</span><span class="op">(</span>N <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">120</span>, <span class="fl">90</span>, <span class="fl">150</span><span class="op">)</span>, prevalence <span class="op">=</span> <span class="fl">0.15</span>, ICC <span class="op">=</span> <span class="fl">0.01</span> , reps <span class="op">=</span> <span class="fl">1e2</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> |==                                                    |  5% ~1 s remaining     |=====                                                 | 10% ~1 s remaining     |========                                              | 15% ~1 s remaining     |==========                                            | 20% ~1 s remaining     |=============                                         | 25% ~1 s remaining     |================                                      | 30% ~1 s remaining     |===================                                   | 35% ~1 s remaining     |=====================                                 | 40% ~1 s remaining     |========================                              | 45% ~1 s remaining     |===========================                           | 51% ~1 s remaining     |==============================                        | 56% ~0 s remaining     |================================                      | 61% ~0 s remaining     |===================================                   | 66% ~0 s remaining     |=====================================                 | 70% ~0 s remaining     |========================================              | 75% ~0 s remaining     |===========================================           | 80% ~0 s remaining     |=============================================         | 85% ~0 s remaining     |================================================      | 90% ~0 s remaining     |===================================================   | 95% ~0 s remaining     |======================================================|100% ~0 s remaining     Completed after 1 s                                                             </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       estimate   CI_2.5  CI_97.5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> lower   8.2258  7.89046  8.56114</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> upper  29.0514 28.44613 29.65667</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> |==                                                    |  5% ~1 s remaining     |=====                                                 | 10% ~1 s remaining     |========                                              | 15% ~1 s remaining     |==========                                            | 20% ~1 s remaining     |=============                                         | 25% ~1 s remaining     |================                                      | 30% ~1 s remaining     |===================                                   | 35% ~1 s remaining     |=====================                                 | 40% ~1 s remaining     |========================                              | 45% ~1 s remaining     |===========================                           | 51% ~1 s remaining     |==============================                        | 56% ~0 s remaining     |================================                      | 61% ~0 s remaining     |===================================                   | 66% ~0 s remaining     |======================================                | 71% ~0 s remaining     |========================================              | 76% ~0 s remaining     |===========================================           | 81% ~0 s remaining     |==============================================        | 86% ~0 s remaining     |=================================================     | 91% ~0 s remaining     |===================================================   | 96% ~0 s remaining     Completed after 1 s                                                             </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       estimate    CI_2.5   CI_97.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> lower   8.1986  7.847912  8.549288</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> upper  29.2766 28.669232 29.883968</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

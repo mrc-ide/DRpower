@@ -116,6 +116,6 @@ Using the *DRpower* table above (not the z-test table!) we can come up with reas
 3. Use these values to look up the corresponding minimum sample size from the table above. This is your first rough estimate of sample size per cluster.
 4. Buffer these values for potential dropout. Also note that this table gives the number of *confirmed malaria positive* individuals, but you may want to design the study based on the total number tested, which may be considerably higher. For example, if you suspect that 40% of suspected malaria cases end up being confirmed then you would need to divide your sample size by 0.4.
 5. Examine whether it will be possible to recruit this many samples in each of your sites. This may depend on things like catchment population size, staff numbers, and malaria transmission intensity throughout the season. It may be that in some cases it is not possible to reach these numbers.
-6. For your newly refined sample size estimates, estimate power directly using the `get_power()` function.
+6. For your newly refined sample size estimates, estimate power directly using the `get_power_threshold()` function.
 
 The [design tutorial](articles/tutorial_design.html) goes through all of these steps in detail.

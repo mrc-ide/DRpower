@@ -49,11 +49,10 @@ proportion between 0 and 1.}
 }
 \value{
 the functions \code{get_margin()} and \code{get_margin_CP()} return
-  the expected lower and upper CI limits on the prevalence as a value between
-  0 and 1 (i.e. not as a percentage). Technically this is not the MOE, as
-  that would be the difference between these limits and the assumed
-  prevalence. However, we feel this is a more useful and more intuitive
-  output.
+  the expected lower and upper CI limits on the prevalence as percentage.
+  Technically this is not the MOE, as that would be the difference between
+  these limits and the assumed prevalence. However, we feel this is a more
+  useful and more intuitive output.
 }
 \description{
 Calculate the expected margin of error when estimating
