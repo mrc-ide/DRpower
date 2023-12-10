@@ -73,11 +73,10 @@
 #'   to do this.
 #' 
 #' @returns the functions \code{get_margin()} and \code{get_margin_CP()} return
-#'   the expected lower and upper CI limits on the prevalence as a value between
-#'   0 and 1 (i.e. not as a percentage). Technically this is not the MOE, as
-#'   that would be the difference between these limits and the assumed
-#'   prevalence. However, we feel this is a more useful and more intuitive
-#'   output.
+#'   the expected lower and upper CI limits on the prevalence as percentage.
+#'   Technically this is not the MOE, as that would be the difference between
+#'   these limits and the assumed prevalence. However, we feel this is a more
+#'   useful and more intuitive output.
 #' 
 #' @references
 #' Clopper, C.J. and Pearson, E.S., 1934. The use of confidence or fiducial
@@ -112,7 +111,7 @@ get_margin <- function(N, n_clust, prevalence = 0.2, ICC = 0.05, alpha = 0.05) {
   
   p <- prevalence
   d <- qnorm(1 - alpha/2) * sqrt( p*(1 - p)/(N*n_clust)*(1 + (N - 1)*ICC) )
-  ret <- c(lower = p - d, upper = p + d)
+  ret <- c(lower = 1e2*(p - d), upper = 1e2*(p + d))
   
   return(ret)
 }
@@ -181,8 +180,8 @@ get_margin_CP <- function(N, n_clust, prevalence = 0.2, ICC = 0.05, alpha = 0.05
   Ne <- N / Deff
   
   p <- prevalence
-  CI_lower <- qbeta(p = alpha / 2, shape1 = Ne*p, shape2 = Ne*(1 - p) + 1)
-  CI_upper <- qbeta(p = 1 - alpha / 2, shape1 = Ne*p + 1, shape2 = Ne*(1 - p))
+  CI_lower <- 1e2*qbeta(p = alpha / 2, shape1 = Ne*p, shape2 = Ne*(1 - p) + 1)
+  CI_upper <- 1e2*qbeta(p = 1 - alpha / 2, shape1 = Ne*p + 1, shape2 = Ne*(1 - p))
   ret <- c(lower = CI_lower, upper = CI_upper)
   
   return(ret)
@@ -228,17 +227,17 @@ get_sample_size_margin_CP <- function(MOE, n_clust, prevalence = 0.2, ICC = 0.05
   }, 1:N_max) %>%
     t() %>%
     as.data.frame() %>%
-    mutate(d_lower = prevalence - lower,
-           d_upper = upper - prevalence,
+    mutate(d_lower = 1e2*prevalence - lower,
+           d_upper = upper - 1e2*prevalence,
            d_max = ifelse(d_lower > d_upper, d_lower, d_upper))
   
   # exit if no N achieves target
-  if (!any(MOE_CP$d_max <= MOE)) {
+  if (!any(MOE_CP$d_max <= 1e2*MOE)) {
     stop("No sample size up to N_max achieves the desired margin of error. Consider decreasing the target MOE, increasing N_max, or changing other assumptions (e.g. number of clusters, ICC etc.)")
   }
   
   # get smallest sample size to achieve target MOE
-  ret <- which(MOE_CP$d_max <= MOE)[1]
+  ret <- which(MOE_CP$d_max <= 1e2*MOE)[1]
   
   return(ret)
 }
@@ -291,10 +290,11 @@ get_sample_size_margin_CP <- function(MOE, n_clust, prevalence = 0.2, ICC = 0.05
 #'
 #' @returns If \code{return_full = FALSE} (the default) returns an estimate of
 #'   the lower and upper CrI limit in the form of a data.frame. The first row
-#'   gives the lower limit, the second row gives the upper limit. The first
-#'   column gives the point estimate, the subsequent columns give the 95\% CI on
-#'   this estimate. If \code{return_full = TRUE} then returns a complete
-#'   data.frame of all lower and upper CI realisations over simulations.
+#'   gives the lower limit, the second row gives the upper limit, both as
+#'   percentages. The first column gives the point estimate, the subsequent
+#'   columns give the 95\% CI on this estimate. If \code{return_full = TRUE}
+#'   then returns a complete data.frame of all lower and upper CI realisations
+#'   over simulations.
 #'
 #' @importFrom stats var
 #'
@@ -351,7 +351,7 @@ get_margin_Bayesian <- function(N, prevalence = 0.2, ICC = 0.05, alpha = 0.05,
   l_w <- tabulate(match(l_n, l_u))
   
   # make progress bar
-  pb <- progress_estimated(length(l_u))
+  pb <- knitrProgressBar::progress_estimated(length(l_u))
   
   # simulate
   sim_df <- data.frame(lower = rep(NA, length(l_u)),

@@ -791,7 +791,7 @@ get_power <- function(N, prevalence = 0.10, ICC = 0.05,
   l_w <- tabulate(match(l_n, l_u))
   
   # make progress bar
-  pb <- progress_estimated(length(l_u))
+  pb <- knitrProgressBar::progress_estimated(length(l_u))
   
   # simulate
   sim_correct <- matrix(NA, nrow = length(l_u), ncol = length(prev_thresh))
