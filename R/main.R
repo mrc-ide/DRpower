@@ -7,7 +7,7 @@
 #' @export
 
 check_DRpower_loaded <- function() {
-  message("DRpower version 1.0.1 loaded successfully!")
+  message("DRpower version 1.0.2 loaded successfully!")
 }
 
 #------------------------------------------------
@@ -726,20 +726,20 @@ get_joint <- function(n, N,
 #' 10.2307/2331986.
 #'
 #' @examples
-#' get_power(N = c(120, 90, 150), prevalence = 0.15, ICC = 0.1 , reps = 1e2)
+#' get_power_threshold(N = c(120, 90, 150), prevalence = 0.15, ICC = 0.1 , reps = 1e2)
 #' 
 #' @importFrom stats runif
 #' @importFrom knitrProgressBar progress_estimated update_progress
 #' @export
 
-get_power <- function(N, prevalence = 0.10, ICC = 0.05,
-                      prev_thresh = 0.05,
-                      rejection_threshold = 0.95,
-                      ICC_infer = NULL,
-                      prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
-                      prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 9.0,
-                      n_intervals = 20, round_digits = 2,
-                      reps = 1e2, use_cpp = TRUE, silent = FALSE) {
+get_power_threshold <- function(N, prevalence = 0.10, ICC = 0.05,
+                                prev_thresh = 0.05,
+                                rejection_threshold = 0.95,
+                                ICC_infer = NULL,
+                                prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
+                                prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 9.0,
+                                n_intervals = 20, round_digits = 2,
+                                reps = 1e2, use_cpp = TRUE, silent = FALSE) {
   
   # avoid "no visible binding" note
   n <- NULL
@@ -883,7 +883,7 @@ get_power_presence <- function(N, prevalence = 0.01, ICC = 0.05) {
   }
   
   # power is probability of not seeing zero deletions
-  power <- 1 - exp(log_prob_zero)
+  power <- 1e2*(1 - exp(log_prob_zero))
   
   return(power)
 }

@@ -2,8 +2,8 @@
 #' Summary of simulations from the threshold analysis
 #' 
 #' @description This object was produced by running the function
-#'   \code{get_power()} over a wide range of parameter combinations. This
-#'   data.frame contains the results of these simulations attached to the
+#'   \code{get_power_threshold()} over a wide range of parameter combinations.
+#'   This data.frame contains the results of these simulations attached to the
 #'   parameter values used in simulation. The most obvious use of this object is
 #'   in constructing power curves over a range of sample sizes (see
 #'   \code{?power_curve()}).

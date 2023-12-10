@@ -271,7 +271,7 @@ get_sample_size_margin_CP <- function(MOE, n_clust, prevalence = 0.2, ICC = 0.05
 #' computationally costly. The appropriate value can be established manually if
 #' needed by running \code{get_margin_Bayesian()} for different sample sizes.
 #' 
-#' @inheritParams get_power
+#' @inheritParams get_power_threshold
 #' @param prevalence assumed true prevalence of pfhrp2/3 deletions as a
 #'   proportion between 0 and 1.
 #' @param alpha the significance level of the credible interval - for example,

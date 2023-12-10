@@ -9,7 +9,7 @@
 # data/df_sim.rda: power estimates from bank of simulations over parameter combinations
 #
 # Purpose:
-# Estimates power using get_power() over a large range of parameter
+# Estimates power using get_power_threshold() over a large range of parameter
 # combinations. Results are saved to the data/ folder.
 #
 # ------------------------------------------------------------------
@@ -53,19 +53,19 @@ f1 <- function(df_sim) {
     v <- df_sim[i,]
     set.seed(v$seed)
     
-    ret[[i]] <- DRpower::get_power(N = rep(v$N, v$n_clust),
-                                   prevalence = v$prevalence,
-                                   ICC = v$ICC,
-                                   prev_thresh = prev_thresh,
-                                   rejection_threshold = v$rejection_threshold,
-                                   prior_prev_shape1 = v$prior_prev_shape1,
-                                   prior_prev_shape2 = v$prior_prev_shape2,
-                                   prior_ICC_shape1 = v$prior_ICC_shape1,
-                                   prior_ICC_shape2 = v$prior_ICC_shape2,
-                                   n_intervals = v$n_intervals,
-                                   round_digits = v$round_digits,
-                                   reps = v$reps,
-                                   silent = TRUE)
+    ret[[i]] <- DRpower::get_power_threshold(N = rep(v$N, v$n_clust),
+                                             prevalence = v$prevalence,
+                                             ICC = v$ICC,
+                                             prev_thresh = prev_thresh,
+                                             rejection_threshold = v$rejection_threshold,
+                                             prior_prev_shape1 = v$prior_prev_shape1,
+                                             prior_prev_shape2 = v$prior_prev_shape2,
+                                             prior_ICC_shape1 = v$prior_ICC_shape1,
+                                             prior_ICC_shape2 = v$prior_ICC_shape2,
+                                             n_intervals = v$n_intervals,
+                                             round_digits = v$round_digits,
+                                             reps = v$reps,
+                                             silent = TRUE)
   }
   return(ret)
 }
