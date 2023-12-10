@@ -11,6 +11,7 @@ get_prevalence(
   N,
   alpha = 0.05,
   prev_thresh = 0.05,
+  ICC = NULL,
   prior_prev_shape1 = 1,
   prior_prev_shape2 = 1,
   prior_ICC_shape1 = 1,
@@ -25,7 +26,8 @@ get_prevalence(
   CrI_type = "HDI",
   n_intervals = 20,
   round_digits = 2,
-  use_cpp = TRUE
+  use_cpp = TRUE,
+  silent = FALSE
 )
 
 get_ICC(
@@ -59,6 +61,12 @@ argument for how this is calculated.}
 \item{prev_thresh}{the prevalence threshold that we are comparing against.
 Can be a vector, in which case the return object contains one value for
 each input.}
+
+\item{ICC}{normally this should be set to \code{NULL} (the default), in which
+case the ICC is estimated from the data. However, a fixed value can be
+entered here, in which case this overrides the use of the prior
+distribution as specified by \code{prior_ICC_shape1} and
+\code{prior_ICC_shape2}.}
 
 \item{prior_prev_shape1, prior_prev_shape2, prior_ICC_shape1, prior_ICC_shape2}{parameters that dictate the shape of the Beta priors on prevalence and the
 ICC. See the \href{https://en.wikipedia.org/wiki/Beta_distribution}{Wikipedia page on the Beta
@@ -110,6 +118,8 @@ giving the false impression of extreme precision.}
 \item{use_cpp}{if \code{TRUE} (the default) then use an Rcpp implementation
 of the adaptive quadrature approach that is much faster than the base R
 method.}
+
+\item{silent}{if \code{TRUE} then suppress all console output.}
 }
 \description{
 Takes raw counts of the number of positive samples per cluster

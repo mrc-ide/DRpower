@@ -139,7 +139,7 @@ double loglike_joint(const vector<int> &n,
 
 double loglike_marginal_p(const vector<int> &n,
                           const vector<int> &N,
-                          double p, int n_intervals,
+                          double p, double rho_fixed, int n_intervals,
                           double prior_p_shape1, double prior_p_shape2,
                           double prior_rho_shape1, double prior_rho_shape2,
                           vector<double> &x0, vector<double> &xm,
@@ -148,6 +148,15 @@ double loglike_marginal_p(const vector<int> &n,
                           vector<double> &log_area_trap,
                           vector<double> &log_area_Simp,
                           vector<double> &total_diff) {
+  
+  // special case that rho is defined as a fixed value
+  if (rho_fixed != -1) {
+    
+    // calculate exactly, no need for quadrature-based integration
+    double ret = loglike_joint(n, N, p, rho_fixed, prior_p_shape1, prior_p_shape2, prior_rho_shape1, prior_rho_shape2);
+    
+    return ret;
+  }
   
   // use lambda method to define a version of loglike with p fixed and with rho
   // as the only free parameter
@@ -230,6 +239,7 @@ Rcpp::List get_prevalence_cpp(Rcpp::List args_params) {
   // extract inputs
   vector<int> n = rcpp_to_vector_int(args_params["n"]);
   vector<int> N = rcpp_to_vector_int(args_params["N"]);
+  double rho_fixed = rcpp_to_double(args_params["ICC"]);
   double prior_p_shape1 = rcpp_to_double(args_params["prior_prev_shape1"]);
   double prior_p_shape2 = rcpp_to_double(args_params["prior_prev_shape2"]);
   double prior_rho_shape1 = rcpp_to_double(args_params["prior_ICC_shape1"]);
@@ -251,6 +261,7 @@ Rcpp::List get_prevalence_cpp(Rcpp::List args_params) {
   // parameter, marginalised over rho
   auto loglike_interms_p = [&cref_n = n,
                             &cref_N = N,
+                            &cref_rho_fixed = rho_fixed,
                             &cref_n_intervals = n_intervals,
                             &cref_prior_p_shape1 = prior_p_shape1,
                             &cref_prior_p_shape2 = prior_p_shape2,
@@ -265,7 +276,8 @@ Rcpp::List get_prevalence_cpp(Rcpp::List args_params) {
                             &cref_log_area_trap = log_area_trap_inner,
                             &cref_log_area_Simp = log_area_Simp_inner,
                             &cref_total_diff = total_diff_inner](auto p) {
-                              return loglike_marginal_p(cref_n, cref_N, p, cref_n_intervals, cref_prior_p_shape1, cref_prior_p_shape2,
+                              return loglike_marginal_p(cref_n, cref_N, p, cref_rho_fixed, cref_n_intervals,
+                                                        cref_prior_p_shape1, cref_prior_p_shape2,
                                                         cref_prior_rho_shape1, cref_prior_rho_shape2, cref_x0, cref_xm, cref_x1,
                                                         cref_log_y0, cref_log_ym, cref_log_y1,
                                                         cref_log_area_trap, cref_log_area_Simp, cref_total_diff);

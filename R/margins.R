@@ -6,8 +6,8 @@
 #'   clustered survey
 #'
 #' @description Calculate the expected margin of error when estimating
-#'   prevalence from a clustered survey. Alternatively, calculate the sample
-#'   size required to achieve a given target margin of error.
+#'   prevalence from a clustered survey, or calculate the sample size required
+#'   to achieve a given target margin of error.
 #'
 #' @details A very common approach when constructing confidence intervals (CIs)
 #'   from prevalence data is to use the Wald interval:
@@ -17,42 +17,44 @@
 #'   where \eqn{\hat{p}} is our estimate of the prevalence, \eqn{z} is the
 #'   critical value of the normal distribution (\eqn{z=1.96} for a 95\%
 #'   interval) and \eqn{N} is the sample size. When estimating prevalence from a
-#'   clustered survey we need to modify this formula as follows:
+#'   clustered survey, we need to modify this formula as follows:
 #'   
 #'   \deqn{\hat{p} \pm z\sqrt{\frac{\hat{p}(1 - \hat{p})}{Nc}(1 + (n - 1) r)}}
 #'   
 #'   where \eqn{\hat{p}} is the \emph{mean} prevalence over clusters, \eqn{c} is
 #'   the number of clusters, and \eqn{r} is the intra-cluster correlation (ICC,
 #'   a value between 0 and 1). The term to the right of the \eqn{\pm} symbol is
-#'   called the \emph{margin of error} (MOE). The function \code{get_margin()}
-#'   returns this value.
+#'   called the \emph{margin of error} (MOE). We can give this term the name
+#'   \eqn{d}. The function \code{get_margin()} returns the values
+#'   \eqn{\hat{p}-d} and \eqn{\hat{p}+d}, i.e. the lower and upper estimates of
+#'   what our CI will be.
 #'   
 #'   We can also rearrange this formula to get the sample size (\eqn{N})
-#'   required to reach any given MOE:
+#'   required to achieve any given MOE:
 #'   
 #'   \deqn{ N = \frac{ z^2p(1-p)(1-r) }{ cd^2 - z^2p(1-p)r } }
 #'   
-#'   where \eqn{d} is the desired MOE. The function
-#'   \code{get_sample_size_margin()} returns this value. Note that in some cases
-#'   it might not be possible to achieve the specified MOE for any finite sample
-#'   size due to the ICC introducing too much variation, in which case this
-#'   formula will return a negative value and the function will return an error.
+#'   The function \code{get_sample_size_margin()} returns the value of \eqn{N}.
+#'   Note that in some cases it might not be possible to achieve the specified
+#'   MOE for any finite sample size due to the ICC introducing too much
+#'   variation, in which case this formula will return a negative value and the
+#'   function will return an error.
 #'   
-#'   Although this is a very common approach, it has a number of weaknesses.
-#'   First, notice that we sneakily replaced \eqn{\hat{p}} with \eqn{p} when
-#'   moving to the sample size formula above. This implies that there is no
-#'   uncertainty in our prevalence estimation, which is not true. Also note that
-#'   the Wald interval assumes that the sampling distribution of our estimator
-#'   is Gaussian, which is also not true. The difference between the Gaussian
-#'   and the true distribution is particularly pronounced when prevalence is at
-#'   the extremes of the range (near 0\% or 100\%). In these cases, the Wald
-#'   interval can actually include values less than 0 or greater than 1, which
-#'   is nonsensical.
+#'   Although this is a very common approach, it has several weaknesses. First,
+#'   notice that we sneakily replaced \eqn{\hat{p}} with \eqn{p} when moving to
+#'   the sample size formula above. This implies that there is no uncertainty in
+#'   our prevalence estimate, which is not true. Also note that the Wald
+#'   interval assumes that the sampling distribution of our estimator is
+#'   Gaussian, which is also not true. The difference between the Gaussian and
+#'   the true distribution is particularly pronounced when prevalence is at the
+#'   extremes of the range (near 0\% or 100\%). Here, the Wald interval can
+#'   actually include values less than 0 or greater than 1, which are
+#'   nonsensical.
 #'   
 #'   An arguably better approach is to construct CIs using the method of Clopper
 #'   and Pearson (1934). This confidence interval guarantees that the false
-#'   positive rate is \emph{at least} \code{alpha}, and in this sense is
-#'   conservative. It is asymmetric and does not suffer from the problem of
+#'   positive rate is \emph{at least} \eqn{alpha}, and in this sense is
+#'   conservative. It can be asymmetric and does not suffer from the problem of
 #'   allowing values outside the [0,1] range. To make the Clopper-Pearson
 #'   interval apply to a multi-cluster survey, we can use the idea of effective
 #'   sample size, \eqn{N_e}:
@@ -60,20 +62,21 @@
 #'   \deqn{ D_{eff} = 1 + (N - 1)r }
 #'   \deqn{ N_e = \frac{N}{D_{eff}} }
 #'   
-#'   We then calculate the CI as normal but using \eqn{N_e} in place of \eqn{N}.
-#'   The function \code{get_margin_CP()} returns the lower and upper MOE using
-#'   the Clopper-Pearson interval, and the function
+#'   We then calculate the Clopper-Pearson CI but using \eqn{N_e} in place of
+#'   \eqn{N}. The function \code{get_margin_CP()} returns the expected lower and
+#'   upper CI limits using the Clopper-Pearson interval, and the function
 #'   \code{get_sample_size_margin_CP()} returns the corresponding sample size
-#'   needed to achieve a certain MOE.
+#'   needed to achieve a certain MOE (the maximum of either lower or upper).
 #'
-#'   A third option is to use the DRpower model to estimate the credible
-#'   interval of prevalence. See \code{?get_margin_Bayesian()} for how to
-#'   estimate the margin of error under this method.
+#'   A third option is to use the DRpower Bayesian model to estimate the
+#'   credible interval of prevalence. See \code{?get_margin_Bayesian()} for how
+#'   to do this.
 #' 
 #' @returns the functions \code{get_margin()} and \code{get_margin_CP()} return
-#'   the margin of error of the prevalence as a value between 0 and 1 (i.e. not
-#'   as a \%). In the case of \code{get_margin_CP()} a different MOE is returned
-#'   for the upper and lower limits.
+#'   the expected lower and upper CI limits on the prevalence as percentage.
+#'   Technically this is not the MOE, as that would be the difference between
+#'   these limits and the assumed prevalence. However, we feel this is a more
+#'   useful and more intuitive output.
 #' 
 #' @references
 #' Clopper, C.J. and Pearson, E.S., 1934. The use of confidence or fiducial
@@ -107,7 +110,8 @@ get_margin <- function(N, n_clust, prevalence = 0.2, ICC = 0.05, alpha = 0.05) {
   assert_single_bounded(ICC)
   
   p <- prevalence
-  ret <- qnorm(1 - alpha/2) * sqrt( p*(1 - p)/(N*n_clust)*(1 + (N - 1)*ICC) )
+  d <- qnorm(1 - alpha/2) * sqrt( p*(1 - p)/(N*n_clust)*(1 + (N - 1)*ICC) )
+  ret <- c(lower = 1e2*(p - d), upper = 1e2*(p + d))
   
   return(ret)
 }
@@ -176,9 +180,9 @@ get_margin_CP <- function(N, n_clust, prevalence = 0.2, ICC = 0.05, alpha = 0.05
   Ne <- N / Deff
   
   p <- prevalence
-  moe_lower <- p - qbeta(p = alpha / 2, shape1 = Ne*p, shape2 = Ne*(1 - p) + 1)
-  moe_upper <- qbeta(p = 1 - alpha / 2, shape1 = Ne*p + 1, shape2 = Ne*(1 - p)) - p
-  ret <- c(lower = moe_lower, upper = moe_upper)
+  CI_lower <- 1e2*qbeta(p = alpha / 2, shape1 = Ne*p, shape2 = Ne*(1 - p) + 1)
+  CI_upper <- 1e2*qbeta(p = 1 - alpha / 2, shape1 = Ne*p + 1, shape2 = Ne*(1 - p))
+  ret <- c(lower = CI_lower, upper = CI_upper)
   
   return(ret)
 }
@@ -203,7 +207,7 @@ get_sample_size_margin_CP <- function(MOE, n_clust, prevalence = 0.2, ICC = 0.05
                                       alpha = 0.05, N_max = 2e3) {
   
   # avoid "no visible binding" note
-  lower <- upper <- NULL
+  lower <- upper <- d_lower <- d_upper <- NULL
   
   # check inputs
   assert_bounded(MOE, inclusive_left = FALSE, inclusive_right = FALSE)
@@ -223,15 +227,17 @@ get_sample_size_margin_CP <- function(MOE, n_clust, prevalence = 0.2, ICC = 0.05
   }, 1:N_max) %>%
     t() %>%
     as.data.frame() %>%
-    mutate(max = ifelse(lower > upper, lower, upper))
+    mutate(d_lower = 1e2*prevalence - lower,
+           d_upper = upper - 1e2*prevalence,
+           d_max = ifelse(d_lower > d_upper, d_lower, d_upper))
   
   # exit if no N achieves target
-  if (!any(MOE_CP$max <= MOE)) {
+  if (!any(MOE_CP$d_max <= 1e2*MOE)) {
     stop("No sample size up to N_max achieves the desired margin of error. Consider decreasing the target MOE, increasing N_max, or changing other assumptions (e.g. number of clusters, ICC etc.)")
   }
   
   # get smallest sample size to achieve target MOE
-  ret <- which(MOE_CP$max <= MOE)[1]
+  ret <- which(MOE_CP$d_max <= 1e2*MOE)[1]
   
   return(ret)
 }
@@ -242,27 +248,26 @@ get_sample_size_margin_CP <- function(MOE, n_clust, prevalence = 0.2, ICC = 0.05
 #'
 #' @description As well as comparing against a threshold, the function
 #'   \code{get_prevalence()} can be used to estimate a Bayesian credible
-#'   interval (CrI) on the prevalence. We can estimate the margin of error (MOE)
-#'   of this approach by simulation; repeatedly simulating datasets from known
-#'   parameters, running \code{get_prevalence()} and measuring the MOE. Advantages of
-#'   this method are that it accounts for uncertainty in the ICC, accounts for
-#'   uncertainty in prevalence estimation by using simulation, and allows for
-#'   incorporation of prior information.
+#'   interval (CrI) on the prevalence. This function returns the margin of error
+#'   (MOE) we can expect via this method, in terms of the expected lower and
+#'   upper limits of our credible interval (CrI).
 #' 
 #' @details
 #' Estimates MOE using the following approach:
 #' \enumerate{
 #'  \item Simulate data via the function \code{rbbinom_reparam()} using known
-#'  values (e.g. a known "true" prevalence and intra-cluster correlation).
-#'  \item Analyse data using \code{get_prevalence()} to determine the
-#'  upper and lower limits of the credible interval.
-#'  \item Repeat steps 1-2 many times to obtain the distribution of upper and
-#'  lower limits Return either the full distribution, or the mean of the
-#'  distribution along with upper and lower 95\% CIs.
+#'  values, e.g. a known "true" prevalence and intra-cluster correlation.
+#'  \item Analyse data using \code{get_prevalence()}. Determine the upper and
+#'  lower limits of the credible interval.
+#'  \item Repeat steps 1-2 \code{reps} times to obtain the distribution of upper
+#'  and lower limits. Return the mean of this distribution along with upper and
+#'  lower 95\% CIs. To be completely clear, we are producing a 95\% CI on the
+#'  limits of a CrI, which can be confusing! See \emph{Value} for a clear
+#'  explanation of how to interpret the output.
 #' }
-#' Note that we have not implemented a function that returns the sample size
-#' needed to achieve a given MOE under the Bayesian model because this would
-#' require repeated simulation over different values of \code{N}, which is
+#' Note that we have not implemented a function to return the sample size
+#' needed to achieve a given MOE under the Bayesian model, as this would
+#' require repeated simulation over different values of \code{N} which is
 #' computationally costly. The appropriate value can be established manually if
 #' needed by running \code{get_margin_Bayesian()} for different sample sizes.
 #' 
@@ -283,12 +288,13 @@ get_sample_size_margin_CP <- function(MOE, n_clust, prevalence = 0.2, ICC = 0.05
 #'   lower and upper CrI limits in a data.frame. If \code{FALSE} (the default)
 #'   return a summary including the mean and 95\% CI of these limits.
 #'
-#' @returns If \code{return_full = FALSE} (the default) returns a data.frame
-#'   where the lower MOE is in the first row, and the upper MOE is in the second
-#'   row. The first column gives the point estimate, and the subsequent columns
-#'   give the 95\% CI on this estimate. If \code{return_full = TRUE} then
-#'   returns a complete data.frame of all lower and upper MOE realisations over
-#'   simulations.
+#' @returns If \code{return_full = FALSE} (the default) returns an estimate of
+#'   the lower and upper CrI limit in the form of a data.frame. The first row
+#'   gives the lower limit, the second row gives the upper limit, both as
+#'   percentages. The first column gives the point estimate, the subsequent
+#'   columns give the 95\% CI on this estimate. If \code{return_full = TRUE}
+#'   then returns a complete data.frame of all lower and upper CI realisations
+#'   over simulations.
 #'
 #' @importFrom stats var
 #'
@@ -345,7 +351,7 @@ get_margin_Bayesian <- function(N, prevalence = 0.2, ICC = 0.05, alpha = 0.05,
   l_w <- tabulate(match(l_n, l_u))
   
   # make progress bar
-  pb <- progress_estimated(length(l_u))
+  pb <- knitrProgressBar::progress_estimated(length(l_u))
   
   # simulate
   sim_df <- data.frame(lower = rep(NA, length(l_u)),

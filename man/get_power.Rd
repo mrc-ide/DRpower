@@ -10,6 +10,7 @@ get_power(
   ICC = 0.05,
   prev_thresh = 0.05,
   rejection_threshold = 0.95,
+  ICC_infer = NULL,
   prior_prev_shape1 = 1,
   prior_prev_shape2 = 1,
   prior_ICC_shape1 = 1,
@@ -39,6 +40,13 @@ by default).}
 \item{rejection_threshold}{the posterior probability of being above the
 prevalence threshold needs to be greater than \code{rejection_threshold} in
 order to reject the null hypothesis.}
+
+\item{ICC_infer}{the value of the ICC assumed in the inference step. If we
+plan on estimating the ICC from our data, i.e. running
+\code{get_prevalence(ICC = NULL)} (the default), then we should also set
+\code{ICC=NULL} here (the default). However, if we plan on running
+\code{get_prevalence()} with ICC set to a known value then we should
+insert this value here as \code{ICC_infer}.}
 
 \item{prior_prev_shape1, prior_prev_shape2, prior_ICC_shape1, prior_ICC_shape2}{parameters that dictate the shape of the Beta priors on prevalence and the
 ICC. See the \href{https://en.wikipedia.org/wiki/Beta_distribution}{Wikipedia page on the Beta
