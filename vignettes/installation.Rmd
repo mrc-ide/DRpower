@@ -7,6 +7,17 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+
+## Installing via the plasmogenepi R-universe
+
+The fastest and simplest way to install *DRpower* is via the plasmogenepi R-universe as follows:
+
+```{r, eval=FALSE}
+install.packages('DRpower', repos = c('https://plasmogenepi.r-universe.dev', 'https://cloud.r-project.org'))
+```
+
+However, this may not work for some chips, in which case backup instructions are presented below.
+
 ## Installing Rcpp
 
 DRpower relies on the [Rcpp](https://cran.r-project.org/web/packages/Rcpp/index.html) package, which requires the following OS-specific steps:
