@@ -12,4 +12,4 @@ All documentation, including installation instructions and tutorials, are on [th
 
 # Version History
 
-The current version of the software is v1.0.2, released 10 Dec 2023.
+The current version of the software is v1.0.3, released 8 Nov 2024.
