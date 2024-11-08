@@ -31,8 +31,8 @@ plot_prevalence <- function(n, N, prev_range = c(0, 1), alpha = 0.05, prev_thres
                             CrI_type = "HDI", n_intervals = 20,
                             use_cpp = TRUE) {
   
-  # avoid "no visible bindings" note
-  above <- NULL
+  # avoid "no visible binding" notes
+  above <- CrI_lower <- CrI_upper <- max_y <- MAP <- NULL
   
   # check inputs
   assert_vector_pos_int(n)
@@ -92,10 +92,14 @@ plot_prevalence <- function(n, N, prev_range = c(0, 1), alpha = 0.05, prev_thres
     ggplot() + theme_bw() +
     geom_ribbon(aes(x = 1e2*x, ymin = 0, ymax = y, fill = above)) +
     geom_line(aes(x = 1e2*x, y = y)) +
-    geom_segment(aes(x = 1e2*prev_thresh, xend = 1e2*prev_thresh, y = 0, yend = y_thresh)) +
-    geom_errorbar(aes(xmin = post$CrI_lower, xmax = post$CrI_upper, y = 1.1*max(y)), width = 0.5) +
+    geom_segment(aes(x = 1e2*prev_thresh, xend = 1e2*prev_thresh, y = 0, yend = y_thresh), data = data.frame(prev_thresh = prev_thresh,
+                                                                                                             y_thresh = y_thresh)) +
+    geom_errorbar(aes(xmin = CrI_lower, xmax = CrI_upper, y = 1.1*max_y), width = 0.5, data = data.frame(CrI_lower = post$CrI_lower,
+                                                                                                               CrI_upper = post$CrI_upper,
+                                                                                                         max_y = max(y))) +
     annotate(geom = "text", x = post$MAP, y = 1.2*max(y), label = "95% Credible Interval", hjust = 0) +
-    geom_point(aes(x = post$MAP, y = 1.1*max(y))) +
+    geom_point(aes(x = MAP, y = 1.1*max_y), data = data.frame(MAP = post$MAP,
+                                                              max_y = max(y))) +
     scale_fill_manual(values = c("grey", "tomato1"), name = NULL) +
     scale_x_continuous(limits = 1e2*prev_range, expand = c(0, 0)) +
     scale_y_continuous(limits = c(0, 1.3*max(y)), expand = c(0, 0)) +
@@ -119,6 +123,9 @@ plot_ICC <- function(n, N, ICC_range = c(0, 1), alpha = 0.05, prev_thresh = 0.05
                      prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 9.0,
                      CrI_type = "HDI", n_intervals = 20,
                      use_cpp = TRUE) {
+  
+  # avoid "no visible binding" notes
+  CrI_lower <- CrI_upper <- max_y <- MAP <- NULL
   
   # check inputs
   assert_vector_pos_int(n)
@@ -166,9 +173,12 @@ plot_ICC <- function(n, N, ICC_range = c(0, 1), alpha = 0.05, prev_thresh = 0.05
     ggplot() + theme_bw() +
     geom_ribbon(aes(x = x, ymin = 0, ymax = y), fill = "cornflowerblue") +
     geom_line(aes(x = x, y = y)) +
-    geom_errorbar(aes(xmin = post$CrI_lower, xmax = post$CrI_upper, y = 1.1*max(y)), width = 0.5) +
+    geom_errorbar(aes(xmin = CrI_lower, xmax = CrI_upper, y = 1.1*max_y), width = 0.5, data = data.frame(CrI_lower = post$CrI_lower,
+                                                                                                         CrI_upper = post$CrI_upper,
+                                                                                                         max_y = max(y))) +
     annotate(geom = "text", x = max(0.01, post$MAP), y = 1.2*max(y), label = "95% Credible Interval", hjust = 0) +
-    geom_point(aes(x = post$MAP, y = 1.1*max(y))) +
+    geom_point(aes(x = MAP, y = 1.1*max_y), data = data.frame(MAP = post$MAP,
+                                                              max_y = max(y))) +
     scale_x_continuous(limits = ICC_range, expand = c(0, 0)) +
     scale_y_continuous(limits = c(0, 1.3*max(y)), expand = c(0, 0)) +
     xlab("Intra-cluster correlation") + ylab("Posterior probability density")
