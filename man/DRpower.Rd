@@ -2,6 +2,7 @@
 % Please edit documentation in R/DRpower.R
 \docType{package}
 \name{DRpower}
+\alias{DRpower-package}
 \alias{DRpower}
 \title{The DRpower app for design and analysis of Plasmodium falciparum
 pfhrp2/3 data}
@@ -18,4 +19,20 @@ This package can be used in the design and/or analysis stages of
   simulation-based, running the analysis many times on simulated data and
   estimating empirical power. This method can be used to establish a minimum
   sample size required to achieve a given target power.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item Report bugs at \url{https://github.com/mrc-ide/DRpower/issues}
+}
+
+}
+\author{
+\strong{Maintainer}: Bob Verity \email{r.verity@imperial.ac.uk}
+
+Authors:
+\itemize{
+  \item Shazia Ruybal \email{s.ruybal@imperial.ac.uk}
+}
+
 }

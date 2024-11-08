@@ -15,9 +15,8 @@
 #'   estimating empirical power. This method can be used to establish a minimum
 #'   sample size required to achieve a given target power.
 #'
-#' @docType package
 #' @name DRpower
-NULL
+"_PACKAGE"
 
 #------------------------------------------------
 # link to Rcpp

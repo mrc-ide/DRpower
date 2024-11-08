@@ -110,7 +110,8 @@ get_margin <- function(N, n_clust, prevalence = 0.2, ICC = 0.05, alpha = 0.05) {
   assert_single_bounded(ICC)
   
   p <- prevalence
-  d <- qnorm(1 - alpha/2) * sqrt( p*(1 - p)/(N*n_clust)*(1 + (N - 1)*ICC) )
+  deff <- 1 + (N - 1)*ICC
+  d <- qnorm(1 - alpha/2) * sqrt( p*(1 - p)/(N*n_clust)*deff )
   ret <- c(lower = 1e2*(p - d), upper = 1e2*(p + d))
   
   return(ret)
@@ -177,7 +178,7 @@ get_margin_CP <- function(N, n_clust, prevalence = 0.2, ICC = 0.05, alpha = 0.05
   
   # get effective sample size
   Deff <- 1 + (N - 1)*ICC
-  Ne <- N / Deff
+  Ne <- n_clust*N / Deff
   
   p <- prevalence
   CI_lower <- 1e2*qbeta(p = alpha / 2, shape1 = Ne*p, shape2 = Ne*(1 - p) + 1)

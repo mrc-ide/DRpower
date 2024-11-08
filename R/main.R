@@ -281,10 +281,10 @@ get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05, ICC = NULL,
   assert_single_bounded(alpha, inclusive_left = FALSE, inclusive_right = FALSE)
   assert_vector_bounded(prev_thresh)
   if (!is.null(ICC)) {
+    assert_single_bounded(ICC)
     if (!silent) {
       message(sprintf("Note: the ICC is set to the fixed value %s. This overrides the use of the prior on ICC. Use silent = TRUE to suppress this message.", ICC))
     }
-    assert_single_bounded(ICC)
   }
   assert_single_bounded(prior_prev_shape1, left = 1e-3, right = 1e3)
   assert_single_bounded(prior_prev_shape2, left = 1e-3, right = 1e3)

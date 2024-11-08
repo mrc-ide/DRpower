@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Designing a study • DRpower</title>
-<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">DRpower</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.3</span>
       </span>
     </div>
 
@@ -141,8 +141,8 @@
       <h1 data-toc-skip>Designing a study</h1>
                         <h4 data-toc-skip class="author">Bob Verity</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 12 Dec
-2023</h4>
+            <h4 data-toc-skip class="date">Last updated: 08 Nov
+2024</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/mrc-ide/DRpower/blob/HEAD/vignettes/tutorial_design.Rmd" class="external-link"><code>vignettes/tutorial_design.Rmd</code></a></small>
       <div class="hidden name"><code>tutorial_design.Rmd</code></div>
@@ -444,8 +444,9 @@ multi-site study:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># how many samples are needed in an independent analysis</span></span>
 <span><span class="fu"><a href="../reference/get_sample_size_presence.html">get_sample_size_presence</a></span><span class="op">(</span>n_clust <span class="op">=</span> <span class="fl">1</span>, prevalence <span class="op">=</span> <span class="fl">0.01</span>, ICC <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 161</span></span>
-<span></span>
+<span><span class="co">#&gt; [1] 161</span></span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
 <span><span class="co"># get power to detect a 1% variant in each of the individual sites</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/mapply.html" class="external-link">mapply</a></span><span class="op">(</span><span class="va">get_power_presence</span>, <span class="va">N</span>, MoreArgs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>ICC <span class="op">=</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 91.89415 91.89415 45.28434 45.28434 33.10282 33.10282</span></span></code></pre></div>
@@ -470,14 +471,14 @@ per-site sample size needed to achieve a given margin of error (MOE) if
 we plan on pooling results over multiple sites. Here, we assume that the
 prevalence of the marker is 20% in the population, and we aim to
 estimate this to within plus or minus 10%:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># get sample size needed to achieve 10% MOE if prevalence is 20% and we have 6 sites</span></span>
 <span><span class="fu"><a href="../reference/get_margins.html">get_sample_size_margin</a></span><span class="op">(</span>MOE <span class="op">=</span> <span class="fl">0.1</span>, n_clust <span class="op">=</span> <span class="fl">6</span>, prevalence <span class="op">=</span> <span class="fl">0.2</span>, ICC <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 20</span></span></code></pre></div>
 <p>We only need 20 samples to achieve this level of precision, which we
 are well above. We can also use the <code><a href="../reference/get_margins.html">get_margin()</a></code> function
 to tell us what our MOE would be given a known sample size:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># get MOE assuming 40 samples in each of 6 sites</span></span>
 <span><span class="fu"><a href="../reference/get_margins.html">get_margin</a></span><span class="op">(</span>N <span class="op">=</span> <span class="fl">40</span>, n_clust <span class="op">=</span> <span class="fl">6</span>, prevalence <span class="op">=</span> <span class="fl">0.2</span>, ICC <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    lower    upper </span></span>
@@ -494,7 +495,7 @@ interval (CrI). If we plan to estimate prevalence this way, then we
 should use the function <code><a href="../reference/get_margin_Bayesian.html">get_margin_Bayesian()</a></code> to estimate
 our MOE. This function works by simulation, and allows for different
 sample sizes in each site:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># get MOE when using DRpower Bayesian model</span></span>
 <span><span class="fu"><a href="../reference/get_margin_Bayesian.html">get_margin_Bayesian</a></span><span class="op">(</span><span class="va">N</span>, prevalence <span class="op">=</span> <span class="fl">0.2</span>, ICC <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
 <span><span class="co">#&gt;       estimate   CI_2.5  CI_97.5</span></span>
@@ -552,7 +553,7 @@ Next topic
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
 </div>
 
       </footer>
