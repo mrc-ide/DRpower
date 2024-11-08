@@ -1,7 +1,7 @@
 Package: DRpower
 Type: Package
 Title: Study design and analysis for pfhrp2/3 deletion prevalence studies
-Version: 1.0.2
+Version: 1.0.3
 Authors@R: as.person(c(
     "Bob Verity <r.verity@imperial.ac.uk> [aut, cre]",
     "Shazia Ruybal <s.ruybal@imperial.ac.uk> [aut]"
