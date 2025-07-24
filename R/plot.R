@@ -28,6 +28,7 @@ NULL
 plot_prevalence <- function(n, N, prev_range = c(0, 1), alpha = 0.05, prev_thresh = 0.05,
                             prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
                             prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 9.0,
+                            site_weights = rep(1, length(n)),
                             CrI_type = "HDI", n_intervals = 20,
                             use_cpp = TRUE) {
   
@@ -49,6 +50,8 @@ plot_prevalence <- function(n, N, prev_range = c(0, 1), alpha = 0.05, prev_thres
   assert_single_bounded(prior_prev_shape2, left = 1e-3, right = 1e3)
   assert_single_bounded(prior_ICC_shape1, left = 1e-3, right = 1e3)
   assert_single_bounded(prior_ICC_shape2, left = 1e-3, right = 1e3)
+  assert_vector_pos(site_weights)
+  assert_same_length(n, site_weights)
   assert_single_string(CrI_type)
   assert_in(CrI_type, c("HDI", "ETI"))
   assert_pos_int(n_intervals)
@@ -65,6 +68,7 @@ plot_prevalence <- function(n, N, prev_range = c(0, 1), alpha = 0.05, prev_thres
                          prior_prev_shape2 = prior_prev_shape2,
                          prior_ICC_shape1 = prior_ICC_shape1,
                          prior_ICC_shape2 = prior_ICC_shape2,
+                         site_weights = site_weights,
                          MAP_on = TRUE,
                          post_mean_on = FALSE,
                          post_median_on = FALSE,
@@ -121,6 +125,7 @@ plot_prevalence <- function(n, N, prev_range = c(0, 1), alpha = 0.05, prev_thres
 plot_ICC <- function(n, N, ICC_range = c(0, 1), alpha = 0.05, prev_thresh = 0.05,
                      prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
                      prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 9.0,
+                     site_weights = rep(1, length(n)),
                      CrI_type = "HDI", n_intervals = 20,
                      use_cpp = TRUE) {
   
@@ -141,6 +146,8 @@ plot_ICC <- function(n, N, ICC_range = c(0, 1), alpha = 0.05, prev_thresh = 0.05
   assert_single_bounded(prior_prev_shape2, left = 1e-3, right = 1e3)
   assert_single_bounded(prior_ICC_shape1, left = 1e-3, right = 1e3)
   assert_single_bounded(prior_ICC_shape2, left = 1e-3, right = 1e3)
+  assert_vector_pos(site_weights)
+  assert_same_length(n, site_weights)
   assert_single_string(CrI_type)
   assert_in(CrI_type, c("HDI", "ETI"))
   assert_pos_int(n_intervals)
@@ -156,6 +163,7 @@ plot_ICC <- function(n, N, ICC_range = c(0, 1), alpha = 0.05, prev_thresh = 0.05
                   prior_prev_shape2 = prior_prev_shape2,
                   prior_ICC_shape1 = prior_ICC_shape1,
                   prior_ICC_shape2 = prior_ICC_shape2,
+                  site_weights = site_weights,
                   MAP_on = TRUE,
                   post_mean_on = FALSE,
                   post_median_on = FALSE,
@@ -205,6 +213,7 @@ plot_ICC <- function(n, N, ICC_range = c(0, 1), alpha = 0.05, prev_thresh = 0.05
 plot_joint <- function(n, N, 
                        prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
                        prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 9.0,
+                       site_weights = rep(1, length(n)),
                        prev_breaks = seq(0, 1, 0.01),
                        ICC_breaks = seq(0, 1, 0.01),
                        n_bins = 5) {
@@ -222,6 +231,8 @@ plot_joint <- function(n, N,
   assert_single_bounded(prior_prev_shape2, left = 1e-3, right = 1e3)
   assert_single_bounded(prior_ICC_shape1, left = 1e-3, right = 1e3)
   assert_single_bounded(prior_ICC_shape2, left = 1e-3, right = 1e3)
+  assert_vector_pos(site_weights)
+  assert_same_length(n, site_weights)
   assert_bounded(prev_breaks)
   assert_increasing(prev_breaks)
   assert_bounded(ICC_breaks)
@@ -229,11 +240,12 @@ plot_joint <- function(n, N,
   assert_single_pos_int(n_bins, zero_allowed = FALSE)
   
   # get joint posterior
-  z <- get_joint(n = n, N = N, 
+  z <- get_joint(n = n, N = N,
                  prior_prev_shape1 = prior_prev_shape1,
                  prior_prev_shape2 = prior_prev_shape2,
                  prior_ICC_shape1 = prior_ICC_shape1,
                  prior_ICC_shape2 = prior_ICC_shape2,
+                 site_weights = site_weights,
                  prev_breaks = prev_breaks,
                  ICC_breaks = ICC_breaks)
   

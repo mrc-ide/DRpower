@@ -88,7 +88,7 @@ rbbinom_reparam <- function(n_clust, N, p, rho) {
 #' @importFrom stats dbeta
 #' @noRd
 
-loglike_joint <- function(n, N, p, rho,
+loglike_joint <- function(n, N, p, rho, w,
                           prior_p_shape1 = 1, prior_p_shape2 = 1,
                           prior_rho_shape1 = 1, prior_rho_shape2 = 1) {
   
@@ -205,6 +205,12 @@ loglike_joint_p <- function(n, N, p, rho_fixed = NULL, n_intervals = 40,
 #'   \href{https://mrc-ide.github.io/DRpower/articles/historical_analysis.html}{analysis
 #'   of historical pfhrp2/3 studies}, although this does not guarantee that they
 #'   will be suitable in all settings.
+#' @param site_weights optional weighting factors applied to each site. The
+#'   log-likelihood of each site is multiplied by this factor, resulting in a
+#'   pseudo-likelihood based method. This is only an approximate solution to the
+#'   problem of estimating a weighted prevalence - a better solution is to
+#'   choose sites with probabilities proportional to burden, in which case no
+#'   additional weighting factor is required.
 #' @param MAP_on,post_mean_on,post_median_on,post_CrI_on,post_thresh_on,post_full_on a
 #'   series of boolean values specifying which outputs to produce. The options are:
 #'   \itemize{
@@ -262,6 +268,7 @@ NULL
 get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05, ICC = NULL,
                            prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
                            prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 9.0,
+                           site_weights = rep(1, length(n)),
                            MAP_on = TRUE, post_mean_on = FALSE, post_median_on = FALSE,
                            post_CrI_on = TRUE, post_thresh_on = TRUE,
                            post_full_on = FALSE, post_full_breaks = seq(0, 1, l = 1001),
@@ -290,6 +297,8 @@ get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05, ICC = NULL,
   assert_single_bounded(prior_prev_shape2, left = 1e-3, right = 1e3)
   assert_single_bounded(prior_ICC_shape1, left = 1e-3, right = 1e3)
   assert_single_bounded(prior_ICC_shape2, left = 1e-3, right = 1e3)
+  assert_vector_pos(site_weights)
+  assert_same_length(n, site_weights)
   assert_single_logical(MAP_on)
   assert_single_logical(post_mean_on)
   assert_single_logical(post_median_on)
@@ -312,6 +321,7 @@ get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05, ICC = NULL,
     # get arguments into list
     args_params <- list(n = n,
                         N = N,
+                        w = site_weights,
                         ICC = ifelse(is.null(ICC), -1, ICC),
                         prior_prev_shape1 = prior_prev_shape1,
                         prior_prev_shape2 = prior_prev_shape2,
@@ -435,6 +445,7 @@ get_prevalence <- function(n, N, alpha = 0.05, prev_thresh = 0.05, ICC = NULL,
 get_ICC <- function(n, N, alpha = 0.05,
                     prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
                     prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 9.0,
+                    site_weights = rep(1, length(n)),
                     MAP_on = TRUE, post_mean_on = FALSE, post_median_on = FALSE,
                     post_CrI_on = TRUE, post_full_on = FALSE,
                     post_full_breaks = seq(0, 1, l = 1001), CrI_type = "HDI",
@@ -454,6 +465,8 @@ get_ICC <- function(n, N, alpha = 0.05,
   assert_single_bounded(prior_prev_shape2, left = 1e-3, right = 1e3)
   assert_single_bounded(prior_ICC_shape1, left = 1e-3, right = 1e3)
   assert_single_bounded(prior_ICC_shape2, left = 1e-3, right = 1e3)
+  assert_vector_pos(site_weights)
+  assert_same_length(n, site_weights)
   assert_single_logical(MAP_on)
   assert_single_logical(post_mean_on)
   assert_single_logical(post_median_on)
@@ -474,6 +487,7 @@ get_ICC <- function(n, N, alpha = 0.05,
     # get arguments into list
     args_params <- list(n = n,
                         N = N,
+                        w = site_weights,
                         prior_prev_shape1 = prior_prev_shape1,
                         prior_prev_shape2 = prior_prev_shape2,
                         prior_ICC_shape1 = prior_ICC_shape1,
@@ -590,6 +604,7 @@ get_ICC <- function(n, N, alpha = 0.05,
 get_joint <- function(n, N, 
                       prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
                       prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 9.0,
+                      site_weights = rep(1, length(n)),
                       prev_breaks = seq(0, 1, 0.01), ICC_breaks = seq(0, 1, 0.01)) {
   
   # check inputs
@@ -602,6 +617,8 @@ get_joint <- function(n, N,
   assert_single_bounded(prior_prev_shape2, left = 1e-3, right = 1e3)
   assert_single_bounded(prior_ICC_shape1, left = 1e-3, right = 1e3)
   assert_single_bounded(prior_ICC_shape2, left = 1e-3, right = 1e3)
+  assert_vector_pos(site_weights)
+  assert_same_length(n, site_weights)
   assert_bounded(prev_breaks)
   assert_increasing(prev_breaks)
   assert_bounded(ICC_breaks)
@@ -621,7 +638,7 @@ get_joint <- function(n, N,
   # be summed over all clusters
   ll <- 0
   for (i in seq_along(n)) {
-    ll <- ll + extraDistr::dbbinom(x = n[i], size = N[i], alpha = alpha, beta = beta, log = TRUE)
+    ll <- ll + site_weights[i] * extraDistr::dbbinom(x = n[i], size = N[i], alpha = alpha, beta = beta, log = TRUE)
   }
   ll <- matrix(ll, nrow = length(ICC_breaks))
   
@@ -629,15 +646,15 @@ get_joint <- function(n, N,
   w <- which(rho == 0)
   ll[w] <- 0
   for (i in seq_along(n)) {
-    ll[w] <- ll[w] + dbinom(x = n[i], size = N[i], prob = p[w], log = TRUE)
+    ll[w] <- ll[w] + site_weights[i] * dbinom(x = n[i], size = N[i], prob = p[w], log = TRUE)
   }
   w <- which(rho == 1)
   ll[w] <- 0
   for (i in seq_along(n)) {
     if (n[i] == 0) {
-      ll[w] <- ll[w] + log(1 - p[w])
+      ll[w] <- ll[w] + site_weights[i] * log(1 - p[w])
     } else if (n[i] == N[i]) {
-      ll[w] <- ll[w] + log(p[w])
+      ll[w] <- ll[w] + site_weights[i] * log(p[w])
     } else {
       ll[w] <- -Inf
     }
@@ -738,6 +755,7 @@ get_power_threshold <- function(N, prevalence = 0.10, ICC = 0.05,
                                 ICC_infer = NULL,
                                 prior_prev_shape1 = 1.0, prior_prev_shape2 = 1.0,
                                 prior_ICC_shape1 = 1.0, prior_ICC_shape2 = 9.0,
+                                site_weights = rep(1, length(N)),
                                 n_intervals = 20, round_digits = 2,
                                 reps = 1e2, use_cpp = TRUE, silent = FALSE) {
   
@@ -762,6 +780,8 @@ get_power_threshold <- function(N, prevalence = 0.10, ICC = 0.05,
   assert_single_bounded(prior_prev_shape2, left = 1e-3, right = 1e3)
   assert_single_bounded(prior_ICC_shape1, left = 1e-3, right = 1e3)
   assert_single_bounded(prior_ICC_shape2, left = 1e-3, right = 1e3)
+  assert_vector_pos(site_weights)
+  assert_same_length(N, site_weights)
   assert_single_pos_int(n_intervals)
   assert_greq(n_intervals, 5)
   assert_single_pos_int(round_digits)
@@ -769,7 +789,8 @@ get_power_threshold <- function(N, prevalence = 0.10, ICC = 0.05,
   assert_single_logical(use_cpp)
   assert_single_logical(silent)
   
-  # prevalence has the option of drawing uniformly between limits
+  # prevalence has the option of drawing uniformly between limits, so duplicate
+  # this limit if a single value provided
   if (length(prevalence) == 1) {
     prevalence <- rep(prevalence, 2)
   }
@@ -809,6 +830,7 @@ get_power_threshold <- function(N, prevalence = 0.10, ICC = 0.05,
                             prior_prev_shape2 = prior_prev_shape2,
                             prior_ICC_shape1 = prior_ICC_shape1,
                             prior_ICC_shape2 = prior_ICC_shape2,
+                            site_weights = site_weights,
                             MAP_on = TRUE,
                             post_mean_on = FALSE,
                             post_median_on = FALSE,

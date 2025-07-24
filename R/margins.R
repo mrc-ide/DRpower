@@ -340,6 +340,7 @@ get_margin_Bayesian <- function(N, prevalence = 0.2, ICC = 0.05, alpha = 0.05,
                                 prior_prev_shape2 = 1,
                                 prior_ICC_shape1 = 1,
                                 prior_ICC_shape2 = 9,
+                                site_weights = rep(1, length(N)),
                                 CrI_type = "HDI",
                                 n_intervals = 20, round_digits = 2,
                                 reps = 100, use_cpp = TRUE,
@@ -357,6 +358,8 @@ get_margin_Bayesian <- function(N, prevalence = 0.2, ICC = 0.05, alpha = 0.05,
   assert_single_bounded(prior_prev_shape2, left = 1e-3, right = 1e3)
   assert_single_bounded(prior_ICC_shape1, left = 1e-3, right = 1e3)
   assert_single_bounded(prior_ICC_shape2, left = 1e-3, right = 1e3)
+  assert_vector_pos(site_weights)
+  assert_same_length(N, site_weights)
   assert_single_string(CrI_type)
   assert_in(CrI_type, c("ETI", "HDI"))
   assert_single_pos_int(n_intervals)
@@ -401,6 +404,7 @@ get_margin_Bayesian <- function(N, prevalence = 0.2, ICC = 0.05, alpha = 0.05,
                             prior_prev_shape2 = prior_prev_shape2,
                             prior_ICC_shape1 = prior_ICC_shape1,
                             prior_ICC_shape2 = prior_ICC_shape2,
+                            site_weights = site_weights,
                             MAP_on = FALSE,
                             post_mean_on = FALSE,
                             post_median_on = FALSE,

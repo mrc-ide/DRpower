@@ -16,6 +16,7 @@ plot_prevalence(
   prior_prev_shape2 = 1,
   prior_ICC_shape1 = 1,
   prior_ICC_shape2 = 9,
+  site_weights = rep(1, length(n)),
   CrI_type = "HDI",
   n_intervals = 20,
   use_cpp = TRUE
@@ -31,6 +32,7 @@ plot_ICC(
   prior_prev_shape2 = 1,
   prior_ICC_shape1 = 1,
   prior_ICC_shape2 = 9,
+  site_weights = rep(1, length(n)),
   CrI_type = "HDI",
   n_intervals = 20,
   use_cpp = TRUE
@@ -57,6 +59,13 @@ based on an
 \href{https://mrc-ide.github.io/DRpower/articles/historical_analysis.html}{analysis
 of historical pfhrp2/3 studies}, although this does not guarantee that they
 will be suitable in all settings.}
+
+\item{site_weights}{optional weighting factors applied to each site. The
+log-likelihood of each site is multiplied by this factor, resulting in a
+pseudo-likelihood based method. This is only an approximate solution to the
+problem of estimating a weighted prevalence - a better solution is to
+choose sites with probabilities proportional to burden, in which case no
+additional weighting factor is required.}
 
 \item{CrI_type}{which method to use when computing credible intervals.
 Options are "ETI" (equal-tailed interval) or "HDI" (high-density interval).
