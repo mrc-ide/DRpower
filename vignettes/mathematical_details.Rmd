@@ -41,24 +41,30 @@ rbind.data.frame(list(Parameter = "$p$", Definition = "Prevalence at the domain 
 
 We assume a multilevel model in which $p$ is the overall prevalence at the domain level, but the individual site-level prevalence varies around this value according to a beta distribution. The parameters of this beta distribution are chosen such that $r$ represents the level of intra-cluster correlation.
 
-Data, in the form of counts of observed *pfhrp2/3* deletions, are assumed to be binomial within each site. The expected value of this distribution is the site-level prevalence. This results in counts following a beta-binomial distribution, with the following probability distribution:
+Data in the form of counts of observed *pfhrp2/3* deletions are assumed to be binomial within each site. The expected value of this distribution is the site-level prevalence. The combination of the beta prior on the site-level prevalence with the binomial sampling distribution results in counts following a beta-binomial distribution:
 
-$Pr(k_i | n_i, p, r) = {n_i \choose k_i}\frac{B(k_i + \alpha, n_i - k_i + \beta)}{B(\alpha, \beta)}$
+$$
+Pr(k_i | n_i, p, r) = {n_i \choose k_i}\frac{B(k_i + \alpha, n_i - k_i + \beta)}{B(\alpha, \beta)}
+$$
 
-where $B(x, y)$ is the beta function. The overall likelihood is the product of this distribution over all sites:
+where $B(x, y)$ is the [beta function](https://en.wikipedia.org/wiki/Beta_function). The overall likelihood is the product of this distribution over all sites:
 
-$Pr(\mathbf{k} | \mathbf{n}, p, r) = \prod_{i=1}^c Pr(k_i | n_i, p, r)$
+$$
+Pr(\mathbf{k} | \mathbf{n}, p, r) = \prod_{i=1}^c Pr(k_i | n_i, p, r)
+$$
 
-We assume beta priors on the two free parameters, $p$ and $r$. By default, the shape parameters of the prior on $p$ are both equal to 1, meaning this simplifies to the uniform distribution. In contrast, based on [historical data](articles/historical_analysis.html) we assume shape parameters of 1 and 9 for the prior on $r$, giving a mean of 0.1 and entertaining values in the plausible range [0, 0.3]:
+We assume beta priors on the two free parameters, $p$ and $r$. By default, the shape parameters of the prior on $p$ are both equal to 1, meaning this simplifies to the uniform distribution. In contrast, based on [historical data analysis](articles/historical_analysis.html), we assume shape parameters of 1 and 9 for the prior on $r$, giving a mean of 0.1 and entertaining values in the plausible range [0, 0.3]:
 
 The joint posterior probability is obtained (up to a constant of proportionality) by multiplying the likelihood by both priors:
 
-$Pr(p, r | \mathbf{k}, \mathbf{n}) \propto Pr(\mathbf{k} | \mathbf{n}, p, r)Pr(p)Pr(r)$
+$$
+Pr(p, r | \mathbf{k}, \mathbf{n}) \propto Pr(\mathbf{k} | \mathbf{n}, p, r)Pr(p)Pr(r)
+$$
 
 Finally, the marginal posterior distribution of either $p$ or $r$ can be obtained by integrating over the other free parameter:
 
-$Pr(p | \mathbf{k}, \mathbf{n}) \propto \int_0^1 Pr(p, r | \mathbf{k}, \mathbf{n}) dr$
-
-$Pr(r | \mathbf{k}, \mathbf{n}) \propto \int_0^1 Pr(p, r | \mathbf{k}, \mathbf{n}) dp$
-
+$$
+Pr(p | \mathbf{k}, \mathbf{n}) \propto \int_0^1 Pr(p, r | \mathbf{k}, \mathbf{n}) dr \\
+Pr(r | \mathbf{k}, \mathbf{n}) \propto \int_0^1 Pr(p, r | \mathbf{k}, \mathbf{n}) dp
+$$
 This integration is performed inside *DRpower* using an adaptive quadrature-based method. The marginal posterior distributions can be returned in full, or can be summarised using various [measures of central tendency](articles/summarise_prevalence.html) and/or credible intervals (CrI). There are multiple methods of calculating CrIs - we use the high density region (HDI) by default as this avoids the possibility of the maximum a posteriori (MAP) estimate being outside the CrI, which is possible by the more commonly used equal-tailed interval (ETI).

@@ -26,7 +26,7 @@ library(sf)
 # read in data that has been cleaned and pre-filtered but not mapped
 dat <- readRDS("R_ignore/outputs/01.dat_premap.rds")
 
-# read in sf object containins all the relevant countries
+# read in sf object containing all the relevant countries
 shp_combined <- readRDS("R_ignore/data/shp_combined.rds")
 
 # make an sf version of the site coordinates

@@ -11,6 +11,7 @@ get_joint(
   prior_prev_shape2 = 1,
   prior_ICC_shape1 = 1,
   prior_ICC_shape2 = 9,
+  site_weights = rep(1, length(n)),
   prev_breaks = seq(0, 1, 0.01),
   ICC_breaks = seq(0, 1, 0.01)
 )
@@ -26,6 +27,13 @@ based on an
 \href{https://mrc-ide.github.io/DRpower/articles/historical_analysis.html}{analysis
 of historical pfhrp2/3 studies}, although this does not guarantee that they
 will be suitable in all settings.}
+
+\item{site_weights}{optional weighting factors applied to each site. The
+log-likelihood of each site is multiplied by this factor, resulting in a
+pseudo-likelihood based method. This is only an approximate solution to the
+problem of estimating a weighted prevalence - a better solution is to
+choose sites with probabilities proportional to burden, in which case no
+additional weighting factor is required.}
 
 \item{prev_breaks, ICC_breaks}{the values at which to evaluate the posterior
 in both dimensions. Prevalence is returned in columns, ICC in rows.}
