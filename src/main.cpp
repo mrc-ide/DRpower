@@ -11,49 +11,12 @@ using namespace std;
 
 double dbbinom_reparam(const vector<int> &n,
                        const vector<int> &N,
+                       const std::vector<double> &w,
                        double p, double rho) {
   
-  // deal with special cases
   int n_clust = n.size();
-  if (rho == 0.0) {
-    // special case if p=0 or p=1
-    if (p == 0) {
-      for (int i = 0; i < n_clust; ++ i) {
-        if (n[i] != 0) {
-          return -INFINITY;
-        }
-      }
-      return 0.0;
-    } else if (p == 1) {
-      for (int i = 0; i < n_clust; ++ i) {
-        if (n[i] != N[i]) {
-          return -INFINITY;
-        }
-      }
-      return 0.0;
-    }
-    // simplifies to binomial distribution
-    double ret = 0.0;
-    for (int i = 0; i < n_clust; ++ i) {
-      ret += lgamma(N[i] + 1) - lgamma(n[i] + 1) - lgamma(N[i] - n[i] + 1) +
-        n[i]*log(p) + (N[i] - n[i])*log(1.0 - p);
-    }
-    return ret;
-  } else if (rho == 1.0) {
-    // likelihood still positive whenever n == 0 or n == N
-    double ret = 0.0;
-    for (int i = 0; i < n_clust; ++ i) {
-      if (n[i] == 0) {
-        ret += log(1.0 - p);
-      } else if (n[i] == N[i]) {
-        ret += log(p);
-      } else {
-        ret = -INFINITY;
-        break;
-      }
-    }
-    return ret;
-  }
+  
+  // deal with special cases
   if (p == 0.0) {
     // likelihood 1 if all k == 0, otherwise likelihood 0
     for (int i = 0; i < n_clust; ++ i) {
@@ -72,13 +35,38 @@ double dbbinom_reparam(const vector<int> &n,
     return 0.0;
   }
   
+  if (rho == 0.0) {
+    // simplifies to binomial distribution
+    double ret = 0.0;
+    for (int i = 0; i < n_clust; ++ i) {
+      ret += w[i]*(lgamma(N[i] + 1) - lgamma(n[i] + 1) - lgamma(N[i] - n[i] + 1) +
+        n[i]*log(p) + (N[i] - n[i])*log(1.0 - p));
+    }
+    return ret;
+  } else if (rho == 1.0) {
+    // likelihood still positive whenever n == 0 or n == N
+    double ret = 0.0;
+    for (int i = 0; i < n_clust; ++ i) {
+      if (n[i] == 0) {
+        ret += w[i] * log(1.0 - p);
+      } else if (n[i] == N[i]) {
+        ret += w[i] * log(p);
+      } else {
+        ret = -INFINITY;
+        break;
+      }
+    }
+    return ret;
+  }
+  
   // calculate Beta-binomial likelihood over all clusters
   double alpha = p*(1.0 / rho - 1.0);
   double beta = (1.0 - p)*(1.0 / rho - 1.0);
-  double ret = n_clust * (lgamma(alpha + beta) - lgamma(alpha) - lgamma(beta));
+  double ret = 0.0;
   for (int i = 0; i < n_clust; ++ i) {
-    ret += lgamma(N[i] + 1) - lgamma(n[i] + 1) - lgamma(N[i] - n[i] + 1) +
-      lgamma(n[i] + alpha) + lgamma(N[i] - n[i] + beta) - lgamma(N[i] + alpha + beta);
+    ret += w[i]*(lgamma(alpha + beta) - lgamma(alpha) - lgamma(beta) +
+      lgamma(N[i] + 1) - lgamma(n[i] + 1) - lgamma(N[i] - n[i] + 1) +
+      lgamma(n[i] + alpha) + lgamma(N[i] - n[i] + beta) - lgamma(N[i] + alpha + beta));
   }
   
   return ret;
@@ -89,6 +77,7 @@ double dbbinom_reparam(const vector<int> &n,
 
 double loglike_joint(const vector<int> &n,
                      const vector<int> &N,
+                     const vector<double> &w,
                      double p, double rho,
                      double prior_p_shape1, double prior_p_shape2,
                      double prior_rho_shape1, double prior_rho_shape2) {
@@ -129,7 +118,7 @@ double loglike_joint(const vector<int> &n,
   }
   
   // combine with log-likelihood
-  ret += dbbinom_reparam(n, N, p, rho);
+  ret += dbbinom_reparam(n, N, w, p, rho);
   
   return ret;
 }
@@ -139,6 +128,7 @@ double loglike_joint(const vector<int> &n,
 
 double loglike_marginal_p(const vector<int> &n,
                           const vector<int> &N,
+                          const vector<double> &w,
                           double p, double rho_fixed, int n_intervals,
                           double prior_p_shape1, double prior_p_shape2,
                           double prior_rho_shape1, double prior_rho_shape2,
@@ -153,17 +143,18 @@ double loglike_marginal_p(const vector<int> &n,
   if (rho_fixed != -1) {
     
     // calculate exactly, no need for quadrature-based integration
-    double ret = loglike_joint(n, N, p, rho_fixed, prior_p_shape1, prior_p_shape2, prior_rho_shape1, prior_rho_shape2);
+    double ret = loglike_joint(n, N, w, p, rho_fixed, prior_p_shape1, prior_p_shape2, prior_rho_shape1, prior_rho_shape2);
     
     return ret;
   }
   
   // use lambda method to define a version of loglike with p fixed and with rho
   // as the only free parameter
-  auto loglike_interms_rho = [&cref_n = n, &cref_N = N, &cref_p = p, &cref_prior_p_shape1 = prior_p_shape1,
+  auto loglike_interms_rho = [&cref_n = n, &cref_N = N, &cref_w = w, 
+                              &cref_p = p, &cref_prior_p_shape1 = prior_p_shape1,
                               &cref_prior_p_shape2 = prior_p_shape2, &cref_prior_rho_shape1 = prior_rho_shape1,
                               &cref_prior_rho_shape2 = prior_rho_shape2](auto rho) {
-                                return loglike_joint(cref_n, cref_N, cref_p, rho, cref_prior_p_shape1, cref_prior_p_shape2, cref_prior_rho_shape1, cref_prior_rho_shape2);
+                                return loglike_joint(cref_n, cref_N, cref_w, cref_p, rho, cref_prior_p_shape1, cref_prior_p_shape2, cref_prior_rho_shape1, cref_prior_rho_shape2);
                               };
   
   // integrate over rho via adaptive quadrature
@@ -192,6 +183,7 @@ double loglike_marginal_p(const vector<int> &n,
 
 double loglike_marginal_rho(const vector<int> &n,
                             const vector<int> &N,
+                            const vector<double> &w,
                             double rho, int n_intervals,
                             double prior_p_shape1, double prior_p_shape2,
                             double prior_rho_shape1, double prior_rho_shape2,
@@ -204,10 +196,11 @@ double loglike_marginal_rho(const vector<int> &n,
   
   // use lambda method to define a version of loglike with rho fixed and with p
   // as the only free parameter
-  auto loglike_interms_p = [&cref_n = n, &cref_N = N, &cref_rho = rho, &cref_prior_p_shape1 = prior_p_shape1,
+  auto loglike_interms_p = [&cref_n = n, &cref_N = N, &cref_w = w, 
+                            &cref_rho = rho, &cref_prior_p_shape1 = prior_p_shape1,
                             &cref_prior_p_shape2 = prior_p_shape2, &cref_prior_rho_shape1 = prior_rho_shape1,
                             &cref_prior_rho_shape2 = prior_rho_shape2](auto p) {
-                              return loglike_joint(cref_n, cref_N, p, cref_rho, cref_prior_p_shape1, cref_prior_p_shape2, cref_prior_rho_shape1, cref_prior_rho_shape2);
+                              return loglike_joint(cref_n, cref_N, cref_w, p, cref_rho, cref_prior_p_shape1, cref_prior_p_shape2, cref_prior_rho_shape1, cref_prior_rho_shape2);
                             };
   
   // integrate over rho via adaptive quadrature
@@ -239,6 +232,7 @@ Rcpp::List get_prevalence_cpp(Rcpp::List args_params) {
   // extract inputs
   vector<int> n = rcpp_to_vector_int(args_params["n"]);
   vector<int> N = rcpp_to_vector_int(args_params["N"]);
+  vector<double> w = rcpp_to_vector_double(args_params["w"]);
   double rho_fixed = rcpp_to_double(args_params["ICC"]);
   double prior_p_shape1 = rcpp_to_double(args_params["prior_prev_shape1"]);
   double prior_p_shape2 = rcpp_to_double(args_params["prior_prev_shape2"]);
@@ -261,6 +255,7 @@ Rcpp::List get_prevalence_cpp(Rcpp::List args_params) {
   // parameter, marginalised over rho
   auto loglike_interms_p = [&cref_n = n,
                             &cref_N = N,
+                            &cref_w = w,
                             &cref_rho_fixed = rho_fixed,
                             &cref_n_intervals = n_intervals,
                             &cref_prior_p_shape1 = prior_p_shape1,
@@ -276,7 +271,8 @@ Rcpp::List get_prevalence_cpp(Rcpp::List args_params) {
                             &cref_log_area_trap = log_area_trap_inner,
                             &cref_log_area_Simp = log_area_Simp_inner,
                             &cref_total_diff = total_diff_inner](auto p) {
-                              return loglike_marginal_p(cref_n, cref_N, p, cref_rho_fixed, cref_n_intervals,
+                              return loglike_marginal_p(cref_n, cref_N, cref_w, 
+                                                        p, cref_rho_fixed, cref_n_intervals,
                                                         cref_prior_p_shape1, cref_prior_p_shape2,
                                                         cref_prior_rho_shape1, cref_prior_rho_shape2, cref_x0, cref_xm, cref_x1,
                                                         cref_log_y0, cref_log_ym, cref_log_y1,
@@ -319,6 +315,7 @@ Rcpp::List get_ICC_cpp(Rcpp::List args_params) {
   // extract inputs
   vector<int> n = rcpp_to_vector_int(args_params["n"]);
   vector<int> N = rcpp_to_vector_int(args_params["N"]);
+  vector<double> w = rcpp_to_vector_double(args_params["w"]);
   double prior_p_shape1 = rcpp_to_double(args_params["prior_prev_shape1"]);
   double prior_p_shape2 = rcpp_to_double(args_params["prior_prev_shape2"]);
   double prior_rho_shape1 = rcpp_to_double(args_params["prior_ICC_shape1"]);
@@ -340,6 +337,7 @@ Rcpp::List get_ICC_cpp(Rcpp::List args_params) {
   // parameter, marginalised over p
   auto loglike_interms_rho = [&cref_n = n,
                               &cref_N = N,
+                              &cref_w = w,
                               &cref_n_intervals = n_intervals,
                               &cref_prior_p_shape1 = prior_p_shape1,
                               &cref_prior_p_shape2 = prior_p_shape2,
@@ -354,7 +352,8 @@ Rcpp::List get_ICC_cpp(Rcpp::List args_params) {
                               &cref_log_area_trap = log_area_trap_inner,
                               &cref_log_area_Simp = log_area_Simp_inner,
                               &cref_total_diff = total_diff_inner](auto rho) {
-                                return loglike_marginal_rho(cref_n, cref_N, rho, cref_n_intervals, cref_prior_p_shape1, cref_prior_p_shape2,
+                                return loglike_marginal_rho(cref_n, cref_N, cref_w, 
+                                                            rho, cref_n_intervals, cref_prior_p_shape1, cref_prior_p_shape2,
                                                             cref_prior_rho_shape1, cref_prior_rho_shape2, cref_x0, cref_xm, cref_x1,
                                                             cref_log_y0, cref_log_ym, cref_log_y1,
                                                             cref_log_area_trap, cref_log_area_Simp, cref_total_diff);

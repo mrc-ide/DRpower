@@ -203,7 +203,7 @@ We only need 20 samples to achieve this level of precision, which we are well ab
 
 ```{r}
 # get MOE assuming 40 samples in each of 6 sites
-get_margin(N = 40, n_clust = 6, prevalence = 0.2, ICC = 0.05)
+get_margin(N = rep(40, 6), prevalence = 0.2, ICC = 0.05)
 ```
 
 With 40 samples we would expect our 95% CI to range from around 11.3% to 28.7%, in other words a MOE of around 8.7%.

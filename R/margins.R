@@ -24,25 +24,46 @@
 #'   where \eqn{\hat{p}} is the \emph{mean} prevalence over clusters, \eqn{c} is
 #'   the number of clusters, and \eqn{r} is the intra-cluster correlation (ICC,
 #'   a value between 0 and 1). The term to the right of the \eqn{\pm} symbol is
-#'   called the \emph{margin of error} (MOE). We can give this term the name
+#'   called the \emph{margin of error} (MOE), which we can give the symbol
 #'   \eqn{d}. The function \code{get_margin()} returns the values
-#'   \eqn{\hat{p}-d} and \eqn{\hat{p}+d}, i.e. the lower and upper estimates of
-#'   what our CI will be.
+#'   \eqn{\hat{p}-d} and \eqn{\hat{p}+d}, i.e. the lower and upper estimates
+#'   that will comprise our CI.
 #'   
 #'   We can also rearrange this formula to get the sample size (\eqn{N})
 #'   required to achieve any given MOE:
 #'   
 #'   \deqn{ N = \frac{ z^2p(1-p)(1-r) }{ cd^2 - z^2p(1-p)r } }
 #'   
-#'   The function \code{get_sample_size_margin()} returns the value of \eqn{N}.
+#'   The function \code{get_sample_size_margin()} returns this value of \eqn{N}.
 #'   Note that in some cases it might not be possible to achieve the specified
 #'   MOE for any finite sample size due to the ICC introducing too much
 #'   variation, in which case this formula will return a negative value and the
 #'   function will return an error.
 #'   
+#'   So far we have assumed we have \eqn{c} equal sized clusters. We can 
+#'   generalize this approach to a vector of cluster sizes, where \eqn{n_i} is the
+#'   size of cluster \eqn{i}, and \eqn{\bar{n}=\frac{1}{c}\sum_{i=1}^c n_i} is the 
+#'   mean over clusters. We now obtain:
+#'   
+#'   \deqn{
+#'   \hat{p} \pm z\sqrt{\frac{\hat{p}(1 - \hat{p})}{\sum_{i=1}^c n_i}D_{eff}}, \\[1.5ex]
+#'   D_{eff} = V(1 + (n - 1) r), \\[1.5ex]
+#'   V = \frac{c \sum_{i=1}^c n_i^2}{(\sum_{i=1}^c n_i)^2}.
+#'   }
+#'   
+#'   \eqn{D_{eff}} is the design effect, and \eqn{V} is the \emph{variance
+#'   inflation factor} that accounts for the additional sampling variation due
+#'   to unequal cluster sizes. Note that when all \eqn{n_i} are equal this
+#'   simplifies to \eqn{V = 1}, making this a generalization of the approach
+#'   above rather than a replacement. This is the actual formula used by
+#'   \code{get_margin()}, which expects a vector of cluster sizes (\code{N}).
+#'   However, when calculating minimum sample sizes using
+#'   \code{get_sample_size_margin()}, we use the formula above that assumes
+#'   equal cluster sizes and return the sample size per cluster.
+#'   
 #'   Although this is a very common approach, it has several weaknesses. First,
 #'   notice that we sneakily replaced \eqn{\hat{p}} with \eqn{p} when moving to
-#'   the sample size formula above. This implies that there is no uncertainty in
+#'   the sample size formula. This implies that there is no uncertainty in
 #'   our prevalence estimate, which is not true. Also note that the Wald
 #'   interval assumes that the sampling distribution of our estimator is
 #'   Gaussian, which is also not true. The difference between the Gaussian and
@@ -53,24 +74,25 @@
 #'   
 #'   An arguably better approach is to construct CIs using the method of Clopper
 #'   and Pearson (1934). This confidence interval guarantees that the false
-#'   positive rate is \emph{at least} \eqn{alpha}, and in this sense is
+#'   positive rate is \emph{at least} \eqn{\alpha}, and in this sense is
 #'   conservative. It can be asymmetric and does not suffer from the problem of
 #'   allowing values outside the [0,1] range. To make the Clopper-Pearson
 #'   interval apply to a multi-cluster survey, we can use the idea of effective
 #'   sample size, \eqn{N_e}:
 #'   
-#'   \deqn{ D_{eff} = 1 + (N - 1)r }
 #'   \deqn{ N_e = \frac{N}{D_{eff}} }
 #'   
 #'   We then calculate the Clopper-Pearson CI but using \eqn{N_e} in place of
 #'   \eqn{N}. The function \code{get_margin_CP()} returns the expected lower and
-#'   upper CI limits using the Clopper-Pearson interval, and the function
+#'   upper CI limits using the Clopper-Pearson interval. We allow for unequal
+#'   cluster sizes in the design effect using the argument above. The function
 #'   \code{get_sample_size_margin_CP()} returns the corresponding sample size
-#'   needed to achieve a certain MOE (the maximum of either lower or upper).
+#'   needed to achieve a certain MOE (the maximum of either lower or upper),
+#'   assuming equal sizes between clusters.
 #'
-#'   A third option is to use the DRpower Bayesian model to estimate the
-#'   credible interval of prevalence. See \code{?get_margin_Bayesian()} for how
-#'   to do this.
+#'   A third option implemented here is to use the DRpower Bayesian model to
+#'   estimate the credible interval of prevalence. See
+#'   \code{?get_margin_Bayesian()} for how to do this.
 #' 
 #' @returns the functions \code{get_margin()} and \code{get_margin_CP()} return
 #'   the expected lower and upper CI limits on the prevalence as percentage.
@@ -86,9 +108,7 @@ NULL
 
 ##' @rdname get_margins
 ##' 
-#' @param N the number of samples obtained from each cluster, assumed the same
-#'   over all clusters.
-#' @param n_clust the number of clusters.
+#' @param N a vector of the number of samples obtained from each cluster.
 #' @param prevalence the true prevalence of the marker in the population as a
 #'   proportion between 0 and 1.
 #' @param ICC assumed true intra-cluster correlation (ICC) between 0 and 1.
@@ -97,21 +117,28 @@ NULL
 #' @importFrom stats qnorm
 #'
 #' @examples
-#' get_margin(N = 60, n_clust = 3, prevalence = 0.2)
+#' get_margin(N = rep(60, 3), prevalence = 0.2)
 #' 
 #' @export
 
-get_margin <- function(N, n_clust, prevalence = 0.2, ICC = 0.05, alpha = 0.05) {
+get_margin <- function(N, prevalence = 0.2, ICC = 0.05, alpha = 0.05) {
   
   # check inputs
-  assert_single_pos_int(N, zero_allowed = FALSE)
-  assert_single_pos_int(n_clust, zero_allowed = FALSE)
+  assert_vector_pos_int(N, zero_allowed = FALSE)
   assert_single_bounded(prevalence)
   assert_single_bounded(ICC)
+  assert_single_bounded(alpha)
   
+  # calculate variance inflation factor due to unequal cluster sizes
+  n_clust <- length(N)
+  vf <- n_clust * sum(N^2) / (sum(N))^2
+  
+  # calculate ICC effect and multiply
   p <- prevalence
-  deff <- 1 + (N - 1)*ICC
-  d <- qnorm(1 - alpha/2) * sqrt( p*(1 - p)/(N*n_clust)*deff )
+  deff <-vf*(1 + (mean(N) - 1)*ICC)
+  
+  # get margin of error
+  d <- qnorm(1 - alpha/2) * sqrt( p*(1 - p)/sum(N) * deff)
   ret <- c(lower = 1e2*(p - d), upper = 1e2*(p + d))
   
   return(ret)
@@ -164,22 +191,27 @@ get_sample_size_margin <- function(MOE, n_clust, prevalence = 0.2, ICC = 0.05, a
 #'
 #'
 #' @examples
-#' get_margin_CP(N = 60, n_clust = 3, prevalence = 0.2)
+#' get_margin_CP(N = rep(60, 3), prevalence = 0.2)
 #' 
 #' @export
 
-get_margin_CP <- function(N, n_clust, prevalence = 0.2, ICC = 0.05, alpha = 0.05) {
+get_margin_CP <- function(N, prevalence = 0.2, ICC = 0.05, alpha = 0.05) {
   
   # check inputs
-  assert_single_pos_int(N, zero_allowed = FALSE)
-  assert_single_pos_int(n_clust, zero_allowed = FALSE)
+  assert_vector_pos_int(N, zero_allowed = FALSE)
   assert_single_bounded(prevalence)
   assert_single_bounded(ICC)
+  assert_single_bounded(alpha)
   
-  # get effective sample size
-  Deff <- 1 + (N - 1)*ICC
-  Ne <- n_clust*N / Deff
+  # calculate variance inflation factor due to unequal cluster sizes
+  n_clust <- length(N)
+  vf <- n_clust * sum(N^2) / (sum(N))^2
   
+  # calculate design effect and effective sample size
+  deff <- vf*(1 + (mean(N) - 1)*ICC)
+  Ne <- sum(N) / deff
+  
+  # get CIs
   p <- prevalence
   CI_lower <- 1e2*qbeta(p = alpha / 2, shape1 = Ne*p, shape2 = Ne*(1 - p) + 1)
   CI_upper <- 1e2*qbeta(p = 1 - alpha / 2, shape1 = Ne*p + 1, shape2 = Ne*(1 - p))
@@ -220,8 +252,7 @@ get_sample_size_margin_CP <- function(MOE, n_clust, prevalence = 0.2, ICC = 0.05
   
   # get MOE using CP method for all values of N up to N_max
   MOE_CP <- mapply(function(N) {
-    get_margin_CP(N = N,
-                  n_clust = n_clust,
+    get_margin_CP(N = rep(N, n_clust),
                   prevalence = prevalence,
                   ICC = ICC,
                   alpha = alpha)
@@ -309,6 +340,7 @@ get_margin_Bayesian <- function(N, prevalence = 0.2, ICC = 0.05, alpha = 0.05,
                                 prior_prev_shape2 = 1,
                                 prior_ICC_shape1 = 1,
                                 prior_ICC_shape2 = 9,
+                                site_weights = rep(1, length(N)),
                                 CrI_type = "HDI",
                                 n_intervals = 20, round_digits = 2,
                                 reps = 100, use_cpp = TRUE,
@@ -326,6 +358,8 @@ get_margin_Bayesian <- function(N, prevalence = 0.2, ICC = 0.05, alpha = 0.05,
   assert_single_bounded(prior_prev_shape2, left = 1e-3, right = 1e3)
   assert_single_bounded(prior_ICC_shape1, left = 1e-3, right = 1e3)
   assert_single_bounded(prior_ICC_shape2, left = 1e-3, right = 1e3)
+  assert_vector_pos(site_weights)
+  assert_same_length(N, site_weights)
   assert_single_string(CrI_type)
   assert_in(CrI_type, c("ETI", "HDI"))
   assert_single_pos_int(n_intervals)
@@ -370,6 +404,7 @@ get_margin_Bayesian <- function(N, prevalence = 0.2, ICC = 0.05, alpha = 0.05,
                             prior_prev_shape2 = prior_prev_shape2,
                             prior_ICC_shape1 = prior_ICC_shape1,
                             prior_ICC_shape2 = prior_ICC_shape2,
+                            site_weights = site_weights,
                             MAP_on = FALSE,
                             post_mean_on = FALSE,
                             post_median_on = FALSE,

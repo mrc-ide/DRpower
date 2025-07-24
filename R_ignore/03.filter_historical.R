@@ -62,7 +62,7 @@ dat <- dat %>%
   filter(HRP2_TESTED >= 10)
 
 # must have at least three sites per country, collected in the same year. NB,
-# this will be superceded by a filter at a lower administrative level, but
+# this will be superseded by a filter at a lower administrative level, but
 # discarding at this stage reduces the number of rows for which we need to map
 # to this lower level
 dat_country_year <- dat %>%

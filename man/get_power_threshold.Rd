@@ -15,6 +15,7 @@ get_power_threshold(
   prior_prev_shape2 = 1,
   prior_ICC_shape1 = 1,
   prior_ICC_shape2 = 9,
+  site_weights = rep(1, length(N)),
   n_intervals = 20,
   round_digits = 2,
   reps = 100,
@@ -55,6 +56,13 @@ based on an
 \href{https://mrc-ide.github.io/DRpower/articles/historical_analysis.html}{analysis
 of historical pfhrp2/3 studies}, although this does not guarantee that they
 will be suitable in all settings.}
+
+\item{site_weights}{optional weighting factors applied to each site. The
+log-likelihood of each site is multiplied by this factor, resulting in a
+pseudo-likelihood based method. This is only an approximate solution to the
+problem of estimating a weighted prevalence - a better solution is to
+choose sites with probabilities proportional to burden, in which case no
+additional weighting factor is required.}
 
 \item{n_intervals}{the number of intervals used in the adaptive quadrature
 method. Increasing this value gives a more accurate representation of the

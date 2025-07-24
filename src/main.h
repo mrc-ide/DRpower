@@ -7,11 +7,13 @@
 //------------------------------------------------
 double dbbinom_reparam(const std::vector<int> &n,
                        const std::vector<int> &N,
+                       const std::vector<double> &w,
                        double p, double rho);
 
 //------------------------------------------------
 double loglike_joint(const std::vector<int> &n,
                      const std::vector<int> &N,
+                     const std::vector<double> &w,
                      double p, double rho,
                      double prior_p_shape1, double prior_p_shape2,
                      double prior_rho_shape1, double prior_rho_shape2);
@@ -19,6 +21,7 @@ double loglike_joint(const std::vector<int> &n,
 //------------------------------------------------
 double loglike_marginal_p(const std::vector<int> &n,
                           const std::vector<int> &N,
+                          const std::vector<double> &w,
                           double p, int n_intervals,
                           double prior_p_shape1, double prior_p_shape2,
                           double prior_rho_shape1, double prior_rho_shape2,
@@ -32,6 +35,7 @@ double loglike_marginal_p(const std::vector<int> &n,
 //------------------------------------------------
 double loglike_marginal_rho(const std::vector<int> &n,
                             const std::vector<int> &N,
+                            const std::vector<double> &w,
                             double rho, int n_intervals,
                             double prior_p_shape1, double prior_p_shape2,
                             double prior_rho_shape1, double prior_rho_shape2,
